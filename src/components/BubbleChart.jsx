@@ -5,7 +5,7 @@ import * as d3 from 'd3';
 import { useAppStore } from '../stores/useAppStore';
 import * as THREE from 'three';
 
-import { forceSimulation, forceCollide } from 'd3-force-3d';
+import { forceSimulation, forceCollide, forceLink, forceCluster } from 'd3-force-3d';
 
 // Color scales
 const colorScales = {
