@@ -13,7 +13,7 @@ The **SCF 3D Relationship Visualizer** is an interactive, browser-based tool des
 ## **2\. Goals & Objectives**
 
 * **Visualize Complexity:** Transform 1,000+ rows of spreadsheet data into a digestible 3D topology.  
-* **Multi-Dimensional Analysis:** Allow users to view controls through different lenses (Domain, PPTDF, NIST CSF).  
+* **Multi-Dimensional Analysis:** Allow users to view controls and compare different compliange regimes or framwords by using SCF as the common baseline.  The viz will be nested by SCF Domain, PPTDF, NIST CSF).  
 * **Identify High-Impact Areas:** Use "Relative Control Weighting" to drive visual scale.  
 * **Gap Analysis:** Highlight applicability for specific compliance regimes (e.g., NIST 800-53, ISO 27001).
 
