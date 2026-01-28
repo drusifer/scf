@@ -84,7 +84,7 @@ const DetailPanel = ({ control, onBack, getRegimeColor }) => {
 };
 
 export default function Sidebar() {
-    const { data, grouping, setGrouping, searchQuery, selectedControlId, setSelectedControlId, hoveredNode, onlyShowMapped, setOnlyShowMapped, selectedRegimes, toggleRegime, getAvailableRegimes, getRegimeColor } = useAppStore();
+    const { data, grouping, setGrouping, searchQuery, selectedControlId, setSelectedControlId, hoveredNode, onlyShowMapped, setOnlyShowMapped, selectedRegimes, toggleRegime, getAvailableRegimes, getRegimeColor, collisionPadding, setCollisionPadding, cameraDistance, setCameraDistance } = useAppStore();
     const [isOpen, setIsOpen] = useState(true);
     const [regimeSearch, setRegimeSearch] = useState('');
     const [regimesExpanded, setRegimesExpanded] = useState(true);
@@ -93,8 +93,16 @@ export default function Sidebar() {
     const selectedControl = useMemo(() => data.find(c => c.id === selectedControlId), [data, selectedControlId]);
 
     const filteredRegimes = useMemo(() => {
-        return availableRegimes.filter(r => r.toLowerCase().includes(regimeSearch.toLowerCase()));
-    }, [availableRegimes, regimeSearch]);
+        return availableRegimes
+            .filter(r => r.toLowerCase().includes(regimeSearch.toLowerCase()))
+            .sort((a, b) => {
+                const aIsSelected = selectedRegimes.includes(a);
+                const bIsSelected = selectedRegimes.includes(b);
+                if (aIsSelected && !bIsSelected) return -1;
+                if (!aIsSelected && bIsSelected) return 1;
+                return a.localeCompare(b);
+            });
+    }, [availableRegimes, regimeSearch, selectedRegimes]);
 
     const treeData = useMemo(() => {
         if (!data) return [];
@@ -162,6 +170,17 @@ export default function Sidebar() {
                                 </div>
                             </div>
                             <div className="p-3 border-b border-gray-800">
+                                <div className="text-xs text-gray-400 mb-2 px-1 font-semibold uppercase">Visualization Settings</div>
+                                <div className="px-1">
+                                    <label className="text-sm text-gray-300">Bubble Separation</label>
+                                    <input type="range" min="-50" max="150" value={collisionPadding} onChange={(e) => setCollisionPadding(Number(e.target.value))} className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer" />
+                                </div>
+                                <div className="px-1 mt-2">
+                                    <label className="text-sm text-gray-300">Camera Distance</label>
+                                    <input type="range" min="100" max="15000" value={cameraDistance} onChange={(e) => setCameraDistance(Number(e.target.value))} className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer" />
+                                </div>
+                            </div>
+                            <div className="p-3 border-b border-gray-800">
                                 <div className="flex justify-between items-center cursor-pointer" onClick={() => setRegimesExpanded(!regimesExpanded)}>
                                     <div className="text-xs text-gray-400 font-semibold uppercase">Compliance Regimes ({selectedRegimes.length})</div>
                                     <span className="text-xs">{regimesExpanded ? '▲' : '▼'}</span>
@@ -199,4 +218,5 @@ export default function Sidebar() {
         </>
     );
 }
+
 

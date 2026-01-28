@@ -1,30 +1,20 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import React, { useMemo } from 'react';
 import { Text } from '@react-three/drei';
 import * as d3 from 'd3';
 import { useAppStore } from '../stores/useAppStore';
 import * as THREE from 'three';
-
 import { forceSimulation, forceCollide, forceLink, forceCluster } from 'd3-force-3d';
 
-// Color scales
-const colorScales = {
-    domain: d3.scaleOrdinal(d3.schemeSpectral[11]),
-    pptdf: d3.scaleOrdinal(d3.schemeCategory10),
-    nist_csf: d3.scaleOrdinal(d3.schemeSet2)
-};
-
 // Helper for 3D radius - volume based scaling
-const getRadiusFromWeight = (weight, scale = 20) => Math.pow(weight, 1 / 3) * scale;
+const getRadiusFromWeight = (weight, scale = 15) => Math.pow(weight, 1 / 3) * scale;
 
-// Helper to parse mapping string into a tree (Regime Shell -> Flat Mappings)
+// Helper to parse mapping string into a tree
 const parseMappings = (control, selectedRegimes) => {
     const regimes = [];
     const controlWeight = control.weight || 1;
     const allLeaves = [];
 
     control.mappings.forEach(m => {
-        // Only include if it's in the selected regimes
         if (selectedRegimes && !selectedRegimes.includes(m.regime)) return;
 
         let regimeNode = regimes.find(n => n.name === m.regime);
@@ -51,7 +41,6 @@ const parseMappings = (control, selectedRegimes) => {
         });
     });
 
-    // DISTRIBUTE WEIGHT: Divide the control's total weight among all visible mapping leaves
     if (allLeaves.length > 0) {
         const weightPerLeaf = controlWeight / allLeaves.length;
         allLeaves.forEach(leaf => {
@@ -62,69 +51,49 @@ const parseMappings = (control, selectedRegimes) => {
     return regimes;
 };
 
-// A new, more robust 3D layout generator for hierarchical data
-const apply3DLayout = (rootNode) => {
-    // 1. Recursively calculate the radius and position for each node, starting from the leaves.
-    const processNode = (node) => {
-        // If it's a leaf node, its radius is based on its own value.
-        if (!node.children || node.children.length === 0) {
-            node.r = getRadiusFromWeight(node.value || 1);
-            // Initialize local position properties for leaves
-            node.lx = node.ly = node.lz = 0;
-            return;
+const apply3DLayout = (rootNode, collisionPadding) => {
+    const nodes = rootNode.descendants();
+    const links = rootNode.links();
+
+    nodes.forEach(node => {
+        node.r = getRadiusFromWeight(node.value || 1);
+    });
+
+    const simulation = forceSimulation(nodes, 3)
+        .force("link", forceLink(links).id(d => d.id).strength(0.1))
+        .force("collide", forceCollide(d => d.r + collisionPadding).strength(0.8))
+        .force("cluster", forceCluster().centers(d => d.parent).strength(0.9))
+        .force("center", d3.forceCenter().strength(0.01))
+        .stop();
+
+    for (let i = 0; i < 150; i++) {
+        simulation.tick();
+    }
+
+    nodes.forEach(node => {
+        if (node.parent) {
+            node.lx = node.x - node.parent.x;
+            node.ly = node.y - node.parent.y;
+            node.lz = node.z - node.parent.z;
+        } else {
+            node.lx = node.x;
+            node.ly = node.y;
+            node.lz = node.z;
         }
+    });
 
-        // If it's a parent, recursively process its children first.
-        node.children.forEach(processNode);
-
-        // Now that all children have their final radii, we can arrange them.
-        const allChildren = node.children;
-
-        // Give all children an initial random 3D position to avoid clumping at the start.
-        const spread = Math.cbrt(allChildren.length) * 50;
-        allChildren.forEach(d => {
-            d.x = (Math.random() - 0.5) * spread;
-            d.y = (Math.random() - 0.5) * spread;
-            d.z = (Math.random() - 0.5) * spread;
-        });
-
-        // 2. Create a force simulation for the *immediate children only*.
-        const simulation = forceSimulation(allChildren, 3)
-            // Force 1: Collision detection. Prevents any two bubbles from overlapping.
-            // Use a generous padding to ensure visible spacing.
-            .force("collide", forceCollide(d => d.r + 10).strength(0.8))
-            // Force 2: A force that pulls all children towards the center (0,0,0)
-            .force("center", d3.forceCenter().strength(0.05))
-            .stop();
-
-        // 3. Run the simulation for enough ticks to let it settle.
-        for (let i = 0; i < 400; i++) {
-            simulation.tick();
+    nodes.forEach(node => {
+        if (node.children) {
+            let maxDist = 0;
+            node.children.forEach(child => {
+                const dist = Math.sqrt(child.lx ** 2 + child.ly ** 2 + child.lz ** 2) + child.r;
+                if (dist > maxDist) maxDist = dist;
+            });
+            node.r = maxDist;
         }
-
-        // 4. After the simulation, set the final local positions and calculate the new parent radius.
-        let maxDist = 0;
-        node.children.forEach(child => {
-            // The simulation gives absolute x,y,z relative to the simulation's center.
-            // We store these as the child's local coordinates relative to the parent.
-            child.lx = child.x || 0;
-            child.ly = child.y || 0;
-            child.lz = child.z || 0;
-            // Calculate the maximum distance from the parent's center to a child's outer edge.
-            const dist = Math.sqrt(child.lx ** 2 + child.ly ** 2 + child.lz ** 2) + child.r;
-            if (dist > maxDist) maxDist = dist;
-        });
-
-        // The parent's new radius is the one that can enclose all its children, plus some padding.
-        const padding = node.depth === 0 ? 10 : 5; // Less padding for deeper nodes
-        node.r = maxDist + padding;
-    };
-
-    // Start the recursive process from the root.
-    processNode(rootNode);
+    });
 };
 
-// Single bubble component - recursive for true hierarchical rendering
 const BubbleNode = React.memo(({
     node,
     onClick,
@@ -136,13 +105,9 @@ const BubbleNode = React.memo(({
     rootValue,
     getRegimeColor,
     currentDepth = 0,
-    maxRenderDepth = 3, // Increased to reach Regimes from Root
+    maxRenderDepth = 4,
     isFocusRoot = false
 }) => {
-    // Debug logging for the focus root
-    if (isFocusRoot) {
-        console.log(`[BubbleNode] Rendering Focus Root: "${node.data.name}", Children: ${node.children?.length}, Radius: ${node.r.toFixed(1)}`);
-    }
     const isControl = node.data.type === 'control';
     const isRegime = node.data.type === 'regime';
     const isDomain = node.data.type === 'domain';
@@ -158,9 +123,7 @@ const BubbleNode = React.memo(({
     let opacity = 0.1;
     let labelSize = Math.max(node.r / 8, 10);
 
-    // Show label only if it's a top-level bubble and big enough to not overlap
     let showLabel = isTopLevel && node.r > (focusedNode.r / 25);
-
 
     if (isRoot) {
         color = '#ffffff';
@@ -168,20 +131,19 @@ const BubbleNode = React.memo(({
         showLabel = false;
     } else if (isDomain) {
         color = '#ffffff';
-        opacity = isFocused ? 0.01 : 0.04;
+        opacity = isFocused ? 0.05 : 0.1;
     } else if (isControl) {
         if (hasChildren) {
             color = '#ffffff';
-            opacity = isSelected || isHovered ? 0.15 : 0.06;
+            opacity = isSelected || isHovered ? 0.25 : 0.15;
         } else {
             color = '#ffffff';
             opacity = 1.0;
         }
     } else if (isRegime) {
         color = '#ffffff';
-        opacity = 0.03;
+        opacity = 0.08;
     } else {
-        // Mapping leaves
         let regimeName = node.data.regime;
         if (!regimeName) {
             let current = node;
@@ -211,12 +173,10 @@ const BubbleNode = React.memo(({
         ? `${node.data.name} (${percentage}%)`
         : node.data.name;
 
-    // Use local coordinates lx, ly, lz, but center the focus root at origin
-    const position = isFocusRoot ? [0, 0, 0] : [node.lx || 0, node.ly || 0, node.lz || 0];
+    const position = isFocusRoot ? [0, 0, 0] : [node.x || 0, node.y || 0, node.z || 0];
 
     return (
         <group position={position}>
-            {/* Mesh for the bubble itself */}
             <mesh
                 onClick={isClickable ? handleClick : undefined}
                 onPointerOver={isClickable ? (e) => {
@@ -243,22 +203,20 @@ const BubbleNode = React.memo(({
                 />
             </mesh>
 
-            {/* Label */}
             {showLabel && (
                 <Text
-                    position={[0, 0, node.r + 1]} // Slightly outside the surface
+                    position={[0, 0, node.r + 1]}
                     fontSize={labelSize}
                     color="white"
                     anchorX="center"
                     anchorY="middle"
                     fillOpacity={1}
-                    curveRadius={node.r}
+                    curveRadius={-node.r}
                 >
                     {labelText}
                 </Text>
             )}
 
-            {/* Recursively render children if within depth limit */}
             {hasChildren && currentDepth < maxRenderDepth && node.children.map((child, i) => (
                 <BubbleNode
                     key={i}
@@ -279,30 +237,10 @@ const BubbleNode = React.memo(({
     );
 });
 
-// Internal component to handle camera transitions
-function CameraHandler({ targetRadius }) {
-    const { camera } = useThree();
-
-    useFrame((state, delta) => {
-        // Target distance: enough to see the whole bubble (r * 2.5 or so for 45 deg FOV)
-        let targetZ = Math.max(targetRadius * 3.5, 50);
-        // Clamp the z position to prevent drifting too far
-        targetZ = Math.min(targetZ, 10000); 
-
-        // Smoothly interp camera Z
-        camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, delta * 2);
-
-        // Ensure camera stays looking at origin (where focused node is centered)
-        camera.lookAt(0, 0, 0);
-    });
-
-    return null;
-}
-
-export default function BubbleChart({ data }) {
+function BubbleChart({ data }) {
     const {
         grouping,
-        searchQuery, 
+        searchQuery,
         setSelectedControlId,
         selectedControlId,
         hoveredNode,
@@ -311,14 +249,13 @@ export default function BubbleChart({ data }) {
         zoomIn,
         selectedRegimes,
         onlyShowMapped,
-        getRegimeColor
+        getRegimeColor,
+        collisionPadding
     } = useAppStore();
 
-    // transform flat data into single deep hierarchy
     const rootNode = useMemo(() => {
         if (!data || data.length === 0) return null;
 
-        // Combined filtering logic
         const filteredData = data.filter(c => {
             const query = searchQuery.toLowerCase();
             const matchesQuery = query === '' ||
@@ -331,20 +268,13 @@ export default function BubbleChart({ data }) {
             return matchesQuery && matchesRegime;
         });
 
-
         if (filteredData.length === 0 && data.length > 0) {
             console.warn("Filtering hidden all controls. Check search query or regime selection.");
         }
 
-        console.log("Building Deep Hierarchy for", filteredData.length, "controls. Selected Regimes:", selectedRegimes.length);
-
         const getGroupingValue = (d, grouping) => {
-            if (grouping === 'domain') {
-                return d.domain;
-            }
-            if (grouping === 'pptdf') {
-                return d.pptdf;
-            }
+            if (grouping === 'domain') return d.domain;
+            if (grouping === 'pptdf') return d.pptdf;
             if (grouping === 'nist_csf') {
                 const nistCsfMapping = d.mappings.find(m => m.regime === 'NIST CSF Function Grouping');
                 return nistCsfMapping ? nistCsfMapping.value : 'Uncategorized';
@@ -352,28 +282,24 @@ export default function BubbleChart({ data }) {
             return 'Uncategorized';
         };
 
-        // Level 1: Domains
         const grouped = d3.group(filteredData, d => getGroupingValue(d, grouping) || 'Uncategorized');
 
-        const children = Array.from(grouped).map(([key, controls]) => {
-            return {
-                name: key,
-                type: 'domain',
-                children: controls.map(c => {
-                    const regimeChildren = parseMappings(c, selectedRegimes);
-
-                    return {
-                        name: c.id,
-                        type: 'control',
-                        id: c.id,
-                        domain: c.domain,
-                        description: c.description,
-                        weight: c.weight || 1, // Use CSV weight
-                        children: regimeChildren
-                    };
-                })
-            };
-        });
+        const children = Array.from(grouped).map(([key, controls]) => ({
+            name: key,
+            type: 'domain',
+            children: controls.map(c => {
+                const regimeChildren = parseMappings(c, selectedRegimes);
+                return {
+                    name: c.id,
+                    type: 'control',
+                    id: c.id,
+                    domain: c.domain,
+                    description: c.description,
+                    weight: c.weight || 1,
+                    children: regimeChildren
+                };
+            })
+        }));
 
         const hierarchyData = {
             name: "Secure Controls Framework",
@@ -382,24 +308,14 @@ export default function BubbleChart({ data }) {
         };
 
         const root = d3.hierarchy(hierarchyData)
-            .sum(d => d.weight || d.value || 0) // Sum control weights and mapped values
+            .sum(d => d.weight || d.value || 0)
             .sort((a, b) => b.value - a.value);
 
-        // Apply true 3D layout!
-        apply3DLayout(root);
-
-        console.log("3D Hierarchy Processed:", {
-            name: root.data.name,
-            radius: root.r,
-            depth: root.height,
-            childCount: root.children?.length
-        });
+        apply3DLayout(root, collisionPadding);
 
         return root;
+    }, [data, grouping, searchQuery, selectedRegimes, onlyShowMapped, collisionPadding]);
 
-    }, [data, grouping, searchQuery, selectedRegimes, onlyShowMapped]);
-
-    // Find the focused node based on focusedNodePath
     const focusedNode = useMemo(() => {
         if (!rootNode) return null;
         if (focusedNodePath.length === 0) return rootNode;
@@ -408,27 +324,20 @@ export default function BubbleChart({ data }) {
         for (const name of focusedNodePath) {
             const child = current.children?.find(c => c.data.name === name);
             if (!child) {
-                console.warn("Could not find child with name:", name);
-                return rootNode; // Fall back to root if path is invalid
+                return rootNode;
             }
             current = child;
         }
         return current;
     }, [rootNode, focusedNodePath]);
 
-    // Handle zoom - find the outermost zoomable bubble (direct child of focus) from clicked node
     const handleZoom = (clickedNode) => {
         if (!focusedNode || !focusedNode.children) return;
-
-        // If the clicked node IS the focused node itself, do nothing
         if (clickedNode === focusedNode) return;
 
-        // Walk up the ancestor chain from clickedNode to find which direct child of focusedNode contains it
         let current = clickedNode;
         while (current) {
-            // Check if current is a direct child of focusedNode
             if (focusedNode.children.includes(current)) {
-                // Found the outermost zoomable ancestor - zoom into it
                 if (current.children && current.children.length > 0) {
                     zoomIn(current.data.name);
                 }
@@ -441,15 +350,7 @@ export default function BubbleChart({ data }) {
     if (!focusedNode) return null;
 
     return (
-        <group position={[0, 0, 0]}>
-            {/* Automatic camera management */}
-            <CameraHandler targetRadius={focusedNode.r} />
-
-            {/*
-               START RECURSIVE RENDER
-               We render the focusedNode as the local origin (0,0,0)
-               and it will recursively render its descendants using their relative lx/ly/lz properties.
-            */}
+        <group>
             <BubbleNode
                 node={focusedNode}
                 onClick={setSelectedControlId}
@@ -460,8 +361,10 @@ export default function BubbleChart({ data }) {
                 focusedNode={focusedNode}
                 rootValue={rootNode.value}
                 getRegimeColor={getRegimeColor}
-                isFocusRoot={true} // Special flag to ignore node.lx during world-centering
+                isFocusRoot={true}
             />
         </group>
     );
 }
+
+export default React.memo(BubbleChart);

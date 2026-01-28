@@ -55,6 +55,12 @@ export const useAppStore = create((set) => ({
     onlyShowMapped: false,
     setOnlyShowMapped: (val) => set({ onlyShowMapped: val }),
 
+    collisionPadding: 10,
+    setCollisionPadding: (padding) => set({ collisionPadding: padding }),
+
+    cameraDistance: 3000,
+    setCameraDistance: (distance) => set({ cameraDistance: distance }),
+
     // Get all unique regimes available in the loaded data
     getAvailableRegimes: () => {
         const regimes = new Set();
@@ -67,26 +73,27 @@ export const useAppStore = create((set) => ({
 
     // Get a consistent color for a regime
     getRegimeColor: (regime) => {
-        // Preset special colors for requested frameworks - HIGH CONTRAST
         const presets = {
-            'EMEA EU DORA': '#ff0055', // Vibrant Magenta
-            'NIST 800-63B': '#00ffee', // Bright Cyan
-            'NIST CSF 2.0': '#5588ff', // Azure Blue
-            'EMEA EU GDPR': '#ffaa00', // Amber
-            'HIPAA Administrative Simplification 2013': '#00ff44', // Neon Green
-            'PCI DSS 4.0.1': '#aa00ff' // Deep Purple
+            'EMEA EU DORA': '#ff0055',
+            'NIST 800-63B': '#00ffee',
+            'NIST CSF 2.0': '#5588ff',
+            'EMEA EU GDPR': '#ffaa00',
+            'HIPAA Administrative Simplification 2013': '#00ff44',
+            'PCI DSS 4.0.1': '#aa00ff'
         };
         if (presets[regime]) return presets[regime];
 
-        // Stable hash for others
         let hash = 0;
         for (let i = 0; i < regime.length; i++) {
             hash = regime.charCodeAt(i) + ((hash << 5) - hash);
         }
-        const hue = Math.abs(hash % 360);
-        // Vary lightness and saturation as well to increase variety
-        const saturation = 70 + (hash % 20);
-        const lightness = 50 + (hash % 10);
+        hash = hash & hash;
+
+        const GOLDEN_ANGLE = 137.5;
+        const hue = (hash * GOLDEN_ANGLE) % 360;
+        const saturation = 70 + (Math.abs(hash) % 10) * 3;
+        const lightness = 45 + (Math.abs(hash) % 10) * 4;
+
         return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     }
 }))
