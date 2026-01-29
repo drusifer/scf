@@ -13,7 +13,7 @@ The **SCF 3D Relationship Visualizer** is an interactive, browser-based tool des
 ## **2\. Goals & Objectives**
 
 * **Visualize Complexity:** Transform 1,000+ rows of spreadsheet data into a digestible 3D topology.  
-* **Multi-Dimensional Analysis:** Allow users to view controls and compare different compliange regimes or framwords by using SCF as the common baseline.  The viz will be nested by SCF Domain, PPTDF, NIST CSF).  
+* **Multi-Dimensional Analysis:** Allow users to view controls and compare different compliange regimes or framwords by using SCF as the common baseline.  The viz will be nested by SCF Domain allowing all controls maped to the same control group will be grouped togehter.  
 * **Identify High-Impact Areas:** Use "Relative Control Weighting" to drive visual scale.  
 * **Gap Analysis:** Highlight applicability for specific compliance regimes (e.g., NIST 800-53, ISO 27001).
 
@@ -29,24 +29,37 @@ The **SCF 3D Relationship Visualizer** is an interactive, browser-based tool des
 
 * **Requirement:** The system must process SCF 2025.4 CSV data, focusing on Control IDs, Domains, Descriptions, Weighting (1-15 scale), and Functional Groupings.  
 * **Requirement:** Support static data imports to ensure zero-latency performance and offline availability.
+* **Requirement:** use memoization/caching to ensure quick calcuation of bubble positions
 
 ### **4.2 3D Visualization Engine**
 
-* **Requirement:** Render nested, translucent bubbles representing hierarchical groups.  
-* **Requirement:** Implement a "Packing" algorithm (D3-Hierarchy) to ensure children are contained within parents.  
-* **Requirement:** Smooth camera controls (Orbit, Pan, Zoom) for navigating the 3D space.
+* **Requirement:** Render nested, translucent bubbles representing hierarchical groups. 
+* **Requirement:** Implement a "Packing" algorithm (D3-Hierarchy) to ensure children are contained within parents.  the bubbles must be packed in 3 dimensions not a 2d pancake.
+* **Requirement:** Smooth user controled camera controls (Orbit, Pan, Zoom) for navigating the 3D space.
 
-### **4.3 Dynamic Hierarchy (Nesting)**
+### **4.3 Structured Hierarchy (Nesting)**
 
-* **Requirement:** Users must be able to toggle the primary grouping between:  
+* **Requirement:** Show regime controls grouped togeher with the simialr controls from other regimes.  Use SCF mappings for accuracy and organize controls under teh following Hierarchy:
   * **SCF Domain:** High-level security categories.  
-  * **PPTDF:** People, Process, Technology, Data, and Facility.  
-  * **NIST CSF:** Functional areas (Identify, Protect, Detect, Respond, Recover).
+    *  **PPTDF:** People Process etc..
+      * **SCF Control:** The scf control name/id
+        *  **Regime name or framework name**: the name of the frame work or regulation that has controls mapped to this SCF control
+          * **Regime specific control identifier** : 1 per frame work control
+* **Requirement:** bubles with no children are opaque
+* **Requirement:** Option to hide SCF controls with no displayed mappings
+
+### ** Catalog **
+* **Requirement:** Show a catalog of all regimes Opposite the details display.
+* **Requirement:** User can checkoff multiple frameworks they want to see in the display (defaults to NIST-CSF-2.0).  Select / deselct automatically updates the display.
+* **Requirement:** Select regimes have visually distinct colors for all their displayed bubbles.
+* **Requirement:** The selected Regimes are always displayed at the top wiht an indication of what color they are presented as.
+
 
 ### **4.4 Search & Inspection**
-
+* **Requirement:** Navigation via sidebar menu with heircahy matching the bubble chart.  Selecting in this menu zooms directly to that node in the buble graph
+* **Requirement:** Navigation via sidebar Responsive to the selected node (only show current node and below)
 * **Requirement:** Real-time search to filter controls by ID, Domain, or keyword.  
-* **Requirement:** "Detail Panel" displaying full control descriptions, exact weighting, and all applicable regimes upon selection.
+* **Requirement:** "Detail Panel" displaying full control descriptions, scf domain descriptions, exact weighting, and all mapped control identiferies with the bubble that is selected
 
 ## **5\. User Stories**
 
@@ -60,9 +73,11 @@ The **SCF 3D Relationship Visualizer** is an interactive, browser-based tool des
 
 ## **6\. Technical Constraints & Standards**
 
-* **Engine:** React \+ Three.js (React Three Fiber).  
-* **Performance:** Must maintain 60 FPS for up to 2,000 nodes using optimized geometries.  
-* **Styling:** Tailwind CSS for the HUD/UI overlay.  
+* **Engine:** Browser running D3 and other needed libs (client side no node components).  
+* **Performance:** Must maintain 60 FPS for up to 2,000 nodes using optimized geometries.  okay to use dodechahedrions if that helps with performance.
+* **Styling:** Tailwind CSS for the HUD/UI overlay.  \
+  * **Interaction:** click to (visually) zoom into a bubble and hide the non selected bubbles. 
+  * **Labels:** are wrapped around the bubbles so they don't overlap with eachother.  only the highest level of labels is visisble.  hover on bubble causes label to gradually rotate around the bubble until I zoom (click) or stop hovering.
 * **Accessibility:** Provide visual feedback for hover states; ensure high-contrast UI for text overlays.
 
 ## **7\. Success Metrics**
