@@ -1,4 +1,4 @@
-# **Product Requirements Document (PRD): SCF 3D Relationship Visualizer**
+# **Product Requirements Document (PRD): SCF Circle Packing Relationship Visualizer**
 
 **Version:** 1.0
 
@@ -8,14 +8,14 @@
 
 ## **1\. Executive Summary**
 
-The **SCF 3D Relationship Visualizer** is an interactive, browser-based tool designed to simplify the complexity of the Secure Controls Foundation (SCF) 2025.4 dataset. By representing controls as a 3D hierarchical bubble chart, GRC professionals can intuitively understand the density, weighting, and cross-regime applicability of their security controls.
+The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, browser-based tool designed to simplify the complexity of the Secure Controls Foundation (SCF) 2025.4 dataset. By representing controls as a zoomable circle packing chart, GRC professionals can intuitively understand the density, weighting, and cross-regime applicability of their security controls.
 
 ## **2\. Goals & Objectives**
 
-* **Visualize Complexity:** Transform 1,000+ rows of spreadsheet data into a digestible 3D topology.  
-* **Multi-Dimensional Analysis:** Allow users to view controls and compare different compliange regimes or framwords by using SCF as the common baseline.  The viz will be nested by SCF Domain allowing all controls maped to the same control group will be grouped togehter.  
+* **Visualize Complexity:** Transform 1,000+ rows of spreadsheet data into a digestible visual topology.  
+* **Multi-Dimensional Analysis:** Allow users to view controls and compare different compliange regimes or framwords by using SCF as the common baseline.  The viz will be nested by PPTDF and SCF Domain so that all controls mapped to the same SCF control group will be grouped togehter.  
 * **Identify High-Impact Areas:** Use "Relative Control Weighting" to drive visual scale.  
-* **Gap Analysis:** Highlight applicability for specific compliance regimes (e.g., NIST 800-53, ISO 27001).
+* **Gap Analysis:** Highlight applicability for selected compliance regimes (e.g., NIST 800-53, ISO 27001).
 
 ## **3\. Target Audience**
 
@@ -33,9 +33,9 @@ The **SCF 3D Relationship Visualizer** is an interactive, browser-based tool des
 
 ### **4.2 3D Visualization Engine**
 
-* **Requirement:** Render nested, translucent bubbles representing hierarchical groups. 
-* **Requirement:** Implement a "Packing" algorithm (D3-Hierarchy) to ensure children are contained within parents.  the bubbles must be packed in 3 dimensions not a 2d pancake.
-* **Requirement:** Smooth user controled camera controls (Orbit, Pan, Zoom) for navigating the 3D space.
+* **Requirement:** Render nested, translucent circles representing hierarchical groups. Use teh example at https://d3og.com/mbostock/7607535/ as a starting point.
+* **Requirement:** Implement a "Packing" algorithm to ensure children are contained within parents.  
+* **Requirement:** Smooth user controled Zooming  for navigating the the diagram.
 
 ### **4.3 Structured Hierarchy (Nesting)**
 
@@ -44,22 +44,21 @@ The **SCF 3D Relationship Visualizer** is an interactive, browser-based tool des
     *  **PPTDF:** People Process etc..
       * **SCF Control:** The scf control name/id
         *  **Regime name or framework name**: the name of the frame work or regulation that has controls mapped to this SCF control
-          * **Regime specific control identifier** : 1 per frame work control
-* **Requirement:** bubles with no children are opaque
+          * **Regime specific control identifier** : 1 per frame work control (if multiple then devide the space evenly)
 * **Requirement:** Option to hide SCF controls with no displayed mappings
 
 ### ** Catalog **
 * **Requirement:** Show a catalog of all regimes Opposite the details display.
-* **Requirement:** User can checkoff multiple frameworks they want to see in the display (defaults to NIST-CSF-2.0).  Select / deselct automatically updates the display.
-* **Requirement:** Select regimes have visually distinct colors for all their displayed bubbles.
-* **Requirement:** The selected Regimes are always displayed at the top wiht an indication of what color they are presented as.
+* **Requirement:** User can search and checkoff multiple frameworks that they want to see in the display (defaults to NIST-CSF-2.0).  Select / deselct automatically updates the display.
+* **Requirement:** Selected regimes have visually distinct colors for all their displayed circles.
+* **Requirement:** The selected Regimes are always displayed at the top of the selection list with an indication of what color they are presented as.
 
 
 ### **4.4 Search & Inspection**
-* **Requirement:** Navigation via sidebar menu with heircahy matching the bubble chart.  Selecting in this menu zooms directly to that node in the buble graph
-* **Requirement:** Navigation via sidebar Responsive to the selected node (only show current node and below)
+* **Requirement:** Navigation via sidebar menu with heircahy matching the circle pack chart.  Selecting in this menu zooms directly to that node in the buble graph and selecting in the chart navigates the sidebar meue to the selected node.
+* **Requirement:** Navigation via sidebar Responsive to the selected node 
 * **Requirement:** Real-time search to filter controls by ID, Domain, or keyword.  
-* **Requirement:** "Detail Panel" displaying full control descriptions, scf domain descriptions, exact weighting, and all mapped control identiferies with the bubble that is selected
+* **Requirement:** "Detail Panel" displaying full control descriptions, scf domain descriptions, exact weighting, and all mapped control identiferies with the scf control that is selected
 
 ## **5\. User Stories**
 
