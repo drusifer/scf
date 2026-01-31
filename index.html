@@ -2,177 +2,846 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SCF 3D Relationship Visualizer</title>
-
-    <!-- Tailwind Play CDN -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCF Circle Packing Relationship Visualizer</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        outfit: ['Outfit', 'sans-serif'],
-                        inter: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            dark: '#020617',
-                            blue: '#3b82f6',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style type="text/tailwindcss">
-        @layer components {
-      .glass {
-        @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
-      }
-      .custom-scrollbar::-webkit-scrollbar {
-        @apply w-1.5;
-      }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        @apply bg-transparent;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
-      }
-    }
-    body {
-      @apply bg-[#020617] text-slate-100 font-inter overflow-hidden;
-    }
-  </style>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Outfit:wght@600;700&display=swap"
+    <script src="https://cdn.jsdelivr.net/npm/treeselectjs@0.11.0/dist/treeselectjs.umd.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.11.0/dist/treeselectjs.css">
+    <script src="scf_data.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #030712;
+            --sidebar-bg: rgba(17, 24, 39, 0.9);
+            --accent-color: #3b82f6;
+            --glass-border: rgba(255, 255, 255, 0.1);
+
+            /* Treeselect Overrides */
+            --treeselect-bg: rgba(0, 0, 0, 0.4);
+            --treeselect-border: rgba(255, 255, 255, 0.1);
+            --treeselect-text: #d1d5db;
+            --treeselect-hover: rgba(59, 130, 246, 0.2);
+            --treeselect-selected: #3b82f6;
+            --treeselect-list-bg: #0f172a;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .glass {
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .node {
+            cursor: pointer;
+            transition: stroke 0.2s, stroke-width 0.2s, fill 0.3s;
+        }
+
+        .node--1 {
+            stroke: rgba(59, 130, 246, 0.4);
+            stroke-width: 1px;
+            fill: rgba(59, 130, 246, 0.05);
+        }
+
+        .node--2 {
+            stroke: rgba(255, 255, 255, 0.2);
+            stroke-width: 0.5px;
+            fill: rgba(255, 255, 255, 0.02);
+        }
+
+        .node--3 {
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 0.5px;
+            fill: rgba(255, 255, 255, 0.01);
+        }
+
+        .node:hover {
+            stroke: #fff !important;
+            stroke-width: 2px !important;
+        }
+
+        .label {
+            fill: #fff;
+            pointer-events: none;
+            text-anchor: middle;
+            font-family: 'Outfit', sans-serif;
+            transition: fill-opacity 0.3s, font-size 0.3s, transform 0.5s;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: -0.01em;
+        }
+
+        /* Sidebar Accordion */
+        .accordion-header {
+            @apply flex items-center justify-between p-4 cursor-pointer hover:bg-white/5 transition-colors border-b border-white/5;
+        }
+
+        .accordion-content {
+            @apply overflow-hidden transition-all duration-300;
+        }
+
+        .accordion-item.open .accordion-content {
+            overflow: visible !important;
+        }
+
+        /* Unified Treeselect Custom Styling */
+        .treeselect-main {
+            background: #030712 !important;
+            /* Match diagram background */
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 0.75rem !important;
+            color: #d1d5db !important;
+            position: relative !important;
+        }
+
+        .treeselect-input {
+            background: #030712 !important;
+            /* Match diagram background */
+            color: #fff !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .treeselect-list {
+            background: #030712 !important;
+            /* Match diagram background */
+            border: none !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
+            position: relative !important;
+            max-height: 400px !important;
+            width: 100% !important;
+            transform: none !important;
+            z-index: 100 !important;
+            margin-top: 5px !important;
+            display: block !important;
+            backdrop-filter: blur(20px) !important;
+        }
+
+        /* Inline behavior for the fixed ones - ensures they stack and scroll locally */
+        .accordion-content .treeselect-list {
+            position: relative !important;
+            box-shadow: none !important;
+            z-index: 1 !important;
+            margin-top: 0 !important;
+            max-height: 450px !important;
+        }
+
+        #regime-selector .treeselect-list {
+            max-height: 350px !important;
+        }
+
+        /* Hide the arrow and close buttons for inline mode if desired, but let's keep them consistent */
+        .treeselect-main__arrow {
+            color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        .treeselect-tag {
+            background: rgba(59, 130, 246, 0.2) !important;
+            color: #60a5fa !important;
+            border: 1px solid rgba(59, 130, 246, 0.3) !important;
+            font-size: 0.6rem !important;
+        }
+
+        .treeselect-list-item {
+            color: #94a3b8 !important;
+            padding: 6px 10px !important;
+            font-size: 0.7rem !important;
+        }
+
+        .treeselect-list-item:hover,
+        .treeselect-list-item--focused,
+        .treeselect-list__item--focused {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #fff !important;
+        }
+
+        .treeselect-list-item--selected,
+        .treeselect-list__item--checked {
+            background: rgba(59, 130, 246, 0.1) !important;
+            color: #3b82f6 !important;
+        }
+
+        .treeselect-checkbox {
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            background: #030712 !important;
+            /* Match diagram background */
+        }
+
+        .treeselect-list-item--selected .treeselect-checkbox,
+        .treeselect-list__item--checked .treeselect-checkbox {
+            background: #3b82f6 !important;
+            border-color: #3b82f6 !important;
+        }
+
+        .treeselect-input__edit {
+            background-color: var(--accent-color) !important;
+            opacity: 0.8;
+            border-radius: 4px;
+            color: #fff !important;
+        }
+
+        .treeselect-input__tags-element {
+            background-color: rgba(59, 130, 246, 0.2) !important;
+            color: #60a5fa !important;
+            border-radius: 4px !important;
+            padding: 0 6px !important;
+        }
+
+        .hidden-panel {
+            transform: translateX(120%) !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+    </style>
 </head>
 
-<body>
-    <!-- 3D Canvas Container -->
-    <div id="canvas-container" class="fixed inset-0 z-0"></div>
+<body class="flex h-screen w-full">
 
-    <!-- HUD Overlay -->
-    <div class="fixed inset-0 z-20 pointer-events-none flex flex-col justify-between p-6">
+    <!-- Sidebar -->
+    <aside class="glass w-80 h-full flex flex-col border-r z-20 shadow-2xl">
+        <div class="p-6 border-b border-white/10">
+            <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                SCF Visualizer
+            </h1>
+            <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter">Zoomable Relationship Engine</p>
+        </div>
 
-        <!-- Top Bar -->
-        <header class="flex justify-between items-start pointer-events-auto h-16">
-            <div id="navbar" class="glass rounded-2xl px-6 py-3 flex items-center hidden">
-                <!-- Breadcrumbs injected here -->
-            </div>
+        <div class="flex-1 overflow-y-auto">
+            <!-- Regime Selector -->
+            <div id="regime-item" class="accordion-item border-b border-white/10 open">
+                <div class="accordion-header" onclick="toggleAccordion('regime-selector')">
+                    <span class="text-sm font-semibold flex items-center gap-2">
+                        🛡️ Compliance Regimes
+                    </span>
+                    <span id="regime-count"
+                        class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">0</span>
+                </div>
+                <div id="regime-selector" class="accordion-content p-4" style="max-height: 500px; overflow: visible">
+                    <div id="treeselect-container" class="w-full"></div>
 
-            <div class="flex items-center space-x-3">
-                <label
-                    class="glass rounded-xl px-4 py-3 flex items-center space-x-3 cursor-pointer hover:bg-white/10 transition-all">
-                    <input type="checkbox" id="poly-toggle"
-                        class="form-checkbox h-4 w-4 rounded bg-transparent border-white/20 text-blue-500" />
-                    <span class="text-xs font-bold tracking-widest uppercase text-slate-400">Low Poly</span>
-                </label>
-
-                <div class="glass bg-brand-dark/80 rounded-xl overflow-hidden flex items-center px-4 py-2 w-64">
-                    <span class="text-slate-500 mr-3">🔍</span>
-                    <input type="text" id="search-input" placeholder="Search Controls..."
-                        class="bg-transparent border-none outline-none text-sm w-full placeholder:text-slate-600" />
+                    <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                        <label
+                            class="text-[11px] font-semibold text-gray-400 uppercase cursor-pointer flex items-center gap-2">
+                            <input type="checkbox" id="toggle-unmapped" checked
+                                class="w-4 h-4 rounded bg-white/5 border-white/10 text-blue-500 focus:ring-offset-0 focus:ring-0"
+                                onchange="toggleUnmappedVisibility(this.checked)">
+                            Show unmapped controls
+                        </label>
+                    </div>
                 </div>
             </div>
-        </header>
 
-        <!-- Mid Section -->
-        <main class="flex-1 flex justify-between items-center my-6 overflow-hidden">
-            <!-- Left Sidebar -->
-            <aside id="sidebar"
-                class="glass w-80 h-full rounded-3xl p-6 pointer-events-auto flex flex-col hidden overflow-hidden">
-                <!-- Hierarchy Tree injected here -->
-            </aside>
-
-            <!-- Right Catalog -->
-            <aside id="catalog"
-                class="glass w-72 h-full rounded-3xl p-6 pointer-events-auto flex flex-col hidden overflow-hidden">
-                <h2 class="font-outfit text-xl font-bold mb-4 tracking-tight">Regime Catalog</h2>
-                <div id="regime-list" class="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-1">
-                    <!-- Checkboxes injected here -->
+            <!-- Hierarchy Accordion -->
+            <div class="accordion-item open">
+                <div class="accordion-header" onclick="toggleAccordion('hierarchy-selector-container')">
+                    <span class="text-sm font-semibold flex items-center gap-2">
+                        📂 Control Hierarchy
+                    </span>
                 </div>
-            </aside>
-        </main>
-
-        <!-- Bottom Bar -->
-        <footer class="flex justify-start items-end pointer-events-auto min-h-[120px]">
-            <div id="detail-panel" class="glass w-full max-w-2xl rounded-2xl p-6 flex items-start space-x-4 hidden">
-                <!-- Node info injected here -->
-            </div>
-        </footer>
-
-        <!-- Fixed Physics Controls (Centered) -->
-        <div id="physics-panel"
-            class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 glass bg-brand-dark/95 w-80 rounded-3xl p-6 flex flex-col space-y-4 pointer-events-auto hidden">
-            <h3 class="text-xs font-bold tracking-widest uppercase text-blue-400 mb-2 text-center">Physics Engine</h3>
-
-            <div class="space-y-1">
-                <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
-                    <span>Repulsion</span>
-                    <span id="repulsion-val">-3000</span>
+                <div id="hierarchy-selector-container" class="accordion-content p-4"
+                    style="max-height: 1000px; overflow: visible">
+                    <div id="hierarchy-treeselect" class="w-full"></div>
                 </div>
-                <input type="range" id="repulsion-slider" min="-15000" max="-100" value="-3000"
-                    class="w-full accent-blue-500" />
             </div>
 
-            <div class="space-y-1">
-                <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
-                    <span>Link Dist</span>
-                    <span id="link-dist-val">500</span>
-                </div>
-                <input type="range" id="link-dist-slider" min="100" max="3000" value="500"
-                    class="w-full accent-blue-500" />
-            </div>
+        </div>
+    </aside>
 
-            <div class="space-y-1">
-                <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
-                    <span>Bounds Scale</span>
-                    <span id="bounds-scale-val">1.2</span>
-                </div>
-                <input type="range" id="bounds-scale-slider" min="0.5" max="10.0" step="0.1" value="1.2"
-                    class="w-full accent-blue-500" />
-            </div>
+    <!-- Main Visualization Panel -->
+    <main class="flex-grow relative h-screen overflow-hidden">
+        <!-- Header Status -->
 
-            <div class="space-y-1">
-                <div class="flex justify-between text-[10px] text-slate-400 font-bold uppercase">
-                    <span>View Depth</span>
-                    <span id="view-depth-val">1</span>
+        <div id="viz-container" class="w-full h-full"></div>
+
+        <!-- Legend Overlay -->
+        <div id="regime-legend" class="absolute bottom-8 right-8 flex flex-col gap-2 pointer-events-none">
+            <!-- Selected regime colors show here -->
+        </div>
+
+        <!-- Breadcrumbs -->
+        <div id="breadcrumbs"
+            class="absolute top-6 left-6 text-xs text-gray-500 font-mono pointer-events-none shadow-sm flex gap-2">
+            <!-- Path updates here -->
+        </div>
+    </main>
+
+    <!-- Detail Panel (Floating) -->
+    <aside id="detail-panel"
+        class="fixed top-24 right-8 bottom-8 w-[350px] glass rounded-3xl z-40 p-8 hidden-panel flex flex-col transition-all duration-500 shadow-2xl overflow-hidden">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
+            <h2 class="font-bold text-sm tracking-widest uppercase">Control Intelligence</h2>
+            <button onclick="closeDetails()" class="text-gray-400 hover:text-white p-2">✕</button>
+        </div>
+        <div id="detail-content" class="p-8 overflow-y-auto flex-1">
+            <div id="detail-empty" class="h-full flex flex-col items-center justify-center opacity-20 text-center">
+                <span class="text-4xl mb-4">🔍</span>
+                <p class="text-xs">Select a control bubble<br>to view deep analytics</p>
+            </div>
+            <div id="detail-data" class="hidden space-y-8">
+                <div>
+                    <span id="detail-id"
+                        class="text-blue-500 font-mono text-xs font-bold uppercase tracking-widest"></span>
+                    <h3 id="detail-title" class="text-2xl font-bold mt-2 leading-tight"></h3>
+                    <p id="detail-domain" class="text-[10px] text-gray-500 mt-1 uppercase italic"></p>
                 </div>
-                <input type="range" id="view-depth-slider" min="1" max="4" value="1" step="1"
-                    class="w-full accent-blue-500" />
+
+                <div class="bg-white/5 rounded-xl p-5 border border-white/10">
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Functional Summary
+                    </h4>
+                    <p id="detail-desc" class="text-sm text-gray-300 leading-relaxed"></p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-blue-500/5 rounded-xl p-4 border border-blue-500/10 active-highlight">
+                        <span class="text-[9px] text-blue-400 font-bold uppercase block mb-1">Impact Weight</span>
+                        <span id="detail-weight" class="text-xl font-bold font-mono"></span>
+                    </div>
+                    <div class="bg-indigo-500/5 rounded-xl p-4 border border-indigo-500/10">
+                        <span class="text-[9px] text-indigo-400 font-bold uppercase block mb-1">Domain Focus</span>
+                        <span id="detail-pptdf" class="text-xl font-bold"></span>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Mapped Ecosystem</h4>
+                    <div id="detail-mappings" class="space-y-3">
+                        <!-- Mappings rendered as bars -->
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </aside>
 
-    <!-- Loader -->
-    <div id="loader" class="fixed inset-0 z-50 bg-brand-dark flex flex-col items-center justify-center">
-        <div class="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-6"></div>
-        <p id="loading-text" class="font-outfit text-xl font-bold tracking-tight animate-pulse text-slate-300">
-            Initializing 3D Visualizer...
-        </p>
-    </div>
+    <script>
+        // State
+        const DEFAULT_REGIMES = [62, 167, 226]; // CSF 2.0, EU DORA, India SEBI CSCRF
+        let selectedRegimeIds = new Set();
+        let labelDetailLevels = 2; // Hardcoded to 2 levels as requested
 
-    <!-- Import Map for bare specifiers (resolves "three" etc) -->
-    <script type="importmap">
-    {
-      "imports": {
-        "three": "https://esm.sh/three@0.160.0",
-        "three/addons/": "https://esm.sh/three@0.160.0/examples/jsm/",
-        "three/examples/jsm/": "https://esm.sh/three@0.160.0/examples/jsm/",
-        "d3-force-3d": "https://esm.sh/d3-force-3d@3.0.5",
-        "tween": "https://esm.sh/@tweenjs/tween.js@23.1.1",
-        "papaparse": "https://esm.sh/papaparse@5.4.1"
-      }
-    }
-  </script>
+        // Load from localStorage or use defaults
+        const savedRegimes = localStorage.getItem('scf_selected_regimes');
+        if (savedRegimes) {
+            try {
+                selectedRegimeIds = new Set(JSON.parse(savedRegimes));
+            } catch (e) {
+                selectedRegimeIds = new Set(DEFAULT_REGIMES);
+            }
+        } else {
+            selectedRegimeIds = new Set(DEFAULT_REGIMES);
+        }
+        let showUnmapped = true;
+        let root;
+        let hierarchyTreeselect;
+        let regimeTreeselect;
+        let svg, g, node, label;
+        let width, height;
+        let d3Zoom;
+        let focus, view;
+        const colors = d3.scaleOrdinal(d3.schemeTableau10);
+        const typeColors = {
+            "People": "#f43f5e",
+            "Process": "#3b82f6",
+            "Technology": "#a855f7",
+            "Data": "#10b981",
+            "Facility": "#f59e0b",
+            "Standard": "#6b7280"
+        };
+        const getRegimeColor = (rid) => colors(rid);
 
-    <!-- Entry Script -->
-    <script type="module" src="./main.js"></script>
+        // Helper functions for dynamic labeling
+        const getLabelSize = (d, isHovered = false) => {
+            if (isHovered) return "28px";
+            if (d.depth === 1) return "26px";
+            if (d.depth === 2) return "20px";
+            if (d.depth === 3) return "16px";
+            if (d.depth === 4) return "14px";
+            if (d.depth === 5) return "13px";
+            return "11px";
+        };
+
+        const getLabelOffset = (d, r) => {
+            // UNIVERSAL OFFSET: Shift all container labels (D1-D5) to the top to clear the center.
+            if (d.children && d.children.length > 0) return -r * 0.8;
+            return 0;
+        };
+
+        const getLabelOpacity = (d, currentFocus, isHovered = false) => {
+            if (isHovered) return 1;
+            const depthDiff = d.depth - currentFocus.depth;
+            const isRegimeLabel = (d.depth === 5);
+
+            // Visibility based on Label Detail Slider (Levels deeper than focus)
+            const isInDetailRange = (depthDiff >= 0 && depthDiff <= labelDetailLevels);
+            const isHighLevelPermanent = (d.depth > 0 && d.depth < 4);
+
+            let baseOpacity = 0;
+            if (isInDetailRange || isHighLevelPermanent) {
+                if (d.depth === 1) baseOpacity = 1;
+                else if (d.depth === 2) baseOpacity = 0.9;
+                else if (d.depth === 3) baseOpacity = 0.8;
+                else if (d.depth === 4) baseOpacity = 0.7;
+                else if (d.depth === 5) baseOpacity = 0.6;
+                else baseOpacity = 0.5;
+            }
+
+            // Regime specific logic remains deferred until focus is close
+            if (isRegimeLabel && currentFocus.depth < 4 && !isHovered) return 0;
+
+            return baseOpacity;
+        };
+
+        const getLabelDisplay = (d, currentFocus) => {
+            const depthDiff = d.depth - currentFocus.depth;
+            const isHighLevelPermanent = (d.depth > 0 && d.depth < 4);
+            const isInRange = (depthDiff >= 0 && depthDiff <= labelDetailLevels);
+            const isRegimeLabel = (d.depth === 5);
+
+            if (isHighLevelPermanent || isInRange) {
+                if (isRegimeLabel && currentFocus.depth < 4) return "none";
+                return "inline";
+            }
+            return "none";
+        };
+
+        // --- D3 Initialization ---
+        function initViz() {
+            const container = document.getElementById('viz-container');
+            width = container.clientWidth;
+            height = container.clientHeight;
+
+            d3.select("#viz-container").selectAll("svg").remove();
+
+            svg = d3.select("#viz-container").append("svg")
+                .attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`)
+                .style("display", "block")
+                .style("background", "transparent")
+                .style("cursor", "pointer")
+                .on("click", (event) => {
+                    zoom(event, root);
+                    closeDetails(); // Close panel when clicking background
+                });
+
+            g = svg.append("g");
+            updateVisualization();
+        }
+
+        function updateVisualization() {
+            if (!scfData) return;
+
+            // Re-build hierarchy based on selection
+            const filteredData = filterData(JSON.parse(JSON.stringify(scfData)));
+
+            if (!filteredData || !filteredData.children || filteredData.children.length === 0) {
+                g.selectAll("*").remove();
+                g.append("text")
+                    .attr("text-anchor", "middle")
+                    .attr("fill", "rgba(255,255,255,0.2)")
+                    .style("font-size", "14px")
+                    .text("No regimes selected or no matching controls found.");
+                return;
+            }
+
+            const pack = data => d3.pack()
+                .size([width, height])
+                .padding(d => d.depth === 1 ? 5 : 2)
+                (d3.hierarchy(data)
+                    .sum(d => d.value || (d.weight ? d.weight * 5 : 1))
+                    .sort((a, b) => (b.value || b.weight || 0) - (a.value || a.weight || 0)));
+
+            root = pack(filteredData);
+            focus = root;
+
+            // Assign unique persistent IDs for this render to ensure Treeselect values are stable
+            root.descendants().forEach((d, i) => d.id = "node-" + i);
+
+            // Initialize Pan/Zoom on the SVG
+            setupPanZoom();
+
+            // Update hierarchy sidebar to match the D3 tree
+            setupHierarchyNavigator();
+
+            g.selectAll("*").remove();
+
+            node = g.append("g")
+                .selectAll("circle")
+                .data(root.descendants().slice(1))
+                .join("circle")
+                .attr("class", d => `node node--${d.depth} ${d.children ? "" : "node--leaf"}`)
+                .attr("fill", d => {
+                    if (d.depth === 1) return typeColors[d.data.name] || "rgba(255,255,255,0.05)";
+                    if (d.depth === 4) return "rgba(255,255,255,0.15)"; // SCF Control
+                    if (d.depth === 5) return getRegimeColor(d.data.regimeId) + "44"; // Regime Group (Subtle background)
+                    if (d.depth === 6) return getRegimeColor(d.data.regimeId); // Individual Mappings
+                    return "rgba(255,255,255,0.02)";
+                })
+                .attr("fill-opacity", d => d.children ? 0.4 : 0.8)
+                .attr("stroke", d => d.children ? "rgba(255,255,255,0.1)" : "transparent")
+                .attr("stroke-width", 0.5)
+                .on("mouseover", function (event, d) {
+                    d3.select(this).attr("stroke", "#fff").attr("stroke-width", d.depth === 4 ? 3 : 2);
+                    // Search and Enlarge Label
+                    label.filter(l => l === d)
+                        .transition().duration(200)
+                        .style("display", "inline")
+                        .style("fill-opacity", 1)
+                        .style("font-size", getLabelSize(d, true))
+                        .style("font-weight", 700);
+                })
+                .on("mouseout", function (event, d) {
+                    d3.select(this).attr("stroke", d.children ? "rgba(255,255,255,0.1)" : "transparent").attr("stroke-width", 0.5);
+                    // Restore Label
+                    label.filter(l => l === d)
+                        .transition().duration(200)
+                        .style("display", getLabelDisplay(d, focus))
+                        .style("fill-opacity", getLabelOpacity(d, focus))
+                        .style("font-size", getLabelSize(d))
+                        .style("font-weight", d.depth <= 2 ? "700" : "400");
+                })
+                .on("click", (event, d) => {
+                    if (focus !== d) {
+                        zoom(event, d);
+                        event.stopPropagation();
+                    }
+                    if (d.data.mappings) showDetails(d.data);
+                });
+
+            label = g.append("g")
+                .attr("pointer-events", "none")
+                .attr("text-anchor", "middle")
+                .selectAll("text")
+                .data(root.descendants())
+                .join("text")
+                .attr("class", "label")
+                .style("font-size", d => getLabelSize(d))
+                .style("font-weight", d => d.depth <= 2 ? "700" : "400")
+                .style("fill-opacity", d => getLabelOpacity(d, root))
+                .style("display", d => getLabelDisplay(d, root))
+                .text(d => d.data.name.split(':')[0]);
+
+            updateBreadcrumbs(root);
+            zoomTo([root.x, root.y, root.r * 2]);
+
+            window.externalZoom = (d) => {
+                // Focus based zoom
+                zoom({ stopPropagation: () => { } }, d);
+            };
+
+            // Manual Pan/Zoom Logic (Inertia/Standard D3 Zoom)
+            function setupPanZoom() {
+                d3Zoom = d3.zoom()
+                    .scaleExtent([0.1, 40])
+                    .on("zoom", (event) => {
+                        g.attr("transform", event.transform);
+                    });
+
+                // Only enable pan/zoom on the background to avoid fighting with focused zooming
+                svg.call(d3Zoom)
+                    .on("dblclick.zoom", null);
+            }
+            window.zoomReset = () => {
+                svg.transition().duration(750).call(d3Zoom.transform, d3.zoomIdentity);
+                window.externalZoom(root);
+            };
+        }
+
+        function zoomTo(v) {
+            if (!label || !node) return;
+            const k = width / v[2];
+            view = v;
+            label.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k + getLabelOffset(d, d.r * k)})`);
+            node.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
+            node.attr("r", d => d.r * k);
+        }
+
+        function zoom(event, d) {
+            focus = d;
+            const transition = svg.transition()
+                .duration(750)
+                .tween("zoom", d => {
+                    const i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2]);
+                    return t => zoomTo(i(t));
+                });
+
+            label.transition(transition)
+                .style("fill-opacity", d => getLabelOpacity(d, focus))
+                .style("font-size", d => getLabelSize(d))
+                .on("start", function (d) {
+                    if (getLabelDisplay(d, focus) === "inline") this.style.display = "inline";
+                })
+                .on("end", function (d) {
+                    if (getLabelDisplay(d, focus) === "none") this.style.display = "none";
+                });
+
+            updateBreadcrumbs(d);
+        }
+
+        function setupHierarchyNavigator() {
+            if (!root) return;
+
+            // Build Treeselect options recursively from the D3 tree
+            function buildOptions(d3Node) {
+                const name = d3Node.data.name || "Uncategorized";
+                const isControl = !!d3Node.data.mappings;
+
+                const option = {
+                    name: name,
+                    value: d3Node.id, // Use the persistent D3 ID
+                    children: null
+                };
+
+                // Stop recurring at controls to avoid showing mapping IDs (depth 5) in sidebar
+                if (!isControl && d3Node.children && d3Node.children.length > 0) {
+                    const mappedChildren = d3Node.children
+                        .map(c => buildOptions(c))
+                        .filter(opt => opt !== null);
+                    if (mappedChildren.length > 0) {
+                        option.children = mappedChildren;
+                    }
+                }
+                return option;
+            }
+
+            // Map top-level domains, starting with the root node itself
+            const options = [buildOptions(root)];
+
+            const hContainer = document.getElementById('hierarchy-treeselect');
+            hContainer.innerHTML = '';
+            hierarchyTreeselect = new Treeselect({
+                parentHtmlContainer: hContainer,
+                options: options,
+                value: "", // Single string for single-select mode
+                isSingleSelect: true, // As per official single-select example
+                isSearchable: true,
+                isIndependentNodes: true, // Clicking a parent doesn't select children
+                isBranchSelectable: true, // Allow selecting groupings/domains
+                placeholder: 'Jump to Control or Domain...',
+                clearable: true,
+                alwaysOpen: true, // Scrolling list
+                showCheckbox: false, // Cleaner look for single-select
+                showTags: false, // Don't show removable tags
+                staticList: true,
+                openLevel: 10, // Don't collapse (fully expanded)
+                inputCallback: (value) => {
+                    if (!value || Array.isArray(value)) return;
+                    const targetNode = root.descendants().find(d => d.id === value);
+                    if (targetNode) {
+                        window.externalZoom(targetNode);
+                        if (targetNode.data.mappings) showDetails(targetNode.data);
+                    }
+                }
+            });
+        }
+
+        // --- Filtering Logic ---
+        function filterData(data) {
+            // Recursive filter
+            function recurse(node, depth) {
+                // Depth 4 is the new Control Level (Grouping > Applicability > Domain > Control)
+                if (depth === 4 || node.mappings) {
+                    const regimeGroups = {}; // name -> {name, children}
+
+                    for (const [regimeId, identifiers] of Object.entries(node.mappings || {})) {
+                        const rid = parseInt(regimeId);
+                        if (selectedRegimeIds.has(rid)) {
+                            const regInfo = scfData.regimeList[rid];
+                            const rName = regInfo.name;
+
+                            if (!regimeGroups[rName]) {
+                                regimeGroups[rName] = {
+                                    name: rName,
+                                    regimeId: rid,
+                                    children: []
+                                };
+                            }
+
+                            identifiers.forEach(id => {
+                                regimeGroups[rName].children.push({
+                                    name: id,
+                                    regimeId: rid,
+                                    value: 1
+                                });
+                            });
+                        }
+                    }
+
+                    const validRegimeNodes = Object.values(regimeGroups);
+
+                    // If no mappings match the selected regimes, we still want to show the control, 
+                    // just without the regime-specific circles inside it.
+                    // (Requirement: Show all controls even if they are not mapped, UNLESS the toggle is off)
+                    if (validRegimeNodes.length === 0 && !showUnmapped) return null;
+
+                    return {
+                        ...node,
+                        children: validRegimeNodes
+                    };
+                }
+
+                if (node.children) {
+                    node.children = node.children.map(c => recurse(c, depth + 1)).filter(c => c !== null);
+                    if (node.children.length === 0) return null;
+                    return node;
+                }
+                return node;
+            }
+            return recurse(data, 0);
+        }
+
+        // --- UI Interactions ---
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const item = content.parentElement;
+            if (content.style.maxHeight && content.style.maxHeight !== "0px") {
+                content.style.maxHeight = "0px";
+                item.classList.remove('open');
+            } else {
+                content.style.maxHeight = "500px"; // Fixed max height for scrollability
+                item.classList.add('open');
+            }
+        }
+
+        function initTreeselect() {
+            const options = Object.keys(scfData.regimeCatalog).sort().map(cat => ({
+                name: cat,
+                value: `cat-${cat}`,
+                children: scfData.regimeCatalog[cat].map(reg => ({
+                    name: reg.name,
+                    value: reg.id
+                }))
+            }));
+
+            const container = document.getElementById('treeselect-container');
+            treeselect = new Treeselect({
+                parentHtmlContainer: container,
+                value: Array.from(selectedRegimeIds),
+                options: options,
+                isMultiple: true,
+                isSearchable: true,
+                placeholder: 'Search frameworks...',
+                clearable: true,
+                alwaysOpen: true,     // Force the list to stay open
+                staticList: true,     // Render list in static position
+                inputCallback: (value) => {
+                    // Filter out category IDs (they start with cat-)
+                    const selectedIds = value.filter(v => typeof v === 'number');
+                    selectedRegimeIds = new Set(selectedIds);
+
+                    // Save to localStorage
+                    localStorage.setItem('scf_selected_regimes', JSON.stringify(Array.from(selectedRegimeIds)));
+
+                    document.getElementById('regime-count').innerText = selectedRegimeIds.size;
+                    updateVisualization();
+                    updateLegend();
+                }
+            });
+
+            // Initial UI update for count and legend
+            document.getElementById('regime-count').innerText = selectedRegimeIds.size;
+            updateLegend();
+
+        }
+
+        function toggleUnmappedVisibility(checked) {
+            showUnmapped = checked;
+            updateVisualization();
+        }
+
+        function updateLegend() {
+            const container = document.getElementById('regime-legend');
+            container.innerHTML = '';
+
+            selectedRegimeIds.forEach(rid => {
+                const reg = scfData.regimeList[rid];
+                if (!reg) return;
+                const item = document.createElement('div');
+                item.className = 'bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 shadow-xl';
+                item.innerHTML = `
+                    <div class="w-2 h-2 rounded-full" style="background: ${getRegimeColor(rid)}"></div>
+                    <span class="text-[9px] font-bold text-white uppercase tracking-wider">${reg.name}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function showDetails(data) {
+            if (!data || !data.mappings) return; // Only show for controls
+            document.getElementById('detail-empty').classList.add('hidden');
+            document.getElementById('detail-data').classList.remove('hidden');
+            document.getElementById('detail-panel').classList.remove('hidden-panel');
+
+            document.getElementById('detail-id').innerText = data.name.split(':')[0];
+            document.getElementById('detail-title').innerText = data.name.split(':')[1]?.trim() || data.name;
+            document.getElementById('detail-desc').innerText = data.description || "No description provided.";
+            document.getElementById('detail-weight').innerText = data.weight || "1.0";
+            document.getElementById('detail-pptdf').innerText = "Security Control";
+
+            // Map Mappings
+            const mapContainer = document.getElementById('detail-mappings');
+            mapContainer.innerHTML = '';
+
+            const mappings = data.mappings || {};
+            Object.entries(mappings).forEach(([rid, ids]) => {
+                const reg = scfData.regimeList[parseInt(rid)];
+                if (!selectedRegimeIds.has(parseInt(rid))) return; // Only show mapped for selected
+                const block = document.createElement('div');
+                block.className = 'bg-white/5 p-3 rounded-lg border border-white/5 hover:border-blue-500/20 transition-all';
+                block.innerHTML = `
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-1.5 h-1.5 rounded-full" style="background: ${getRegimeColor(rid)}"></div>
+                        <span class="text-[9px] font-bold text-gray-500 uppercase">${reg.full_name}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1">
+                        ${ids.map(id => `<span class="px-2 py-0.5 bg-blue-500/10 text-blue-300 rounded text-[10px] border border-blue-500/10 font-mono">${id}</span>`).join('')}
+                    </div>
+                `;
+                mapContainer.appendChild(block);
+            });
+        }
+
+        function closeDetails() {
+            document.getElementById('detail-panel').classList.add('hidden-panel');
+        }
+
+        function updateLabelDepth(val) {
+            labelDetailLevels = parseInt(val);
+            localStorage.setItem('scf_label_depth', val);
+            document.getElementById('label-depth-val').innerText = `${val} Level${val > 1 ? 's' : ''}`;
+
+            // Instantly update existing labels
+            label.transition().duration(400)
+                .style("fill-opacity", d => getLabelOpacity(d, focus))
+                .style("display", d => getLabelDisplay(d, focus));
+        }
+
+        function updateBreadcrumbs(d) {
+            const crumb = document.getElementById('breadcrumbs');
+            if (!d) return;
+            const path = d.ancestors().reverse().map(a => a.data.name.split(':')[0]);
+            crumb.innerHTML = path.map(p => `<span>${p}</span>`).join('<span class="mx-1 opacity-30">/</span>');
+        }
+
+        // --- Initialization ---
+        window.addEventListener('load', () => {
+            initViz();
+            initTreeselect();
+        });
+
+    </script>
 </body>
 
 </html>

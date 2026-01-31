@@ -31,7 +31,7 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
 * **Requirement:** Support static data imports to ensure zero-latency performance and offline availability.
 * **Requirement:** use memoization/caching to ensure quick calcuation of bubble positions
 
-### **4.2 3D Visualization Engine**
+### **4.2 Circle Packing Visualization Engine**
 
 * **Requirement:** Render nested, translucent circles representing hierarchical groups. Use teh example at https://d3og.com/mbostock/7607535/ as a starting point.
 * **Requirement:** Implement a "Packing" algorithm to ensure children are contained within parents.  
@@ -65,7 +65,7 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
 | ID | Persona | Requirement | Value |
 | :---- | :---- | :---- | :---- |
 | **US.1** | CISO | I want to see which domains have the highest "Control Weighting" | To prioritize resources toward high-impact security areas. |
-| **US.2** | Auditor | I want to highlight only NIST 800-53 controls in the 3D view | To visualize the footprint of my FedRAMP compliance program. |
+| **US.2** | Auditor | I want to highlight only NIST 800-53 controls in the circle packing view | To visualize the footprint of my FedRAMP compliance program. |
 | **US.3** | Architect | I want to group controls by PPTDF (People, Process, Tech) | To identify if my security program is over-reliant on technology vs. process. |
 | **US.4** | Manager | I want to click a specific control bubble | To read its full description and understand its relationship to other controls. |
 | **US.5** | User | I want to search for "Encryption" | To immediately find and zoom into all data protection related controls. |
