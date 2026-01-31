@@ -1,5 +1,0 @@
-Control Description","Conformity Validation
-Cadence",Evidence Request List (ERL) #,"Possible Solutions & Considerations
-Micro-Small Business (<10 staff)
-BLS Firm Size Classes 1-2","Possible Solutions & Considerations
-Small Business (10-49 staff)
