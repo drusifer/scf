@@ -363,49 +363,58 @@
         };
         const getRegimeColor = (rid) => colors(rid);
 
-        // Helper functions for dynamic labeling
-        const getLabelSize = (d, isHovered = false) => {
+        // Helper functions for dynamic labeling (Relative to focus)
+        const getLabelSize = (d, currentFocus, isHovered = false) => {
             if (isHovered) return "24px";
-            if (d.depth === 1) return "20px"; // Domain
-            if (d.depth === 2) return "12px"; // PPTDF
-            if (d.depth === 3) return "10px"; // Functional Group
-            if (d.depth === 4) return "9px";  // SCF Control
-            if (d.depth === 5) return "8px";  // Regime Group
+            const depthDiff = d.depth - (currentFocus?.depth || 0);
+            if (depthDiff === 0) return "22px"; // Focus (Header)
+            if (depthDiff === 1) return "13px"; // Children
             return "8px";
         };
 
-        const getLabelOffset = (d, r) => {
-            // UNIVERSAL OFFSET: Shift all container labels (D1-D5) to the top to clear the center.
-            if (d.children && d.children.length > 0) return -r * 0.8;
+        const getLabelOffset = (d, r, currentFocus) => {
+            const depthDiff = d.depth - (currentFocus?.depth || 0);
+            // Only top-anchor the Focus node (Header) to keep center clear for primary children
+            if (depthDiff === 0 && d.children && d.children.length > 0) return -r * 0.9;
             return 0;
         };
 
         const getLabelOpacity = (d, currentFocus, isHovered = false) => {
             if (isHovered) return 1;
-            const depthDiff = d.depth - currentFocus.depth;
-
-            // Visibility based on hardcoded 2-level window
-            const isInDetailRange = (depthDiff >= 0 && depthDiff <= labelDetailLevels);
-            const isHighLevelPermanent = (d.depth > 0 && d.depth < 4);
-
-            if (isInDetailRange) {
-                if (d.depth === 1) return 1;
-                if (d.depth === 3) return 0.5; // Functional Group - Darker/Smaller
-                return 0.8; // Uniform opacity for others
-            }
-
+            const depthDiff = d.depth - (currentFocus?.depth || 0);
+            if (depthDiff === 0) return 0.8; // Focus is prominent but slightly transparent as a background
+            if (depthDiff === 1) return 0.7; // Children are visible
             return 0;
         };
 
         const getLabelDisplay = (d, currentFocus) => {
-            const depthDiff = d.depth - currentFocus.depth;
-            const isInRange = (depthDiff >= 0 && depthDiff <= labelDetailLevels);
-
-            if (isInRange) {
-                return "inline";
-            }
-            return "none";
+            const depthDiff = d.depth - (currentFocus?.depth || 0);
+            return (depthDiff === 0 || depthDiff === 1) ? "inline" : "none";
         };
+
+        function refreshLabelContent(currentFocus) {
+            if (!label) return;
+            label.each(function (d) {
+                const node = d3.select(this);
+                const depthDiff = d.depth - currentFocus.depth;
+                const name = d.data.name.split(':')[0];
+
+                node.text(""); // Clear
+
+                if (depthDiff === 0) {
+                    // Focus Header: Name only
+                    node.append("tspan").style("font-weight", "700").text(name);
+                } else if (depthDiff === 1) {
+                    // Children: % + Name
+                    const pct = Math.round((d.value / currentFocus.value) * 100);
+                    node.append("tspan")
+                        .style("font-size", "10px")
+                        .style("font-weight", "400")
+                        .text(`${pct}% `);
+                    node.append("tspan").text(name);
+                }
+            });
+        }
 
         // --- D3 Initialization ---
         function initViz() {
@@ -488,7 +497,7 @@
                         .transition().duration(200)
                         .style("display", "inline")
                         .style("fill-opacity", 1)
-                        .style("font-size", getLabelSize(d, true))
+                        .style("font-size", getLabelSize(d, focus, true))
                         .style("font-weight", 700);
                 })
                 .on("mouseout", function (event, d) {
@@ -498,11 +507,10 @@
                         .transition().duration(200)
                         .style("display", getLabelDisplay(d, focus))
                         .style("fill-opacity", getLabelOpacity(d, focus))
-                        .style("font-size", getLabelSize(d))
+                        .style("font-size", getLabelSize(d, focus))
                         .style("font-weight", d => {
-                            if (d.depth === 1) return "700";
-                            if (d.depth === 2) return "500";
-                            return "400";
+                            const depthDiff = d.depth - focus.depth;
+                            return (depthDiff === 0) ? "700" : "400";
                         });
                 })
                 .on("click", (event, d) => {
@@ -525,31 +533,14 @@
                 .selectAll("text")
                 .data(root.descendants().sort((a, b) => b.depth - a.depth))
                 .join("text")
-                .attr("class", "label")
-                .style("font-size", d => getLabelSize(d))
-                .style("font-weight", d => {
-                    if (d.depth === 1) return "700";
-                    if (d.depth === 2) return "500";
-                    return "400";
-                })
+                .attr("class", "label");
+
+            refreshLabelContent(root);
+
+            // Set initial state
+            label.style("font-size", d => getLabelSize(d, root))
                 .style("fill-opacity", d => getLabelOpacity(d, root))
-                .style("display", d => getLabelDisplay(d, root))
-                .each(function (d) {
-                    const name = d.data.name.split(':')[0];
-                    const node = d3.select(this);
-                    node.text(""); // Clear existing
-
-                    // Only show weighting on Level 1 (Domain) labels (at the front)
-                    if (d.depth === 1) {
-                        const pct = Math.round((d.value / root.value) * 100);
-                        node.append("tspan")
-                            .style("font-size", "10px")
-                            .style("font-weight", "400")
-                            .text(`${pct}% `);
-                    }
-
-                    node.append("tspan").text(name);
-                });
+                .style("display", d => getLabelDisplay(d, root));
 
             updateBreadcrumbs(root);
             zoomTo([root.x, root.y, root.r * 2]);
@@ -581,7 +572,7 @@
             if (!label || !node) return;
             const k = width / v[2];
             view = v;
-            label.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k + getLabelOffset(d, d.r * k)})`);
+            label.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k + getLabelOffset(d, d.r * k, focus)})`);
             node.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
             node.attr("r", d => d.r * k);
         }
@@ -595,9 +586,11 @@
                     return t => zoomTo(i(t));
                 });
 
+            refreshLabelContent(focus);
+
             label.transition(transition)
                 .style("fill-opacity", d => getLabelOpacity(d, focus))
-                .style("font-size", d => getLabelSize(d))
+                .style("font-size", d => getLabelSize(d, focus))
                 .on("start", function (d) {
                     if (getLabelDisplay(d, focus) === "inline") this.style.display = "inline";
                 })
