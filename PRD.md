@@ -14,8 +14,9 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
 
 * **Visualize Complexity:** Transform 1,000+ rows of spreadsheet data into a digestible visual topology.  
 * **Multi-Dimensional Analysis:** Allow users to view controls and compare different compliange regimes or framwords by using SCF as the common baseline.  The viz will be nested by PPTDF and SCF Domain so that all controls mapped to the same SCF control group will be grouped togehter.  
-* **Identify High-Impact Areas:** Use "Relative Control Weighting" to drive visual scale.  
-* **Gap Analysis:** Highlight applicability for selected compliance regimes (e.g., NIST 800-53, ISO 27001).
+* **Identify High-Impact Areas:** Use "Relative Control Weighting" to drive the visual scale of circles.  
+* **Gap Analysis:** Highlight applicability for multiple selected compliance regimes (e.g., NIST CSF 2.0, ISO 27001, EU DORA) using distinct color coding.
+* **Simplified Navigation:** Provide a unified "Source of Truth" through an interactive hierarchy sidebar.
 
 ## **3\. Target Audience**
 
@@ -39,26 +40,30 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
 
 ### **4.3 Structured Hierarchy (Nesting)**
 
-* **Requirement:** Show regime controls grouped togeher with the simialr controls from other regimes.  Use SCF mappings for accuracy and organize controls under teh following Hierarchy:
-  * **SCF Domain:** High-level security categories.  
-    *  **PPTDF:** People Process etc..
-      * **SCF Control:** The scf control name/id
-        *  **Regime name or framework name**: the name of the frame work or regulation that has controls mapped to this SCF control
-          * **Regime specific control identifier** : 1 per frame work control (if multiple then devide the space evenly)
+* **Requirement:** Show regime controls grouped together with similar controls from other regimes. Use SCF mappings for accuracy and organize controls under the following 6-level Hierarchy:
+  * **Level 1: SCF Domain:** High-level security categories (e.g., Identification & Authentication).  
+  * **Level 2: PPTDF:** People, Process, Technology, Data, Facility (Strategic categorization).
+  * **Level 3: Functional Grouping:** Broad control functions (e.g., AC: Access Control).
+  * **Level 4: SCF Control:** Specific SCF control name/ID (e.g., IAC-01).
+  * **Level 5: Regime Group:** Grouping of mappings by regime name (e.g., "ISO 27001").
+  * **Level 6: Mapping Node:** Individual regime-specific control identifiers.
 * **Requirement:** Option to hide SCF controls with no displayed mappings
 
-### ** Catalog **
-* **Requirement:** Show a catalog of all regimes Opposite the details display.
-* **Requirement:** User can search and checkoff multiple frameworks that they want to see in the display (defaults to NIST-CSF-2.0).  Select / deselct automatically updates the display.
-* **Requirement:** Selected regimes have visually distinct colors for all their displayed circles.
-* **Requirement:** The selected Regimes are always displayed at the top of the selection list with an indication of what color they are presented as.
+### **4.4 Regime Management**
+* **Requirement:** User can search and check off multiple regimes from a searchable list (defaults to NIST CSF 2.0, EU DORA, and India SEBI CSCRF).
+* **Requirement:** Selected regimes are persistently stored in `localStorage` for session continuity.
+* **Requirement:** Selected regimes have visually distinct colors (Tableau10 palette) used across the Chart, Legend, and Sidebar.
+* **Requirement:** Real-time legend displays the active regimes and their corresponding colors.
 
 
-### **4.4 Search & Inspection**
-* **Requirement:** Navigation via sidebar menu with heircahy matching the circle pack chart.  Selecting in this menu zooms directly to that node in the buble graph and selecting in the chart navigates the sidebar meue to the selected node.
-* **Requirement:** Navigation via sidebar Responsive to the selected node 
-* **Requirement:** Real-time search to filter controls by ID, Domain, or keyword.  
-* **Requirement:** "Detail Panel" displaying full control descriptions, scf domain descriptions, exact weighting, and all mapped control identiferies with the scf control that is selected
+### **4.5 Search & Navigation**
+* **Requirement:** **Hierarchy Navigator:** A sidebar treeselect that remains synced with the chart focus. Selecting a node in the treeselect zooms the chart; zooming in the chart updates the treeselect.
+* **Requirement:** **Mouse-Driven Interaction:** Support intuitive mouse wheel zooming and drag-panning for fluid exploration.
+* **Requirement:** **Labeling Strategy:** 
+    - **Anti-Collision:** Container labels are top-anchored to prevent center stacking.
+    - **Dynamic Visibility:** Labels are locked to a 2-level depth relative to focus for visual clarity.
+    - **Hover Pop:** Individual labels enlarge significantly (28px Bold) on hover for instant inspection.
+* **Requirement:** **Detail Panel:** Slide-out drawer displaying full descriptions, impact weights, and regime mappings with color-coded linkages.
 
 ## **5\. User Stories**
 
@@ -72,12 +77,10 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
 
 ## **6\. Technical Constraints & Standards**
 
-* **Engine:** Browser running D3 and other needed libs (client side no node components).  
-* **Performance:** Must maintain 60 FPS for up to 2,000 nodes using optimized geometries.  okay to use dodechahedrions if that helps with performance.
-* **Styling:** Tailwind CSS for the HUD/UI overlay.  \
-  * **Interaction:** click to (visually) zoom into a bubble and hide the non selected bubbles. 
-  * **Labels:** are wrapped around the bubbles so they don't overlap with eachother.  only the highest level of labels is visisble.  hover on bubble causes label to gradually rotate around the bubble until I zoom (click) or stop hovering.
-* **Accessibility:** Provide visual feedback for hover states; ensure high-contrast UI for text overlays.
+* **Engine:** Browser-based D3.js v7 (Client-side rendering, no Node.js backend required).
+* **Styling:** Tailwind CSS for layout; Vanilla CSS for glassmorphism and custom animation effects.
+* **Persistence:** `localStorage` for regime selection and UI state.
+* **Accessibility:** High-contrast text shadows for all labels; distinct Tableau10 colors for regimes; high-visibility focus states.
 
 ## **7\. Success Metrics**
 
