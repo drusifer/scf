@@ -207,6 +207,42 @@
             opacity: 0 !important;
             pointer-events: none !important;
         }
+
+        /* Footer Branding */
+        footer {
+            font-size: 0.55rem;
+            color: rgba(156, 163, 175, 0.4);
+            white-space: nowrap;
+            transition: color 0.3s ease;
+        }
+
+        footer:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        footer a {
+            color: inherit;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        footer a:hover {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+
+        footer img {
+            filter: grayscale(1) invert(0.8);
+            opacity: 0.3;
+            transition: all 0.3s ease;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        footer:hover img {
+            filter: grayscale(0) invert(0);
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -259,6 +295,22 @@
                 </div>
             </div>
 
+        </div>
+
+        <!-- Footer Branding -->
+        <div class="px-4 py-2 border-t border-white/5 bg-black/40">
+            <footer>
+                <a href="https://github.com/securecontrolsframework/securecontrolsframework" target="_blank">SCF
+                    Visualizer</a> © 2026
+                <span class="mx-1 opacity-20">|</span>
+                <a href="https://www.linkedin.com/in/drew-gutstein-9332b34/" target="_blank">Drew Gutstein</a>
+                <span class="mx-1 opacity-20">|</span>
+                <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>
+                <span class="inline-flex gap-0.5 ml-1 transform translate-y-0.5">
+                    <img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="CC" class="h-2 w-2">
+                    <img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="BY" class="h-2 w-2">
+                </span>
+            </footer>
         </div>
     </aside>
 
