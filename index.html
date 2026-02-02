@@ -519,11 +519,8 @@
 
         // Helper functions for dynamic labeling (Relative to focus)
         const getLabelSize = (d, currentFocus, isHovered = false) => {
-            if (isHovered) return "24px";
-            const depthDiff = d.depth - (currentFocus?.depth || 0);
-            if (depthDiff === 0) return "22px"; // Focus (Header)
-            if (depthDiff === 1) return "13px"; // Children
-            return "8px";
+            if (isHovered) return "16px";
+            return "14px"; // Consistent size regardless of depth
         };
 
         const getLabelOffset = (d, r, currentFocus) => {
@@ -562,7 +559,7 @@
                     // Children: % + Name
                     const pct = Math.round((d.value / currentFocus.value) * 100);
                     node.append("tspan")
-                        .style("font-size", "10px")
+                        .style("opacity", "0.7")
                         .style("font-weight", "400")
                         .text(`${pct}% `);
                     node.append("tspan").text(name);
