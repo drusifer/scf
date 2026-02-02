@@ -1072,35 +1072,81 @@
             }
         }
 
+
         function initHierarchyFieldsTreeselect() {
             const hContainer = document.getElementById('hierarchy-fields-treeselect');
-            hContainer.innerHTML = '';
+            if (!hContainer) return;
 
-            const options = processor.hierarchyColumns.map(col => ({
-                name: col.name,
-                value: col.id
-            }));
+            const renderWidget = () => {
+                hContainer.innerHTML = '';
+                const active = processor.currentHierarchy || [];
+                const allCols = processor.hierarchyColumns;
 
-            hierarchyFieldsTreeselect = new Treeselect({
-                parentHtmlContainer: hContainer,
-                options: options,
-                value: processor.currentHierarchy,
-                isMultiple: true,
-                isSearchable: false,
-                placeholder: 'Select hierarchy layers...',
-                clearable: false,
-                alwaysOpen: true,
-                staticList: true,
-                showCheckbox: true,
-                inputCallback: (value) => {
-                    if (!value || value.length === 0) return;
-                    processor.currentHierarchy = value;
-                    scfData = processor.buildTree(value);
-                    updateVisualization();
-                    updateURL(); // Update URL first
-                    setTimeout(initHierarchyNavigatorTreeselect, 50); // Rebuild navigator with new tree
+                // 1. Active Levels Container
+                const activeWrapper = document.createElement('div');
+                activeWrapper.className = 'flex flex-col gap-2 mb-4';
+
+                if (active.length > 0) {
+                    activeWrapper.innerHTML = '<div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Hierarchy Order</div>';
+                    active.forEach((id, index) => {
+                        const col = allCols.find(c => c.id === id);
+                        if (!col) return;
+
+                        const item = document.createElement('div');
+                        item.className = 'flex items-center justify-between bg-blue-500/10 border border-blue-500/20 text-blue-300 px-3 py-2 rounded text-xs select-none hover:bg-blue-500/20 transition-colors group cursor-pointer';
+                        item.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono opacity-50 text-[10px]">${index + 1}</span>
+                                <span class="font-bold">${col.name}</span>
+                            </div>
+                            <span class="text-xs opacity-50 group-hover:opacity-100 group-hover:text-red-400 transition-opacity">✕</span>
+                        `;
+                        item.onclick = () => {
+                            // Remove this item
+                            processor.currentHierarchy.splice(index, 1);
+                            updateState();
+                        };
+                        activeWrapper.appendChild(item);
+                    });
+                } else {
+                    activeWrapper.innerHTML = '<div class="text-xs text-gray-500 italic p-2 text-center border border-dashed border-white/10 rounded">No hierarchy levels selected.<br>Select fields below to start.</div>';
                 }
-            });
+                hContainer.appendChild(activeWrapper);
+
+                // 2. Available Fields Container
+                const availWrapper = document.createElement('div');
+                availWrapper.className = 'flex flex-wrap gap-2';
+                availWrapper.innerHTML = '<div class="w-full text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Available Fields</div>';
+
+                const available = allCols.filter(c => !active.includes(c.id));
+
+                if (available.length === 0) {
+                    availWrapper.innerHTML += '<div class="text-xs text-gray-600 italic">All fields selected.</div>';
+                }
+
+                available.forEach(col => {
+                    const btn = document.createElement('button');
+                    btn.className = 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white px-2 py-1 rounded text-xs border border-white/5 transition-colors text-left';
+                    btn.innerText = col.name;
+                    btn.onclick = () => {
+                        // Add to end
+                        processor.currentHierarchy.push(col.id);
+                        updateState();
+                    };
+                    availWrapper.appendChild(btn);
+                });
+                hContainer.appendChild(availWrapper);
+            };
+
+            const updateState = () => {
+                scfData = processor.buildTree(processor.currentHierarchy);
+                updateVisualization();
+                updateURL();
+                setTimeout(initHierarchyNavigatorTreeselect, 50);
+                renderWidget(); // Re-render self
+            };
+
+            renderWidget();
         }
 
         function initHierarchyNavigatorTreeselect() {
