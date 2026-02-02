@@ -9,29 +9,36 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/treeselectjs@0.11.0/dist/treeselectjs.umd.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.11.0/dist/treeselectjs.css">
-    <script src="scf_data.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="scf_processor.js"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --bg-color: #030712;
-            --sidebar-bg: rgba(17, 24, 39, 0.9);
-            --accent-color: #3b82f6;
-            --glass-border: rgba(255, 255, 255, 0.1);
+            /* Core Palette */
+            --bg-deep: #030712;
+            --sidebar-color: #111827;
+            --sidebar-darker: #0f172a;
+            --accent-blue: #3b82f6;
+            --accent-indigo: #6366f1;
 
-            /* Treeselect Overrides */
-            --treeselect-bg: rgba(0, 0, 0, 0.4);
-            --treeselect-border: rgba(255, 255, 255, 0.1);
-            --treeselect-text: #d1d5db;
-            --treeselect-hover: rgba(59, 130, 246, 0.2);
-            --treeselect-selected: #3b82f6;
-            --treeselect-list-bg: #0f172a;
+            /* Text & Borders */
+            --text-primary: #f3f4f6;
+            --text-muted: #94a3b8;
+            --border-muted: rgba(255, 255, 255, 0.1);
+            --border-faint: rgba(255, 255, 255, 0.05);
+
+            /* Treeselect Base */
+            --ts-bg: var(--sidebar-darker);
+            --ts-list-bg: var(--sidebar-color);
+            --ts-tag-blue: #1e3a8a;
+            --ts-tag-indigo: #312e81;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: #f3f4f6;
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
             font-family: 'Inter', sans-serif;
             overflow: hidden;
             margin: 0;
@@ -44,9 +51,9 @@
         }
 
         .glass {
-            background: var(--sidebar-bg);
+            background: rgba(17, 24, 39, 0.9);
             backdrop-filter: blur(16px);
-            border: 1px solid var(--glass-border);
+            border: 1px solid var(--border-muted);
         }
 
         .node {
@@ -100,106 +107,123 @@
             overflow: visible !important;
         }
 
-        /* Unified Treeselect Custom Styling */
-        .treeselect-main {
-            background: #030712 !important;
-            /* Match diagram background */
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        /* --- Unified Treeselect Overrides --- */
+        .treeselect-input {
+            background: var(--ts-bg) !important;
+            border: 1px solid var(--border-muted) !important;
             border-radius: 0.75rem !important;
-            color: #d1d5db !important;
-            position: relative !important;
+            color: var(--text-primary) !important;
+            min-height: 38px !important;
         }
 
-        .treeselect-input {
-            background: #030712 !important;
-            /* Match diagram background */
+        .treeselect-input__edit {
+            background: transparent !important;
             color: #fff !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+            font-size: 13px !important;
+            max-width: 100% !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
+
+        .treeselect-input__edit::placeholder {
+            color: rgba(255, 255, 255, 0.4) !important;
         }
 
         .treeselect-list {
-            background: #030712 !important;
-            /* Match diagram background */
-            border: none !important;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5) !important;
-            position: relative !important;
-            max-height: 400px !important;
-            width: 100% !important;
-            transform: none !important;
+            background: var(--ts-list-bg) !important;
+            border: 1px solid var(--border-muted) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7) !important;
+            border-radius: 0.75rem !important;
             z-index: 100 !important;
-            margin-top: 5px !important;
-            display: block !important;
-            backdrop-filter: blur(20px) !important;
         }
 
-        /* Inline behavior for the fixed ones - ensures they stack and scroll locally */
+        /* Inline behavior for sidebar accordions */
         .accordion-content .treeselect-list {
             position: relative !important;
+            border: none !important;
             box-shadow: none !important;
-            z-index: 1 !important;
             margin-top: 0 !important;
             max-height: 450px !important;
+            background: var(--sidebar-color) !important;
         }
 
-        #regime-selector .treeselect-list {
-            max-height: 350px !important;
+        /* Tags Design */
+        .treeselect-input__tags-element {
+            background: var(--ts-tag-blue) !important;
+            color: #ffffff !important;
+            border-radius: 6px !important;
+            padding: 2px 8px !important;
+            margin: 2px !important;
+            font-weight: 600 !important;
+            border: 1px solid var(--accent-blue) !important;
+            height: auto !important;
         }
 
-        /* Hide the arrow and close buttons for inline mode if desired, but let's keep them consistent */
-        .treeselect-main__arrow {
-            color: rgba(255, 255, 255, 0.3) !important;
+        #hierarchy-fields-treeselect .treeselect-input__tags-element {
+            background: var(--ts-tag-indigo) !important;
+            border-color: var(--accent-indigo) !important;
         }
 
-        .treeselect-tag {
-            background: rgba(59, 130, 246, 0.2) !important;
-            color: #60a5fa !important;
-            border: 1px solid rgba(59, 130, 246, 0.3) !important;
-            font-size: 0.6rem !important;
+        .treeselect-input__tags-name {
+            font-size: 11px !important;
         }
 
-        .treeselect-list-item {
-            color: #94a3b8 !important;
-            padding: 6px 10px !important;
-            font-size: 0.7rem !important;
+        .treeselect-input__tags-cross svg {
+            stroke: #fff !important;
+            opacity: 0.6;
         }
 
-        .treeselect-list-item:hover,
-        .treeselect-list-item--focused,
-        .treeselect-list__item--focused {
+        /* List Items & Styling */
+        .treeselect-list__item {
+            color: var(--text-muted) !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            padding-right: 12px !important;
+            /* Do NOT override padding-left with !important */
+            height: 32px !important;
+        }
+
+        .treeselect-list__item--focused,
+        .treeselect-list__item:hover {
             background: rgba(255, 255, 255, 0.05) !important;
             color: #fff !important;
         }
 
-        .treeselect-list-item--selected,
-        .treeselect-list__item--checked {
-            background: rgba(59, 130, 246, 0.1) !important;
-            color: #3b82f6 !important;
+        .treeselect-list__item--checked,
+        .treeselect-list__item--single-selected {
+            background: rgba(59, 130, 246, 0.15) !important;
+            color: #60a5fa !important;
+            font-weight: 600 !important;
         }
 
-        .treeselect-checkbox {
+        .treeselect-list__item-label {
+            font-size: 13px !important;
+        }
+
+        /* Checkboxes */
+        .treeselect-list__item-checkbox-container {
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            background: #030712 !important;
-            /* Match diagram background */
+            background: var(--bg-deep) !important;
+            width: 16px !important;
+            height: 16px !important;
+            min-width: 16px !important;
         }
 
-        .treeselect-list-item--selected .treeselect-checkbox,
-        .treeselect-list__item--checked .treeselect-checkbox {
-            background: #3b82f6 !important;
-            border-color: #3b82f6 !important;
+        .treeselect-list__item--checked .treeselect-list__item-checkbox-container,
+        .treeselect-list__item--partial-checked .treeselect-list__item-checkbox-container {
+            background-color: var(--accent-blue) !important;
+            border-color: var(--accent-blue) !important;
         }
 
-        .treeselect-input__edit {
-            background-color: var(--accent-color) !important;
-            opacity: 0.8;
-            border-radius: 4px;
-            color: #fff !important;
+        /* Icons */
+        .treeselect-input__arrow svg,
+        .treeselect-input__clear svg {
+            stroke: rgba(255, 255, 255, 0.4) !important;
         }
 
         .treeselect-input__tags-element {
-            background-color: rgba(59, 130, 246, 0.2) !important;
-            color: #60a5fa !important;
-            border-radius: 4px !important;
-            padding: 0 6px !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
         .hidden-panel {
@@ -243,13 +267,61 @@
             filter: grayscale(0) invert(0);
             opacity: 1;
         }
+
+        aside {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: left;
+        }
+
+        .sidebar-collapsed aside.left-sidebar {
+            transform: translateX(-100%);
+            width: 0 !important;
+            border-right: none;
+        }
+
+        #right-sidebar {
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(100%);
+        }
+
+        #right-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .toggle-sidebar {
+            position: fixed;
+            left: 320px;
+            top: 24px;
+            z-index: 50;
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            padding: 8px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .sidebar-collapsed .toggle-sidebar {
+            left: 0;
+        }
+
+        .toggle-sidebar:hover {
+            color: #fff;
+            background: #1f2937;
+        }
     </style>
 </head>
 
 <body class="flex h-screen w-full">
+    <button class="toggle-sidebar" onclick="toggleSidebar()" title="Toggle Sidebar">
+        <span id="toggle-icon">◀</span>
+    </button>
 
     <!-- Sidebar -->
-    <aside class="glass w-80 h-full flex flex-col border-r z-20 shadow-2xl">
+    <aside class="left-sidebar glass w-80 h-full flex flex-col border-r z-20 shadow-2xl relative">
         <div class="p-6 border-b border-white/10">
             <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
                 SCF Visualizer
@@ -257,48 +329,49 @@
             <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter">Zoomable Relationship Engine</p>
         </div>
 
-        <div class="flex-1 overflow-y-auto">
+        <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Regime Selector -->
             <div id="regime-item" class="accordion-item border-b border-white/10 open">
                 <div class="accordion-header" onclick="toggleAccordion('regime-selector')">
                     <span class="text-sm font-semibold flex items-center gap-2">
                         🛡️ Compliance Regimes
                     </span>
-                    <span id="regime-count"
-                        class="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">0</span>
                 </div>
-                <div id="regime-selector" class="accordion-content p-4" style="max-height: 500px; overflow: visible">
+                <div id="regime-selector" class="accordion-content p-4 overflow-y-auto" style="max-height: 40vh;">
                     <div id="treeselect-container" class="w-full"></div>
+                </div>
+            </div>
 
-                    <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-                        <label
-                            class="text-[11px] font-semibold text-gray-400 uppercase cursor-pointer flex items-center gap-2">
-                            <input type="checkbox" id="toggle-unmapped" checked
-                                class="w-4 h-4 rounded bg-white/5 border-white/10 text-blue-500 focus:ring-offset-0 focus:ring-0"
-                                onchange="toggleUnmappedVisibility(this.checked)">
-                            Show unmapped controls
-                        </label>
+            <!-- Hierarchy Fields Accordion -->
+            <div class="accordion-item border-b border-white/10 open">
+                <div class="accordion-header" onclick="toggleAccordion('hierarchy-fields-container')">
+                    <span class="text-sm font-semibold flex items-center gap-2">
+                        🏗️ Hierarchy Fields
+                    </span>
+                </div>
+                <div id="hierarchy-fields-container" class="accordion-content p-4 overflow-y-auto"
+                    style="max-height: 30vh;">
+                    <div id="hierarchy-fields-treeselect" class="w-full"></div>
+                    <div class="mt-2 text-[10px] text-gray-500 italic px-2 leading-tight text-indigo-400/60">
+                        * Selection order defines hierarchical depth
                     </div>
                 </div>
             </div>
 
-            <!-- Hierarchy Accordion -->
-            <div class="accordion-item open">
-                <div class="accordion-header" onclick="toggleAccordion('hierarchy-selector-container')">
-                    <span class="text-sm font-semibold flex items-center gap-2">
-                        📂 Control Hierarchy
-                    </span>
-                </div>
-                <div id="hierarchy-selector-container" class="accordion-content p-4"
-                    style="max-height: 1000px; overflow: visible">
-                    <div id="hierarchy-treeselect" class="w-full"></div>
-                </div>
-            </div>
-
+            <!-- Control Navigator Accordion (MOVED TO RIGHT) -->
         </div>
 
         <!-- Footer Branding -->
         <div class="px-4 py-2 border-t border-white/5 bg-black/40">
+            <div class="mb-2 flex items-center justify-between">
+                <label
+                    class="text-[10px] font-semibold text-gray-400 uppercase cursor-pointer flex items-center gap-2 hover:text-white transition-colors">
+                    <input type="checkbox" id="toggle-unmapped" checked
+                        class="w-3.5 h-3.5 rounded bg-white/5 border-white/10 text-blue-500 focus:ring-offset-0 focus:ring-0 checked:bg-blue-600"
+                        onchange="toggleUnmappedVisibility(this.checked)">
+                    Show unmapped
+                </label>
+            </div>
             <footer>
                 <a href="https://github.com/securecontrolsframework/securecontrolsframework" target="_blank">SCF
                     Visualizer</a> © 2026
@@ -332,19 +405,36 @@
         </div>
     </main>
 
-    <!-- Detail Panel (Floating) -->
-    <aside id="detail-panel"
-        class="fixed top-24 right-8 bottom-8 w-[350px] glass rounded-3xl z-40 p-8 hidden-panel flex flex-col transition-all duration-500 shadow-2xl overflow-hidden">
-        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
-            <h2 class="font-bold text-sm tracking-widest uppercase">Control Intelligence</h2>
-            <button onclick="closeDetails()" class="text-gray-400 hover:text-white p-2">✕</button>
+    <!-- Right Sidebar for Navigation & Details -->
+    <aside id="right-sidebar"
+        class="fixed top-0 right-0 h-full w-96 glass z-30 shadow-2xl flex flex-col border-l border-white/10">
+        <!-- Toggle Handle (Outside) -->
+        <button onclick="toggleRightSidebar()"
+            class="absolute top-1/2 -left-8 w-8 h-16 bg-black/60 backdrop-blur rounded-l-xl border-y border-l border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+            <span id="right-toggle-icon">◀</span>
+        </button>
+
+        <!-- Right Header -->
+        <div class="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+            <h2 class="font-bold text-sm tracking-widest uppercase">Inspect & Navigate</h2>
         </div>
-        <div id="detail-content" class="p-8 overflow-y-auto flex-1">
+
+        <!-- Navigator Section (Top Half) -->
+        <div class="flex-1 flex flex-col min-h-0 border-b border-white/10">
+            <div
+                class="p-2 bg-white/5 text-[10px] font-bold uppercase tracking-wider text-gray-500 flex items-center gap-2">
+                <span>📂 Hierarchy Navigator</span>
+            </div>
+            <div id="hierarchy-navigator-treeselect" class="p-4 flex-1 overflow-y-auto"></div>
+        </div>
+
+        <!-- Details Section (Bottom Half) -->
+        <div id="detail-panel-content" class="flex-1 flex flex-col min-h-0 bg-black/20">
             <div id="detail-empty" class="h-full flex flex-col items-center justify-center opacity-20 text-center">
                 <span class="text-4xl mb-4">🔍</span>
                 <p class="text-xs">Select a control bubble<br>to view deep analytics</p>
             </div>
-            <div id="detail-data" class="hidden space-y-8">
+            <div id="detail-data" class="hidden p-6 overflow-y-auto space-y-6">
                 <div>
                     <span id="detail-id"
                         class="text-blue-500 font-mono text-xs font-bold uppercase tracking-widest"></span>
@@ -398,8 +488,20 @@
         }
         let showUnmapped = true;
         let root;
-        let hierarchyTreeselect;
+        let hierarchyFieldsTreeselect;
+        let hierarchyNavigatorTreeselect;
         let regimeTreeselect;
+        let scfData; // Globally available after processing
+        const HIERARCHY_ALIASES = {
+            "PPTDF_Applicability": "pptd",
+            "NIST_CSF_Function_Grouping": "nist",
+            "SCF_Domain": "domain",
+            "Conformity_Validation_Cadence": "cadent",
+            "Relative_Control_Weighting": "weight"
+        };
+        const REVERSE_ALIASES = Object.fromEntries(Object.entries(HIERARCHY_ALIASES).map(([k, v]) => [v, k]));
+
+        let processor = new SCFDataProcessor();
         let svg, g, node, label;
         let width, height;
         let d3Zoom;
@@ -518,6 +620,11 @@
 
             // Assign unique persistent IDs for this render to ensure Treeselect values are stable
             root.descendants().forEach((d, i) => d.id = "node-" + i);
+
+            // Re-sync the navigator options
+            if (typeof initHierarchyNavigatorTreeselect === 'function') {
+                initHierarchyNavigatorTreeselect();
+            }
 
             // Initialize Pan/Zoom on the SVG
             setupPanZoom();
@@ -639,6 +746,7 @@
                 });
 
             refreshLabelContent(focus);
+            updateURL();
 
             label.transition(transition)
                 .style("fill-opacity", d => getLabelOpacity(d, focus))
@@ -682,9 +790,9 @@
             // Map top-level domains, starting with the root node itself
             const options = [buildOptions(root)];
 
-            const hContainer = document.getElementById('hierarchy-treeselect');
+            const hContainer = document.getElementById('hierarchy-navigator-treeselect');
             hContainer.innerHTML = '';
-            hierarchyTreeselect = new Treeselect({
+            hierarchyNavigatorTreeselect = new Treeselect({
                 parentHtmlContainer: hContainer,
                 options: options,
                 value: "", // Single string for single-select mode
@@ -708,8 +816,6 @@
                         if (controlNode) {
                             showDetails(controlNode.data);
                         } else {
-                            // If it's a domain/category without mappings, we might still want to show something, 
-                            // but for now let's just close to avoid mismatch.
                             closeDetails();
                         }
                     }
@@ -772,7 +878,50 @@
             return recurse(data, 0);
         }
 
-        // --- UI Interactions ---
+        function toggleSidebar() {
+            document.body.classList.toggle('sidebar-collapsed');
+            const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+            document.getElementById('toggle-icon').innerText = isCollapsed ? '▶' : '◀';
+
+            // Trigger D3 resize after transition
+            setTimeout(() => {
+                handleResize();
+            }, 400);
+        }
+
+        function toggleRightSidebar() {
+            document.getElementById('right-sidebar').classList.toggle('open');
+            const isOpen = document.getElementById('right-sidebar').classList.contains('open');
+            document.getElementById('right-toggle-icon').innerText = isOpen ? '▶' : '◀';
+
+            // Trigger D3 resize to accommodate panel taking up space? 
+            // Actually, since it's "fixed" and overlays or pushes from right, we might want to shift the view.
+            // D3 is centered in "main", which uses remaining width. We might need to adjust padding-right of main?
+            // For now, let it overlay or assume main is flexible. But better to resize.
+            const rightWidth = isOpen ? 384 : 0; // w-96 = 24rem = 384px.
+            document.querySelector('main').style.marginRight = isOpen ? '384px' : '0';
+
+            setTimeout(() => {
+                handleResize();
+            }, 400);
+        }
+
+        function handleResize() {
+            const container = document.getElementById('viz-container');
+            if (!container) return;
+            width = container.clientWidth;
+            height = container.clientHeight;
+
+            if (svg) {
+                svg.attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`);
+                if (root && view) {
+                    zoomTo([view[0], view[1], view[2]]); // Refresh current zoom with new dimensions
+                }
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+
         function toggleAccordion(id) {
             const content = document.getElementById(id);
             const item = content.parentElement;
@@ -782,6 +931,88 @@
             } else {
                 content.style.maxHeight = "500px"; // Fixed max height for scrollability
                 item.classList.add('open');
+            }
+        }
+
+        // --- URL State Management ---
+        function updateURL() {
+            const params = new URLSearchParams();
+
+            // Regimes (use raw values from Treeselect to keep categories)
+            if (window.regimeTreeselect) {
+                const val = regimeTreeselect.value;
+                if (val && val.length > 0) {
+                    params.set('r', val.join(','));
+                }
+            } else if (selectedRegimeIds.size > 0) {
+                params.set('r', Array.from(selectedRegimeIds).join(','));
+            }
+
+            // Hierarchy Fields (with aliasing)
+            if (processor.currentHierarchy.length > 0) {
+                const aliased = processor.currentHierarchy.map(id => HIERARCHY_ALIASES[id] || id);
+                params.set('h', aliased.join(','));
+            }
+
+            // Unmapped Visibility
+            if (showUnmapped) params.set('u', '1');
+
+            // Focus Node
+            if (focus && focus !== root) {
+                params.set('f', focus.data.name);
+            }
+
+            const newHash = params.toString();
+            if (window.location.hash.substring(1) !== newHash) {
+                window.history.replaceState(null, null, '#' + newHash);
+            }
+        }
+
+        function applyURLState() {
+            const hash = window.location.hash.substring(1);
+            if (!hash) return;
+
+            const params = new URLSearchParams(hash);
+
+            // 1. Unmapped Visibility
+            if (params.has('u')) {
+                showUnmapped = params.get('u') === '1';
+                const toggle = document.getElementById('toggle-unmapped');
+                if (toggle) toggle.checked = showUnmapped;
+            }
+
+            // 2. Hierarchy Fields
+            if (params.has('h')) {
+                const aliased = params.get('h').split(',');
+                const fields = aliased.map(a => REVERSE_ALIASES[a] || a);
+                if (fields.length > 0) {
+                    processor.currentHierarchy = fields;
+                }
+            }
+
+            // 3. Regimes
+            if (params.has('r')) {
+                const rawVals = params.get('r').split(',');
+                window._initialRegimeValue = rawVals.map(v => v.startsWith('cat-') ? v : Number(v));
+            }
+        }
+
+        function applyURLFocus() {
+            const hash = window.location.hash.substring(1);
+            if (!hash) return;
+            const params = new URLSearchParams(hash);
+            const focusName = params.get('f');
+
+            if (focusName && root) {
+                const target = root.descendants().find(d => d.data.name === focusName);
+                if (target) {
+                    setTimeout(() => {
+                        window.externalZoom(target);
+                        if (target.data.mappings) {
+                            showDetails(target.data);
+                        }
+                    }, 500);
+                }
             }
         }
 
@@ -796,39 +1027,149 @@
             }));
 
             const container = document.getElementById('treeselect-container');
-            treeselect = new Treeselect({
+            regimeTreeselect = new Treeselect({
                 parentHtmlContainer: container,
-                value: Array.from(selectedRegimeIds),
+                value: window._initialRegimeValue || Array.from(selectedRegimeIds),
                 options: options,
                 isMultiple: true,
                 isSearchable: true,
                 placeholder: 'Search frameworks...',
                 clearable: true,
-                alwaysOpen: true,     // Force the list to stay open
-                staticList: true,     // Render list in static position
+                alwaysOpen: true,
+                staticList: true,
                 inputCallback: (value) => {
-                    // Filter out category IDs (they start with cat-)
-                    const selectedIds = value.filter(v => typeof v === 'number');
+                    const selectedIds = value.reduce((acc, val) => {
+                        if (typeof val === 'number') {
+                            acc.push(val);
+                        } else if (typeof val === 'string' && val.startsWith('cat-')) {
+                            const catName = val.replace('cat-', '');
+                            const catRegimes = scfData.regimeCatalog[catName];
+                            if (catRegimes) catRegimes.forEach(r => acc.push(r.id));
+                        }
+                        return acc;
+                    }, []);
+
                     selectedRegimeIds = new Set(selectedIds);
-
-                    // Save to localStorage
                     localStorage.setItem('scf_selected_regimes', JSON.stringify(Array.from(selectedRegimeIds)));
-
-                    document.getElementById('regime-count').innerText = selectedRegimeIds.size;
                     updateVisualization();
                     updateLegend();
+                    updateURL();
                 }
             });
 
-            // Initial UI update for count and legend
-            document.getElementById('regime-count').innerText = selectedRegimeIds.size;
-            updateLegend();
+            if (window._initialRegimeValue) {
+                const selectedIds = window._initialRegimeValue.reduce((acc, val) => {
+                    if (typeof val === 'number') {
+                        acc.push(val);
+                    } else if (typeof val === 'string' && val.startsWith('cat-')) {
+                        const catName = val.replace('cat-', '');
+                        const catRegimes = scfData.regimeCatalog[catName];
+                        if (catRegimes) catRegimes.forEach(r => acc.push(r.id));
+                    }
+                    return acc;
+                }, []);
+                selectedRegimeIds = new Set(selectedIds);
+            }
+        }
 
+        function initHierarchyFieldsTreeselect() {
+            const hContainer = document.getElementById('hierarchy-fields-treeselect');
+            hContainer.innerHTML = '';
+
+            const options = processor.hierarchyColumns.map(col => ({
+                name: col.name,
+                value: col.id
+            }));
+
+            hierarchyFieldsTreeselect = new Treeselect({
+                parentHtmlContainer: hContainer,
+                options: options,
+                value: processor.currentHierarchy,
+                isMultiple: true,
+                isSearchable: false,
+                placeholder: 'Select hierarchy layers...',
+                clearable: false,
+                alwaysOpen: true,
+                staticList: true,
+                showCheckbox: true,
+                inputCallback: (value) => {
+                    if (!value || value.length === 0) return;
+                    processor.currentHierarchy = value;
+                    scfData = processor.buildTree(value);
+                    updateVisualization();
+                    updateURL(); // Update URL first
+                    setTimeout(initHierarchyNavigatorTreeselect, 50); // Rebuild navigator with new tree
+                }
+            });
+        }
+
+        function initHierarchyNavigatorTreeselect() {
+            const hContainer = document.getElementById('hierarchy-navigator-treeselect');
+            if (!hContainer) return;
+            hContainer.innerHTML = '';
+
+            // Helper to recursively build nested options
+            function buildNestedOptions(node) {
+                if (!node) return [];
+                const option = {
+                    name: node.data.name,
+                    value: node.id,
+                    node: node, // reference for zoom
+                    children: []
+                };
+
+                if (node.children) {
+                    option.children = node.children.map(child => buildNestedOptions(child)).flat();
+                } else {
+                    delete option.children; // Leaf node
+                }
+                return option;
+            }
+
+            // Build options starting from root's children (skipping the abstract root if needed)
+            // If root is abstract, map its children. If root is actual data, wrap it.
+            let nestedOptions = [];
+            if (root) {
+                if (root.children) {
+                    nestedOptions = root.children.map(child => buildNestedOptions(child)).flat();
+                } else {
+                    nestedOptions = [buildNestedOptions(root)];
+                }
+            }
+
+            hierarchyNavigatorTreeselect = new Treeselect({
+                parentHtmlContainer: hContainer,
+                options: nestedOptions,
+                value: null, // Single value (null) for single select
+                isSingleSelect: true,
+                isSearchable: true,
+                placeholder: 'Jump to Control or Domain...',
+                clearable: true,
+                alwaysOpen: true,     // Keep it open as a navigator
+                staticList: true,     // Render in-place
+                showCheckbox: false,  // NO checkboxes for single select
+                disableBranchNodes: false, // Allow selecting branches (domains) to zoom to them
+                expandSelected: true,
+                inputCallback: (value) => {
+                    if (!value) return;
+                    // Find node in D3 hierarchy by ID since we can't easily flatten the nested structure in O(1)
+                    // But we can use the D3 root.descendants() map we already have implicitly
+                    const targetNode = root.descendants().find(d => d.id === value);
+
+                    if (targetNode) {
+                        window.externalZoom(targetNode);
+                        if (targetNode.data.mappings) {
+                            showDetails(targetNode.data);
+                        }
+                    }
+                }
+            });
         }
 
         function toggleUnmappedVisibility(checked) {
             showUnmapped = checked;
             updateVisualization();
+            updateURL();
         }
 
         function updateLegend() {
@@ -850,41 +1191,73 @@
 
         function showDetails(data) {
             if (!data || !data.mappings) return; // Only show for controls
-            document.getElementById('detail-empty').classList.add('hidden');
-            document.getElementById('detail-data').classList.remove('hidden');
-            document.getElementById('detail-panel').classList.remove('hidden-panel');
 
-            document.getElementById('detail-id').innerText = data.name.split(':')[0];
-            document.getElementById('detail-title').innerText = data.name.split(':')[1]?.trim() || data.name;
-            document.getElementById('detail-desc').innerText = data.description || "No description provided.";
-            document.getElementById('detail-weight').innerText = data.weight || "1.0";
-            document.getElementById('detail-pptdf').innerText = "Security Control";
+            // Safe helper to set text if element exists
+            const safeSetText = (id, text) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = text;
+            };
+
+            safeSetText('detail-id', data.name.split(':')[0]);
+            safeSetText('detail-title', data.name.split(':')[1]?.trim() || data.name);
+            safeSetText('detail-desc', data.description || "No description provided.");
+            safeSetText('detail-weight', data.weight || "1.0");
+
+            // Format PPTDF
+            const pptdf = Object.keys(HIERARCHY_ALIASES).find(key => data[key]) || "Unspecified";
+            safeSetText('detail-pptdf', pptdf.replace(/_/g, ' '));
 
             // Map Mappings
             const mapContainer = document.getElementById('detail-mappings');
-            mapContainer.innerHTML = '';
+            // Proceed only if container exists in DOM
+            if (mapContainer) {
+                mapContainer.innerHTML = '';
 
-            const mappings = data.mappings || {};
-            Object.entries(mappings).forEach(([rid, ids]) => {
-                const reg = scfData.regimeList[parseInt(rid)];
-                if (!selectedRegimeIds.has(parseInt(rid))) return; // Only show mapped for selected
-                const block = document.createElement('div');
-                block.className = 'bg-white/5 p-3 rounded-lg border border-white/5 hover:border-blue-500/20 transition-all';
-                block.innerHTML = `
-                    <div class="flex items-center gap-2 mb-2">
-                        <div class="w-1.5 h-1.5 rounded-full" style="background: ${getRegimeColor(rid)}"></div>
-                        <span class="text-[9px] font-bold text-gray-500 uppercase">${reg.full_name}</span>
-                    </div>
-                    <div class="flex flex-wrap gap-1">
-                        ${ids.map(id => `<span class="px-2 py-0.5 bg-blue-500/10 text-blue-300 rounded text-[10px] border border-blue-500/10 font-mono">${id}</span>`).join('')}
-                    </div>
-                `;
-                mapContainer.appendChild(block);
-            });
+                const mappings = data.mappings || {};
+                let hasMappings = false;
+
+                Object.entries(mappings).forEach(([rid, ids]) => {
+                    hasMappings = true;
+                    const rInfo = scfData.regimeList[rid];
+                    if (!rInfo || !selectedRegimeIds.has(parseInt(rid))) return;
+
+                    const el = document.createElement('div');
+                    el.className = 'bg-white/5 rounded-lg p-3 border border-white/5';
+                    el.innerHTML = `
+                        <div class="flex items-center gap-2 mb-2">
+                             <div class="w-2 h-2 rounded-full" style="background: ${getRegimeColor(rid)}"></div>
+                             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${rInfo.name}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            ${ids.map(id => `<span class="text-xs bg-black/40 px-2 py-1 rounded border border-white/10 text-gray-300 font-mono">${id}</span>`).join('')}
+                        </div>
+                    `;
+                    mapContainer.appendChild(el);
+                });
+
+                if (!hasMappings) {
+                    mapContainer.innerHTML = '<div class="text-xs text-gray-600 italic p-2 dark:text-gray-500">No active mappings for selected regimes.</div>';
+                }
+            }
+
+            // Show Details Section
+            const dEmpty = document.getElementById('detail-empty');
+            const dData = document.getElementById('detail-data');
+            if (dEmpty) dEmpty.classList.add('hidden');
+            if (dData) dData.classList.remove('hidden');
+
+            // Open right sidebar if closed
+            const rightSidebar = document.getElementById('right-sidebar');
+            if (rightSidebar && !rightSidebar.classList.contains('open')) {
+                toggleRightSidebar();
+            }
         }
 
         function closeDetails() {
-            document.getElementById('detail-panel').classList.add('hidden-panel');
+            const dEmpty = document.getElementById('detail-empty');
+            const dData = document.getElementById('detail-data');
+            if (dEmpty) dEmpty.classList.remove('hidden');
+            if (dData) dData.classList.add('hidden');
         }
 
         function updateLabelDepth(val) {
@@ -906,9 +1279,24 @@
         }
 
         // --- Initialization ---
-        window.addEventListener('load', () => {
-            initViz();
-            initTreeselect();
+        window.addEventListener('load', async () => {
+            try {
+                applyURLState(); // Load state from URL first
+
+                // Initialize Processor with potentially overridden hierarchy
+                scfData = await processor.init('data/scf_controls.csv', 'data/scf_domains.csv');
+
+                initViz();
+                initTreeselect();
+                initHierarchyFieldsTreeselect();
+                initHierarchyNavigatorTreeselect();
+
+                updateLegend();
+                applyURLFocus();
+            } catch (error) {
+                console.error("Failed to initialize SCF Visualizer:", error);
+                alert("Error loading SCF data. Please ensure CSV files are accessible.");
+            }
         });
 
     </script>
