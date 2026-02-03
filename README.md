@@ -4,14 +4,17 @@ A sophisticated, browser-based GRC visualization tool for the **Secure Controls 
 
 ## 🚀 Features
 
-- **Interactive Circle Packing:** Navigate a 6-level hierarchy from SCF Domains down to individual regime mappings.
+- **Interactive Circle Packing:** Navigate a dynamic hierarchy from SCF Domains down to individual regime mappings.
 - **Dynamic Regime Comparison:** Select multiple compliance frameworks (NIST CSF, ISO 27001, GDPR, etc.) and see them color-coded in real-time.
+- **Adjustable Hierarchy:** Reorder hierarchy fields (PPTDF, Domain, NIST Timing, etc.) to customize the visual depth and grouping.
 - **Smart Navigation:** 
   - **Mouse-Driven:** Fluid zoom (mouse wheel) and pan (drag) interactions.
-  - **Treeselect Sidebar:** Deeply synced hierarchy navigator for precision jumping.
+  - **Treeselect Navigator:** Syncronized hierarchy navigator for precision jumping, now located in the right sidebar.
+  - **Collapsible Sidebars:** Toggle sidebars to maximize visualization space.
+- **Theme Support:** Switch between Dark, Light, and System themes.
 - **Anti-Collision Labeling:** Container labels are top-anchored to prevent visual stacking, with a high-contrast shadow for readability.
 - **Detail Extraction:** Interactive slide-out panel showing full control descriptions, impact weights, and cross-regime linkages.
-- **Persistent State:** Your selected regimes and navigation focus are saved via `localStorage`.
+- **Persistent State:** Your selected regimes, hierarchy order, theme, and navigation focus are saved via `localStorage`.
 
 ## 🛠️ Technology Stack
 
@@ -23,8 +26,8 @@ A sophisticated, browser-based GRC visualization tool for the **Secure Controls 
 ## 📂 Project Structure
 
 - `index.html`: The main visual application (HTML/CSS/JS).
-- `scf_data.js`: The processed SCF hierarchy data.
-- `process_data.py`: (Internal) Python script used to transform SCF CSV data into the visual-ready JSON format.
+- `scf_data.js`: The raw SCF control and domain data in JavaScript format.
+- `scf_processor.js`: Client-side engine that transforms SCF data into the visual-ready hierarchy.
 - `PRD.md`: Product Requirements Document.
 - `USER_GUIDE.md`: Detailed instructions for end-users.
 

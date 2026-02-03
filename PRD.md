@@ -28,9 +28,9 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
 
 ### **4.1 Data Processing**
 
-* **Requirement:** The system must process SCF 2025.4 CSV data, focusing on Control IDs, Domains, Descriptions, Weighting (1-15 scale), and Functional Groupings.  
-* **Requirement:** Support static data imports to ensure zero-latency performance and offline availability.
-* **Requirement:** use memoization/caching to ensure quick calcuation of bubble positions
+* **Requirement:** The system must process SCF 2025.4 CSV data client-side, using `scf_processor.js` to handle Control IDs, Domains, Descriptions, Weighting, and Functional Groupings.
+* **Requirement:** Support direct CSV loading to ensure easy updates and high performance without a backend.
+* **Requirement:** Use client-side caching to ensure quick calculation of bubble positions and hierarchy transitions.
 
 ### **4.2 Circle Packing Visualization Engine**
 
@@ -40,14 +40,9 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
 
 ### **4.3 Structured Hierarchy (Nesting)**
 
-* **Requirement:** Show regime controls grouped together with similar controls from other regimes. Use SCF mappings for accuracy and organize controls under the following 6-level Hierarchy:
-  * **Level 1: SCF Domain:** High-level security categories (e.g., Identification & Authentication).  
-  * **Level 2: PPTDF:** People, Process, Technology, Data, Facility (Strategic categorization).
-  * **Level 3: Functional Grouping:** Broad control functions (e.g., AC: Access Control).
-  * **Level 4: SCF Control:** Specific SCF control name/ID (e.g., IAC-01).
-  * **Level 5: Regime Group:** Grouping of mappings by regime name (e.g., "ISO 27001").
-  * **Level 6: Mapping Node:** Individual regime-specific control identifiers.
-* **Requirement:** Option to hide SCF controls with no displayed mappings
+* **Requirement:** Provide an **Adjustable Hierarchy** where users can reorder fields (e.g., Domain, PPTDF, NIST Timing) to redefine the visual nesting depth.
+* **Requirement:** Organize controls under a dynamic n-level hierarchy based on user selection.
+* **Requirement:** Option to hide SCF controls with no displayed mappings via the "Show Unmapped" toggle.
 
 ### **4.4 Regime Management**
 * **Requirement:** User can search and check off multiple regimes from a searchable list (defaults to NIST CSF 2.0, EU DORA, and India SEBI CSCRF).
@@ -57,6 +52,7 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
 
 
 ### **4.5 Search & Navigation**
+* **Requirement:** **Collapsible Sidebars:** Both left (Regimes/Hierarchy) and right (Navigator/Details) sidebars are collapsible via handle toggles to maximize visualization area.
 * **Requirement:** **Hierarchy Navigator:** A sidebar treeselect that remains synced with the chart focus. Selecting a node in the treeselect zooms the chart; zooming in the chart updates the treeselect.
 * **Requirement:** **Mouse-Driven Interaction:** Support intuitive mouse wheel zooming and drag-panning for fluid exploration.
 * **Requirement:** **Labeling Strategy:** 
@@ -77,9 +73,10 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
 
 ## **6\. Technical Constraints & Standards**
 
-* **Engine:** Browser-based D3.js v7 (Client-side rendering, no Node.js backend required).
+* **Engine:** Browser-based D3.js v7 (Pure client-side rendering with `scf_processor.js`).
 * **Styling:** Tailwind CSS for layout; Vanilla CSS for glassmorphism and custom animation effects.
-* **Persistence:** `localStorage` for regime selection and UI state.
+* **Themes:** Full support for **Dark Mode**, **Light Mode**, and **System Sync**.
+* **Persistence:** `localStorage` for regime selection, theme preference, and UI state.
 * **Accessibility:** High-contrast text shadows for all labels; distinct Tableau10 colors for regimes; high-visibility focus states.
 
 ## **7\. Success Metrics**

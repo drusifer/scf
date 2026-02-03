@@ -8,6 +8,7 @@ Welcome to the **SCF Visualizer**! This guide will help you navigate the complex
 - **Zoom In/Out:** Use your **mouse wheel** or trackpad scroll gesture.
 - **Pan/Move:** **Click and drag** the background or any circle to move the view.
 - **Focus Zoom:** **Click** on any circle to zoom directly into that category or control.
+- **Toggle Sidebars:** Click the **◀ / ▶ handles** on the center-edges of the screen to collapse or expand the left and right sidebars.
 - **Reset View:** Click the background or the root "SCF 2025.4" node to reset the visualization.
 
 ### 2. Labels & Interaction
@@ -17,10 +18,15 @@ Welcome to the **SCF Visualizer**! This guide will help you navigate the complex
 
 ## 📂 Sidebar Controls
 
-### 📦 Control Hierarchy
-The hierarchy navigator lets you search or jump directly to any part of the SCF.
+### 📦 Control Hierarchy (Navigator)
+The hierarchy navigator (located in the **Right Sidebar**) lets you search or jump directly to any part of the SCF.
 - Selecting a node in the tree will zoom the chart to that location.
 - As you zoom in the chart, this tree will automatically update to show your current location.
+
+### 🏗️ Hierarchy Fields
+Located in the **Left Sidebar**, this section allows you to define the depth of the visualization.
+- **Reorder Fields:** Drag or select fields like "PPTDF Applicability" or "SCF Domain" to change how controls are grouped.
+- **Dynamic Grouping:** The visualization updates immediately to reflect your chosen hierarchy.
 
 ### 🛡️ Compliance Regimes
 Choose which frameworks you want to visualize.
@@ -30,9 +36,10 @@ Choose which frameworks you want to visualize.
 
 ## 💡 Pro Tips
 
-- **Unmapped Controls:** The sidebar has a toggle to **"Show Unmapped"**. Turn this OFF to see only the controls that are relevant to your selected regimes.
-- **Breadcrumbs:** Use the breadcrumb path at the top left to track exactly where you are in the 6-level hierarchy.
-- **Click Outside:** You can close the Detail Panel by clicking anywhere on the background.
+- **Themes:** Use the dropdown in the bottom-left footer to switch between **Dark**, **Light**, or **System** themes.
+- **Unmapped Controls:** In the left footer, toggle **"Show Unmapped"** to hide controls that don't have mappings for your selected regimes.
+- **Breadcrumbs:** Use the path at the top left to track your location in the hierarchy.
+- **Detail Panel:** Click any control bubble to see full data in the **Right Sidebar**.
 
 ---
 
