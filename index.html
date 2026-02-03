@@ -14,26 +14,92 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        deep: '#030712',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         :root {
-            /* Core Palette */
-            --bg-deep: #030712;
-            --sidebar-color: #111827;
-            --sidebar-darker: #0f172a;
+            /* Default Light Theme */
+            --bg-deep: #f8fafc;
+            /* Light gray background */
+            --sidebar-color: #ffffff;
+            --sidebar-darker: #f1f5f9;
             --accent-blue: #3b82f6;
             --accent-indigo: #6366f1;
 
             /* Text & Borders */
+            --text-primary: #1e293b;
+            /* Dark text for light mode */
+            --text-muted: #64748b;
+            --border-muted: rgba(0, 0, 0, 0.1);
+            --border-faint: rgba(0, 0, 0, 0.05);
+
+            /* Treeselect overrides */
+            --ts-bg: var(--sidebar-darker);
+            --ts-list-bg: var(--sidebar-color);
+            --ts-tag-blue: #3b82f6;
+            --ts-tag-indigo: #6366f1;
+
+            /* Visualization Colors */
+            /* Visualization Colors */
+            --label-color: #0f172a;
+            --node-stroke: rgba(0, 0, 0, 0.4);
+            --node-stroke-hover: #1e293b;
+            --node-shadow-text: none;
+            --node-fill-default: rgba(0, 0, 0, 0.05);
+            --control-fill: rgba(0, 0, 0, 0.1);
+
+            /* Greyscale for SCF Layers */
+            --scf-depth-1: #94a3b8;
+            /* Slate 400 */
+            --scf-depth-2: #cbd5e1;
+            /* Slate 300 */
+            --scf-depth-3: #e2e8f0;
+            /* Slate 200 */
+            --scf-depth-4: #f1f5f9;
+            /* Slate 100 */
+        }
+
+        .dark {
+            /* Dark Theme Overrides */
+            --bg-deep: #030712;
+            --sidebar-color: #111827;
+            --sidebar-darker: #0f172a;
+
             --text-primary: #f3f4f6;
             --text-muted: #94a3b8;
             --border-muted: rgba(255, 255, 255, 0.1);
             --border-faint: rgba(255, 255, 255, 0.05);
 
-            /* Treeselect Base */
-            --ts-bg: var(--sidebar-darker);
-            --ts-list-bg: var(--sidebar-color);
+            /* Treeselect overrides (Dark) */
+            --ts-bg: #0f172a;
+            --ts-list-bg: #111827;
             --ts-tag-blue: #1e3a8a;
             --ts-tag-indigo: #312e81;
+
+            /* Visualization Colors (Dark) */
+            --label-color: #fff;
+            --node-stroke: rgba(255, 255, 255, 0.1);
+            --node-stroke-hover: #fff;
+            --node-shadow-text: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.5);
+            --node-fill-default: rgba(255, 255, 255, 0.02);
+            --control-fill: rgba(255, 255, 255, 0.15);
+
+            /* Greyscale for SCF Layers (Dark Mode) */
+            --scf-depth-1: rgba(255, 255, 255, 0.15);
+            --scf-depth-2: rgba(255, 255, 255, 0.10);
+            --scf-depth-3: rgba(255, 255, 255, 0.05);
+            --scf-depth-4: rgba(255, 255, 255, 0.20);
+            /* Control highlight */
         }
 
         body {
@@ -51,9 +117,15 @@
         }
 
         .glass {
-            background: rgba(17, 24, 39, 0.9);
+            background: var(--sidebar-color);
             backdrop-filter: blur(16px);
             border: 1px solid var(--border-muted);
+            color: var(--text-primary);
+        }
+
+        /* Adjust glass color transparency for dark mode via variable or specificity */
+        .dark .glass {
+            background: rgba(17, 24, 39, 0.9);
         }
 
         .node {
@@ -62,35 +134,39 @@
         }
 
         .node--1 {
-            stroke: rgba(59, 130, 246, 0.4);
+            stroke: var(--accent-blue);
+            stroke-opacity: 0.4;
             stroke-width: 1px;
-            fill: rgba(59, 130, 246, 0.05);
+            fill: var(--accent-blue);
+            fill-opacity: 0.05;
         }
 
         .node--2 {
-            stroke: rgba(255, 255, 255, 0.2);
+            stroke: var(--node-stroke);
             stroke-width: 0.5px;
-            fill: rgba(255, 255, 255, 0.02);
+            fill: var(--node-fill-default);
         }
 
         .node--3 {
-            stroke: rgba(255, 255, 255, 0.1);
+            stroke: var(--node-stroke);
             stroke-width: 0.5px;
-            fill: rgba(255, 255, 255, 0.01);
+            fill: var(--node-fill-default);
+            fill-opacity: 0.5;
+            /* Slightly fainter */
         }
 
         .node:hover {
-            stroke: #fff !important;
+            stroke: var(--node-stroke-hover) !important;
             stroke-width: 2px !important;
         }
 
         .label {
-            fill: #fff;
+            fill: var(--label-color);
             pointer-events: none;
             text-anchor: middle;
             font-family: 'Outfit', sans-serif;
-            transition: fill-opacity 0.3s, font-size 0.3s, transform 0.5s;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: fill-opacity 0.3s, font-size 0.3s, transform 0.5s, fill 0.3s;
+            text-shadow: var(--node-shadow-text);
             letter-spacing: -0.01em;
         }
 
@@ -118,7 +194,7 @@
 
         .treeselect-input__edit {
             background: transparent !important;
-            color: #fff !important;
+            color: var(--text-primary) !important;
             font-size: 13px !important;
             max-width: 100% !important;
             position: relative !important;
@@ -132,9 +208,15 @@
         .treeselect-list {
             background: var(--ts-list-bg) !important;
             border: 1px solid var(--border-muted) !important;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7) !important;
             border-radius: 0.75rem !important;
             z-index: 100 !important;
+        }
+
+        .treeselect-input__tags-name {
+            margin-left: 7px !important;
+            margin-right: 3px !important;
+            margin-top: 3px !important;
+            margin-bottom: 2px !important;
         }
 
         /* Inline behavior for sidebar accordions */
@@ -185,7 +267,7 @@
 
         .treeselect-list__item--focused,
         .treeselect-list__item:hover {
-            background: rgba(255, 255, 255, 0.05) !important;
+            background: var(--accent-blue) !important;
             color: #fff !important;
         }
 
@@ -233,6 +315,11 @@
         }
 
         /* Footer Branding */
+        select option {
+            background-color: var(--sidebar-color);
+            color: var(--text-primary);
+        }
+
         footer {
             font-size: 0.55rem;
             color: rgba(156, 163, 175, 0.4);
@@ -378,15 +465,23 @@
         </div>
 
         <!-- Footer Branding -->
-        <div class="px-4 py-2 border-t border-white/5 bg-black/40">
+        <div class="px-4 py-2 border-t border-white/5 bg-white/5 dark:bg-black/40">
             <div class="mb-2 flex items-center justify-between">
                 <label
-                    class="text-[10px] font-semibold text-gray-400 uppercase cursor-pointer flex items-center gap-2 hover:text-white transition-colors">
+                    class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase cursor-pointer flex items-center gap-2 hover:text-black dark:hover:text-white transition-colors">
                     <input type="checkbox" id="toggle-unmapped" checked
                         class="w-3.5 h-3.5 rounded bg-white/5 border-white/10 text-blue-500 focus:ring-offset-0 focus:ring-0 checked:bg-blue-600"
                         onchange="toggleUnmappedVisibility(this.checked)">
                     Show unmapped
                 </label>
+
+                <!-- Theme Switcher -->
+                <select id="theme-select" onchange="setTheme(this.value)"
+                    class="bg-white/10 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded text-[10px] text-gray-600 dark:text-gray-400 px-1 py-0.5 focus:outline-none focus:border-blue-500">
+                    <option value="system">System</option>
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                </select>
             </div>
             <footer>
                 <a href="https://github.com/securecontrolsframework/securecontrolsframework" target="_blank">SCF
@@ -415,8 +510,7 @@
         </div>
 
         <!-- Breadcrumbs -->
-        <div id="breadcrumbs"
-            class="absolute top-6 left-6 text-xs text-gray-500 font-mono pointer-events-none shadow-sm flex gap-2">
+        <div id="breadcrumbs" class="absolute top-6 left-6 z-20 text-xs text-gray-500 font-mono shadow-sm flex gap-2">
             <!-- Path updates here -->
         </div>
     </main>
@@ -444,7 +538,7 @@
         </div>
 
         <!-- Details Section (Bottom Half) -->
-        <div id="detail-panel-content" class="flex-1 flex flex-col min-h-0 bg-black/20">
+        <div id="detail-panel-content" class="flex-1 flex flex-col min-h-0 bg-white/5 dark:bg-black/20">
             <div id="detail-empty" class="h-full flex flex-col items-center justify-center opacity-20 text-center">
                 <span class="text-4xl mb-4">🔍</span>
                 <p class="text-xs">Select a control bubble<br>to view deep analytics</p>
@@ -651,18 +745,25 @@
                 .data(root.descendants().slice(1))
                 .join("circle")
                 .attr("class", d => `node node--${d.depth} ${d.children ? "" : "node--leaf"}`)
-                .attr("fill", d => {
-                    if (d.depth === 1) return typeColors[d.data.name] || "rgba(255,255,255,0.05)";
-                    if (d.depth === 4) return "rgba(255,255,255,0.15)"; // SCF Control
-                    if (d.depth === 5) return getRegimeColor(d.data.regimeId) + "44"; // Regime Group (Subtle background)
-                    if (d.depth === 6) return getRegimeColor(d.data.regimeId); // Individual Mappings
-                    return "rgba(255,255,255,0.02)";
+                .style("fill", d => {
+                    if (d.depth === 1) return "var(--scf-depth-1)";
+                    if (d.depth === 2) return "var(--scf-depth-2)";
+                    if (d.depth === 3) return "var(--scf-depth-3)";
+                    if (d.depth === 4) return "var(--scf-depth-4)";
+                    if (d.depth === 5) return getRegimeColor(d.data.regimeId);
+                    if (d.depth === 6) return getRegimeColor(d.data.regimeId);
+                    return "var(--node-fill-default)";
                 })
-                .attr("fill-opacity", d => d.children ? 0.4 : 0.8)
-                .attr("stroke", d => d.children ? "rgba(255,255,255,0.1)" : "transparent")
-                .attr("stroke-width", 0.5)
+                .style("fill-opacity", d => {
+                    if (d.depth === 5) return 0.2; // Manual opacity for regime groups
+                    return d.children ? 0.4 : 0.8;
+                })
+                .style("stroke", d => d.children ? "var(--node-stroke)" : "transparent")
+                .style("stroke-width", 0.5)
                 .on("mouseover", function (event, d) {
-                    d3.select(this).attr("stroke", "#fff").attr("stroke-width", d.depth === 4 ? 3 : 2);
+                    d3.select(this)
+                        .style("stroke", "var(--node-stroke-hover)")
+                        .style("stroke-width", d.depth === 4 ? "3px" : "2px");
                     // Search and Enlarge Label
                     label.filter(l => l === d)
                         .transition().duration(200)
@@ -672,7 +773,9 @@
                         .style("font-weight", 700);
                 })
                 .on("mouseout", function (event, d) {
-                    d3.select(this).attr("stroke", d.children ? "rgba(255,255,255,0.1)" : "transparent").attr("stroke-width", 0.5);
+                    d3.select(this)
+                        .style("stroke", d.children ? "var(--node-stroke)" : "transparent")
+                        .style("stroke-width", "0.5px");
                     // Restore Label
                     label.filter(l => l === d)
                         .transition().duration(200)
@@ -1336,9 +1439,59 @@
         function updateBreadcrumbs(d) {
             const crumb = document.getElementById('breadcrumbs');
             if (!d) return;
-            const path = d.ancestors().reverse().map(a => a.data.name.split(':')[0]);
-            crumb.innerHTML = path.map(p => `<span>${p}</span>`).join('<span class="mx-1 opacity-30">/</span>');
+
+            const ancestors = d.ancestors().reverse();
+            crumb.innerHTML = ''; // Clear existing
+
+            ancestors.forEach((node, index) => {
+                const isLast = index === ancestors.length - 1;
+                const span = document.createElement('span');
+                span.textContent = node.data.name.split(':')[0];
+                span.className = isLast ? "font-bold text-slate-900 dark:text-white" : "cursor-pointer hover:text-blue-500 transition-colors duration-200 text-slate-500 dark:text-slate-400";
+
+                if (!isLast) {
+                    span.onclick = (e) => {
+                        e.stopPropagation();
+                        zoom(e, node);
+                    };
+                }
+
+                crumb.appendChild(span);
+
+                if (!isLast) {
+                    const separator = document.createElement('span');
+                    separator.className = "mx-1 opacity-30 text-gray-500 dark:text-gray-400";
+                    separator.textContent = "/";
+                    crumb.appendChild(separator);
+                }
+            });
         }
+
+        // --- Theme Management ---
+        window.setTheme = (theme) => {
+            localStorage.setItem('scf_theme', theme);
+
+            if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
+            // Update select if implementation logic changed it
+            const sel = document.getElementById('theme-select');
+            if (sel) sel.value = theme;
+        };
+
+        // Initial Theme Load
+        const storedTheme = localStorage.getItem('scf_theme') || 'system';
+        setTheme(storedTheme);
+
+        // Listen for system changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (localStorage.getItem('scf_theme') === 'system') {
+                setTheme('system');
+            }
+        });
 
         // --- Initialization ---
         window.addEventListener('load', async () => {
