@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SCF Circle Packing Relationship Visualizer</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/treeselectjs@0.11.0/dist/treeselectjs.umd.js"></script>
@@ -507,13 +508,24 @@
                     Show unmapped
                 </label>
 
-                <!-- Theme Switcher -->
-                <select id="theme-select" onchange="setTheme(this.value)"
-                    class="bg-white/10 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded text-[10px] text-gray-600 dark:text-gray-400 px-1 py-0.5 focus:outline-none focus:border-blue-500">
-                    <option value="system">System</option>
-                    <option value="dark">Dark</option>
-                    <option value="light">Light</option>
-                </select>
+                <div class="flex items-center gap-2">
+                    <label
+                        class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase flex items-center gap-1">
+                        <span>Size By</span>
+                        <select id="size-by-select" onchange="setSizeBy(this.value)"
+                            class="bg-white/10 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded text-[10px] text-gray-600 dark:text-gray-400 px-1 py-0.5 focus:outline-none focus:border-blue-500">
+                            <option value="weight">Impact</option>
+                            <option value="uniform">Uniform</option>
+                        </select>
+                    </label>
+
+                    <select id="theme-select" onchange="setTheme(this.value)"
+                        class="bg-white/10 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded text-[10px] text-gray-600 dark:text-gray-400 px-1 py-0.5 focus:outline-none focus:border-blue-500">
+                        <option value="system">System</option>
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                    </select>
+                </div>
             </div>
             <footer>
                 <a href="https://github.com/securecontrolsframework/securecontrolsframework" target="_blank">SCF
@@ -610,11 +622,15 @@
         </div>
     </aside>
 
+    <script src="viz_sizing.js"></script>
     <script>
         // State
         const DEFAULT_REGIMES = [62, 167, 226]; // CSF 2.0, EU DORA, India SEBI CSCRF
+        const SIZE_BY_STORAGE_KEY = 'scf_size_by';
+        const { SIZE_BY_WEIGHT, SIZE_BY_UNIFORM } = SCFSizing;
         let selectedRegimeIds = new Set();
         let labelDetailLevels = 2; // Hardcoded to 2 levels as requested
+        let currentSizeBy = localStorage.getItem(SIZE_BY_STORAGE_KEY) || SIZE_BY_WEIGHT;
 
         // Load from localStorage or use defaults
         const savedRegimes = localStorage.getItem('scf_selected_regimes');
@@ -657,6 +673,26 @@
             "Standard": "#6b7280"
         };
         const getRegimeColor = (rid) => colors(rid);
+        const getNodeKey = (d) => d.ancestors().map(node => node.data.name).reverse().join(' > ');
+        const getProjectedScale = (targetView) => width / targetView[2];
+        const getProjectedRadius = (r, targetView) => r * getProjectedScale(targetView);
+        const getProjectedTransform = (x, y, targetView, yOffset = 0) => {
+            const k = getProjectedScale(targetView);
+            return `translate(${(x - targetView[0]) * k},${(y - targetView[1]) * k + yOffset})`;
+        };
+
+        function setSizeBy(value) {
+            currentSizeBy = value === SIZE_BY_UNIFORM ? SIZE_BY_UNIFORM : SIZE_BY_WEIGHT;
+            localStorage.setItem(SIZE_BY_STORAGE_KEY, currentSizeBy);
+
+            const select = document.getElementById('size-by-select');
+            if (select) {
+                select.value = currentSizeBy;
+            }
+
+            updateVisualization();
+            updateURL();
+        }
 
         // Helper functions for dynamic labeling (Relative to focus)
         const getLabelSize = (d, currentFocus, isHovered = false) => {
@@ -733,6 +769,8 @@
 
         function updateVisualization() {
             if (!scfData) return;
+            const previousFocusName = focus?.data?.name;
+            const previousLayout = root ? new Map(root.descendants().map(d => [getNodeKey(d), { x: d.x, y: d.y, r: d.r }])) : new Map();
 
             // Re-build hierarchy based on selection
             const filteredData = filterData(JSON.parse(JSON.stringify(scfData)));
@@ -751,11 +789,12 @@
                 .size([width, height])
                 .padding(d => d.depth === 1 ? 5 : 2)
                 (d3.hierarchy(data)
-                    .sum(d => d.value || (d.weight ? d.weight * 5 : 1))
-                    .sort((a, b) => (b.value || b.weight || 0) - (a.value || a.weight || 0)));
+                    .sum(d => d.value ?? SCFSizing.getLeafSizeValue(d, currentSizeBy))
+                    .sort((a, b) => (b.value ?? 0) - (a.value ?? 0) || d3.ascending(a.data.name, b.data.name)));
 
             root = pack(filteredData);
-            focus = root;
+            focus = previousFocusName ? root.descendants().find(d => d.data.name === previousFocusName) || root : root;
+            const targetView = [focus.x, focus.y, focus.r * 2];
 
             // Assign unique persistent IDs for this render to ensure Treeselect values are stable
             root.descendants().forEach((d, i) => d.id = "node-" + i);
@@ -845,19 +884,45 @@
                 .join("text")
                 .attr("class", "label");
 
-            refreshLabelContent(root);
+            refreshLabelContent(focus);
+
+            const getInitialLayout = (d) => previousLayout.get(getNodeKey(d)) || { x: focus.x, y: focus.y, r: 0 };
+
+            node.attr("transform", d => {
+                const initial = getInitialLayout(d);
+                return getProjectedTransform(initial.x, initial.y, targetView);
+            })
+                .attr("r", d => {
+                    const initial = getInitialLayout(d);
+                    return getProjectedRadius(initial.r, targetView);
+                });
+
+            label.attr("transform", d => {
+                const initial = getInitialLayout(d);
+                return getProjectedTransform(initial.x, initial.y, targetView, getLabelOffset(d, getProjectedRadius(initial.r, targetView), focus));
+            });
 
             // Set initial state
-            label.style("font-size", d => getLabelSize(d, root))
-                .style("fill-opacity", d => getLabelOpacity(d, root))
-                .style("display", d => getLabelDisplay(d, root));
+            label.style("font-size", d => getLabelSize(d, focus))
+                .style("fill-opacity", d => getLabelOpacity(d, focus))
+                .style("display", d => getLabelDisplay(d, focus));
 
-            updateNodeStyles(root);
+            updateNodeStyles(focus);
 
             console.log("Chart refreshed.");
 
-            updateBreadcrumbs(root);
-            zoomTo([root.x, root.y, root.r * 2]);
+            const transition = svg.transition().duration(previousLayout.size > 0 ? 650 : 0);
+            node.transition(transition)
+                .attr("transform", d => getProjectedTransform(d.x, d.y, targetView))
+                .attr("r", d => getProjectedRadius(d.r, targetView));
+            label.transition(transition)
+                .attr("transform", d => getProjectedTransform(d.x, d.y, targetView, getLabelOffset(d, getProjectedRadius(d.r, targetView), focus)));
+
+            view = targetView;
+            updateBreadcrumbs(focus);
+            if (previousLayout.size === 0) {
+                zoomTo(targetView);
+            }
 
             window.externalZoom = (d) => {
                 // Focus based zoom
@@ -1020,6 +1085,7 @@
                 // Depth 4 is the new Control Level (Grouping > Applicability > Domain > Control)
                 if (depth === 4 || node.mappings) {
                     const regimeGroups = {}; // name -> {name, children}
+                    const visibleMappingLeafCount = SCFSizing.getVisibleMappingLeafCount(node.mappings, selectedRegimeIds);
 
                     for (const [regimeId, identifiers] of Object.entries(node.mappings || {})) {
                         const rid = parseInt(regimeId);
@@ -1039,7 +1105,7 @@
                                 regimeGroups[rName].children.push({
                                     name: id,
                                     regimeId: rid,
-                                    value: 1
+                                    value: SCFSizing.getMappedLeafValue(node, visibleMappingLeafCount, currentSizeBy)
                                 });
                             });
                         }
@@ -1143,6 +1209,11 @@
             // Unmapped Visibility
             if (showUnmapped) params.set('u', '1');
 
+            // Bubble sizing mode
+            if (currentSizeBy !== SIZE_BY_WEIGHT) {
+                params.set('s', currentSizeBy);
+            }
+
             // Focus Node
             if (focus && focus !== root) {
                 params.set('f', focus.data.name);
@@ -1165,6 +1236,11 @@
                 showUnmapped = params.get('u') === '1';
                 const toggle = document.getElementById('toggle-unmapped');
                 if (toggle) toggle.checked = showUnmapped;
+            }
+
+            if (params.has('s')) {
+                const sizeBy = params.get('s');
+                currentSizeBy = sizeBy === SIZE_BY_UNIFORM ? SIZE_BY_UNIFORM : SIZE_BY_WEIGHT;
             }
 
             // 2. Hierarchy Fields
@@ -1552,6 +1628,7 @@
         // Initial Theme Load
         const storedTheme = localStorage.getItem('scf_theme') || 'system';
         setTheme(storedTheme);
+        setSizeBy(currentSizeBy);
 
         // Listen for system changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
