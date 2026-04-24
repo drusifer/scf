@@ -1,0 +1,11 @@
+[project]
+name = "scf-data-processor"
+version = "0.1.0"
+dependencies = [
+    "pandas",
+    "openpyxl",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
