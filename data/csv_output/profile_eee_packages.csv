@@ -1,0 +1,591 @@
+CRI Profile ver. 2.1 - Examples of Effective Evidence (EEE) Packages,CRI Profile ver. 2.1 - Examples of Effective Evidence (EEE) Packages,CRI Profile ver. 2.1 - Examples of Effective Evidence (EEE) Packages
+Package Id,EEE Package Name,Package Example Evidence Items
+EEE-001,Cybersecurity and IT Strategy Documents,"- An integrated IT strategic plan that includes cybersecurity goals, detailing how security initiatives support and enhance long-term organizational objectives.
+- Cybersecurity policy documents that are aligned with the IT strategic plan, ensuring that security measures and protocols are consistently applied across all technology projects.
+- A technology and cybersecurity roadmap that provides a timeline for planned IT and security initiatives, including critical milestones and resource allocation.
+- Documentation of the organization's adoption and implementation of cybersecurity frameworks demonstrating a structured approach to security practices within the strategic context.
+- Consolidated IT and cybersecurity budget reports that reflect strategic financial planning for technology and security investments, highlighting the integration of cybersecurity into the overall technology and business budget.
+- Strategic alignment review reports that evaluate the alignment between ongoing IT initiatives and cybersecurity objectives, ensuring that all technology projects incorporate necessary security considerations."
+EEE-002,Board Governance and IT Oversight Documentation,"- Board of Directors' charter and governance guidelines.
+- Copies of presentations, reports, and minutes from board meetings and committees related to IT and cybersecurity.
+- Records of decisions and actions taken regarding IT governance.
+- Policy documents on roles and responsibilities of governance bodies.
+- Compliance reports related to governance policies and practices."
+EEE-003,Strategic Objectives and Planning Documents,"- Documentation ot the organization's mission statement.
+- Strategic plan outlining the organization's objectives and key results.
+- Executive summaries of strategic goals related to IT and cybersecurity.
+- Performance reports against strategic objectives.
+- Communications from leadership on strategic direction and priorities."
+EEE-004,Risk Management Framework and Reporting Documents,"- Enterprise risk management (ERM) framework documentation.
+- IT risk assessment reports identifying potential threats, vulnerabilities, controls, impacts, and mitigation recommendations.
+- Risk register tracking identified risks and mitigation strategies.
+- Annual risk management reports summarizing risk posture.
+- Risk treatment plans detailing responses to specific risks."
+EEE-005,"Risk Appetite Tolerance, and Strategy Alignment Documents","- Risk appetite statements approved by the board or executive management.
+- Risk tolerance levels defined for different categories of risk.
+- Documentation on how risk appetite influences decision-making and strategy.
+- Reports on risk exposures compared to the defined risk appetite.
+- Updates or revisions to risk appetite and tolerance based on changing conditions."
+EEE-006,"Cybersecurity, Culture, and Training Record Documents","- Employee cybersecurity awareness survey results.
+- Training attendance logs for cybersecurity and IT policy courses.
+- Assessments of organizational culture regarding security practices.
+- Feedback and improvement reports following culture assessments.
+- Records of cultural change initiatives related to cybersecurity."
+EEE-007,"Legal, Regulatory, and Compliance Management Documentation","- Compliance audit reports for relevant laws and regulations (e.g., GDPR, HIPAA).
+- Documentation of legal advice received on cybersecurity matters, to include determinations of incident materiality.
+- Records of regulatory filings and notices related to IT and cybersecurity.
+- Updates to policies and procedures in response to legal and regulatory changes.
+- Training records on legal and regulatory requirements for IT staff."
+EEE-008,Customer Data Privacy and Data Protection Documentation,"- Published privacy policy detailing how customer data is handled and protected.
+- Consent forms and records of customer approvals for data processing.
+- Data Protection Impact Assessments (DPIAs) for new projects involving personal data.
+- Records of privacy policy reviews and updates.
+- Documentation of customer notifications in the event of a data breach."
+EEE-009,Audit and Remediation Documentation,"- Internal audit reports on IT and cybersecurity controls.
+- External audit findings and recommendations related to cybersecurity.
+- Management responses and action plans addressing audit observations.
+- Follow-up reports on the implementation of audit recommendations.
+- Third-party assurance reports (e.g., SOC 2, ISO/IEC 27001 certifications)."
+EEE-010,IT Asset Management and Business Function Mapping Documentation,"- Inventory list of IT assets, including hardware, software, and data.
+- Business function catalog that maps key assets to their corresponding business process.
+- Asset ownership and stewardship  records indicating who is responsible for specific assets.
+- Lifecycle management records for assets, showing purchase dates, warranty periods, and disposal information.
+- Integration diagrams showing how assets interact within the business's technology ecosystem."
+EEE-011,External Dependencies and Risk Assessment Documents,"- Diagrams of network architecture showing connections to external systems and services.
+- Contracts and service level agreements (SLAs) with key vendors and service providers.
+- Risk assessments of external dependencies highlighting potential impact on business operations.
+- Documentation of alternative vendors and backup resources in case of primary vendor failure.
+- Incident reports related to external dependencies, including response and resolution details."
+EEE-012,Critical Business Process and Recovery Documentation,"- Process and informatioin flow diagrams for critical business operations.
+- Business impact analyses that identify and prioritize critical processes.
+- Procedures and guidelines for maintaining and operating critical processes.
+- Performance metrics and monitoring reports for critical processes.
+- Recovery plans for critical business processes in the event of disruption."
+EEE-013,Operational Resilience and Continuity Procedures Documentation,"- Standard operating procedures (SOPs) for responding to incidents that threaten resilience and continuity.
+- Business continuity plan outlining procedures for maintaining service delivery during disruptions.
+- Recovery time objectives (RTOs), recovery point objectives (RPOs), maximum tolerable downtime (MTO), impact tolerance, and/or other recovery objective metrics are established for key services.
+- Communication plans for stakeholders during a service disruption, to include alternative communication mechanisms.
+- Contingency plans detailing alternative service delivery methods.
+- Training records for staff on resilience and continuity procedures and their roles during incidents."
+EEE-014,Resilience and Continuity Design and Assessment Documents,"- A documented methodology for evaluating the resilience and continuity of business operations and IT systems.
+- Workbooks or diagrams that visually depict the dependencies of critical business processes.
+- Risk impact studies with mitigation strategies for critical functions.
+- Meeting minutes from design reviews focused on enhancing system resilience and continuity.
+- Industry benchmarking reports comparing the organization's resilience and continuity capabilities.
+- Checklists used for auditing the content and coverage of resilience and continuity plans."
+EEE-015,Sector-Wide Dependency and Impact Analysis Documentation,"- Analysis reports detailing the dependencies within the organization's sector and potential vulnerabilities.
+- Tools or software used to evaluate the criticality of external partners and suppliers.
+- Summaries from workshops and exercises aimed at understanding the sector-wide impact of external disruptions.
+- Reports on how regulatory changes could affect critical external dependencies.
+- Real-time dashboards for monitoring geopolitical events that may impact the sector."
+EEE-016,Recovery Objectives and Strategic Alignment Documentation,"- Tools and templates used for formulating recovery strategies that support business objectives.
+- A matrix aligning recovery time and point objectives with business priorities.
+- Documentation from strategic planning sessions focused on recovery objectives.
+- Signed approvals from management endorsing the proposed recovery strategies.
+- Periodic review reports assessing the alignment of recovery objectives with business needs."
+EEE-017,Third-Party Risk Management and Communication Documents,"- Risk assessment reports for each critical third-party vendor, detailing potential risks and mitigation strategies.
+- Communication plan templates for coordinating with third parties during incidents.
+- Vendor risk management policy that outlines procedures for assessing and managing third-party risks.
+- Records of third-party risk management training provided to staff responsible for vendor relations.
+- Documentation of third-party performance reviews, focusing on compliance with security and resilience standards."
+EEE-018,"Supplier Evaluation, Onboarding, and Due Diligence Documentation","- Checklists and criteria used for evaluating potential suppliers, including security and resilience factors.
+- Due diligence reports for key suppliers, including assessments of their financial stability and operational resilience.
+- Agreements that include clauses related to ongoing monitoring and evaluation of supplier performance.
+- Records of supplier selection meetings, including rationale for decisions and any identified risks.
+- Supplier onboarding process documentation, highlighting security and resilience requirements."
+EEE-019,Vendor Contract Management and Compliance Oversight Documents,"- Templates for contracts with vendors that include specific security and resilience requirements.
+- Oversight procedures for ensuring vendors comply with contractual obligations related to security and resilience.
+- Audit reports of vendor compliance with contract terms, including any corrective actions taken.
+- Documentation of contract review meetings, focusing on performance and adherence to security standards.
+- Change management records for contracts, detailing any amendments related to security and resilience."
+EEE-020,Vendor Contingency and Transition Planning Documents,"- Contingency plans for transitioning services in case of vendor failure, including timelines and responsibilities.
+- Checklists for evaluating vendor contingency and recovery capabilities during the selection process.
+- Documentation of transition exercises or drills conducted to test the effectiveness of contingency plans.
+- Vendor exit strategy documents that outline procedures for terminating relationships while maintaining operational continuity.
+- Records of vendor performance issues that triggered contingency or transition plans."
+EEE-021,Third-Party Cybersecurity and Continuity Assessment Documentation,"- Reports from cybersecurity assessments conducted on third-party vendors, including findings and recommendations.
+- Third-party business continuity plans that detail recovery strategies and objectives relevant to services provided (or records of plan reviews).
+- Agreements with third parties that include requirements for cybersecurity measures and business continuity planning.
+- Documentation of joint business continuity exercises with critical vendors, including outcomes and improvements.
+- Vendor cybersecurity certification records, verifying adherence to industry standards and best practices."
+EEE-022,"Incident Management, Response Framework and Performance Documentation","- Integrated incident management policies and Incident Response Plan (IRP) that outline procedures for detecting, responding to, and recovering from security incidents, from detection to resolution.
+- Configuration guides for SIEM systems and other detection tools, paired with response protocols.
+- Combined logs of incident detection, analysis, and response activities, showing the full incident lifecycle.
+- Training records and modules for the incident response team and security personnel, including exercises, simulations, and end-to-end incident management process.
+- After-action reports, summaries, and lessons learned from incident response exercises, including key takeaways and action items.
+- Metrics and performance indicators that track the effectiveness of the incident response program.
+- Audit reports evaluating the effectiveness of the incident management framework and suggesting improvements."
+EEE-023,Third Party Technology Security Assessment and Compliance Documents,"- Assessment reports for third party software and technology, including security reviews and compliance checks.
+- Documentation of the criteria and standards used for technology assessments.
+- Change logs for external software, indicating how updates and patches are managed.
+- Reports from third party vulnerability and security evaluation scanning services
+- Vendor security certifications or attestations, such as SOC 2 reports or ISO certifications.
+- Records of security testing, such as penetration tests or vulnerability scans, performed on third-party technologies."
+EEE-024,Supplier Collaboration and Security Program Documentation,"- Standard operating procedures (SOPs) for conducting security investigations and handling forensic data.
+- Chain of custody forms and logs that track the handling and analysis of forensic evidence.
+- Forensic toolkits and software licenses used for data analysis during investigations.
+- Forensic investigation reports detailing the rigor of methods applied.
+- Training certifications and other qualifications for personnel or third parties involved in forensic investigations.
+- Reports from completed investigations, including methodologies, findings, and recommendations."
+EEE-025,Vendor Contingency and Risk Mitigation Documentation,"- Contingency plans that outline alternative solutions in case of vendor failure or service disruption.
+- Risk assessments that identify potential points of failure with vendors and corresponding contingency options.
+- Documentation of the evaluation and selection process for alternative vendors or solutions.
+- Communication plans for engaging with alternative vendors during a contingency event.
+- Test results from contingency plan exercises, demonstrating the viability of alternative solutions."
+EEE-026,Third-Party Termination and Decommissioning Documentation,"- Termination procedures and checklists that outline the steps for ending a relationship with a third party.
+- Documentation of data retrieval or transfer processes upon termination of a third-party contract.
+- Records of final account settlements and confirmations of service discontinuation.
+- Technical closure reports that confirm the secure decommissioning of third-party services and systems.
+- Exit interview records or final performance reviews with the third party, capturing lessons learned and final assessments."
+EEE-027,Security Event Detection and Categorization Guidelines,"- Documentation of the security information and event management (SIEM) system configuration and operational procedures.
+- Incident categorization guidelines that define types of incidents and their corresponding response protocols.
+- Logs and reports from the SIEM system demonstrating the detection of security events.
+- Training materials for security analysts on event detection and incident categorization.
+- Audit trails showing the escalation process from event detection to incident declaration."
+EEE-028,Investigation and Forensic Documentation,"- Standard operating procedures (SOPs) for conducting security investigations and handling forensic data.
+- Chain of custody forms and logs that track the handling and analysis of forensic evidence.
+- Forensic toolkits and software licenses used for data analysis during investigations.
+- Forensic investigation reports detailing the rigor of methods applied.
+- Training certifications and other qualifications for personnel or third parties involved in forensic investigations.
+- Reports from completed investigations, including methodologies, findings, and recommendations."
+EEE-029,Critical Function Resilience Documentation,"- Plans that specifically address the continuity and resilience of critical business functions.
+- Dashboards or reports that monitor the health and resilience of critical functions.
+- Definitions of measures used to manage and assess resilience (RPO, RTO, MTO, Impact Tolerance, etc.)
+- Documentation of resilience requirements integrated into the design of new services or processes.
+- Evaluations or audits of the resilience program, highlighting strengths and areas for improvement."
+EEE-030,Board Accountability and Cybersecurity Governance Documentation,"- Minutes from board meetings where cybersecurity and risk management topics are discussed, showing oversight and decision-making.
+- Policies and procedures that define the roles and responsibilities of senior management in overseeing cybersecurity efforts.
+- Performance metrics and reports presented to the board and senior management, demonstrating accountability for security and risk management.
+- Documentation of board-approved cybersecurity strategies and initiatives.
+- Records of executive training and awareness sessions on cybersecurity and risk management topics."
+EEE-031,Cybersecurity and Technology Officer Leadership Documentation,"- Job descriptions and role profiles for the Cybersecurity Officer and Technology Officer, outlining responsibilities and qualifications.
+- Strategic plans and objectives developed by the Cybersecurity Officer and Technology Officer, with documented board or executive approval.
+- Records of security initiatives led by these officers, including project plans, status updates, and outcomes.
+- Documentation of regular updates or briefings provided to the board and senior management by these officers.
+- Evidence of the performance of 360-degree reviews of the Cybersecurity Officer and Technology Officer.
+- Performance evaluations or reviews of the Cybersecurity Officer and Technology Officer, assessing their effectiveness and impact."
+EEE-032,Technology and Cybersecurity Personnel Roles and Responsibilities Documentation,"- Organizational charts and role matrices that clearly define the roles and responsibilities of technology and cybersecurity personnel.
+- Training and certification records for staff, demonstrating qualifications and ongoing professional development.
+- Policies and procedures that outline the expected contributions of personnel to cybersecurity initiatives.
+- Evaluations of skill and resource level requirements against the current personnel complement.
+- Incident response team rosters and contact information, indicating roles during security incidents.
+- Performance reviews and goal-setting documents for technology and cybersecurity staff."
+EEE-033,Training Programs Documents and Physical and Cybersecurity Documentation,"- Documented physical and cybersecurity objectives aligned with the organization's overall security strategy.
+- Training curricula and schedules for physical and cybersecurity awareness and skill-building programs.
+- Attendance records and completion certificates for security training sessions.
+- Evaluations and feedback from participants on the effectiveness of the training programs.
+- Security exercise and drill reports, demonstrating the application of training in simulated scenarios."
+EEE-034,Asset Management and Inventory Oversight Documentation,"- Asset management policies that outline the processes and data requirements for tracking, maintaining, and securing organizational assets.
+- Inventory lists or databases of assets, including hardware, software, data, and intellectual property, with assigned custodians or owners.
+- Change logs or records of asset transfers, disposals, and acquisitions.
+- Technical documentation and configuration of automated inventory discovery and management tools.
+- Reports from periodic asset audits or reviews, confirming the accuracy of the inventory and compliance with the policy.
+- Documentation of asset classification and labeling, indicating the criticality and sensitivity of assets."
+EEE-035,Access Control and Identity Management Documentation,"- Written policies and procedures detailing access control measures and identity management protocols.
+- System configuration snapshots or reports demonstrating the implementation of access controls.
+- Descriptions of role-based groups or other practices used to differentiate access rights.
+- Records demonstrating regular review of access controls, authorized users, and least privilege principle application by system owners.
+- Audit logs showing user access activities and adherence to access policies.
+- Records of user account creation, modification, and termination processes."
+EEE-036,Vulnerability Scanning and Patch Management Documentation,"- Policy, standard, and/or procedure documents covering the identification, assessment, reporting, and remediation of software and device vulnerabilities, including regular patching protocols.
+- Schedules and records of patch deployment activities, including system reboots, post-patch testing, dates, systems affected, and patching outcomes.
+- Documentation of patching or upgrades to standard system configuration baselines.
+- Reports from vulnerability scans or assessments that inform the patch management process.
+- Incident reports related to vulnerabilities that were mitigated through patch management.
+- Documentation and reporting of vulnerability mitigation targets.
+- Records of exceptions to, assessments of, and approvals for cases where vulnerability mitigation targets or standards are not met.
+- Records demonstrating the integration of patch management and change management practices.
+- Approval and review documentation for patching protocols, including impact assessments and authorization records.
+- Dashboards or tools used to monitor patch levels and patch application across the target environment.
+- Post-implementation reviews and post-change evaluation reports assessing the impact and success of patches and any unintended consequences.
+- Audit or review findings related to vulnerability management and patching practices with actions taken in response to findings."
+EEE-037,Change Management Documentation,"- Policy, standard, and/or procedure documents covering change management practices.
+- Change management procedures that outline the process for assessing, tracking, making and documenting changes to IT systems and business processes.
+- Change management procedures for emergency changes, to include approval requirements and post-change documentation requirements.
+- Change management records and documentation for system changes, reflecting updates, modifications, and controlled implementation.
+- Change control records documenting the approval and implementation of system changes, patches, and configuration control, to include actions and decisions taken by change advisory boards or similar review groups.
+- Approval and review documentation for changes, including impact assessments and authorization records.
+- Post-implementation reviews and post-change evaluation reports assessing the impact and success of system changes, identifying any unintended consequences.
+- Records demonstrating that change management practices are integrated into project delivery processes.
+- Records demonstrating that documentation, training, and other system artifacts are updated to reflect any changes made.
+- Audit or review findings related to change management, with actions taken in response to findings."
+EEE-038,Configuration Management Documentation,"- Policy, standard, and/or procedure documents covering configuration management practices.
+- Best practice standards used to inform configuration standards, to include evidence of adherence to hardening and least functionality objectives.
+- System configuration baseline documentation and reports showing compliance with established standards.
+- Change control records documenting the approval and implementation of standard system configurations.
+- Dashboards or tools used to monitor version levels and system configurations across the organization.
+- Dashboards or tools used to monitor for non-standard configurations, unsupported systems, or configuration drift.
+- Audit or review findings related to configuration management with actions taken in response to findings."
+EEE-039,Malware Protection and Incident Detection Documentation,"- Anti-malware policies and procedures, including strategies for prevention, detection, and response.
+- Logs from anti-malware solutions showing coverage, detection, and remediation of malicious software.
+- Exception reports and tracking of malware detection failures and gaps.
+- Incident response plans that include specific protocols for handling malware-related incidents.
+- Post-incident analysis reports that evaluate the effectiveness of malware protection strategies."
+EEE-040,Cybersecurity Awareness and Training Program Documentation,"- Plan detailing awareness initiatives and training programs, including schedules and topics.
+- Records of executed awareness campaigns (e.g., phishing simulations) and training sessions.
+- Engagement metrics, feedback summaries, and post-training testing used to assess program effectiveness.
+- Records of follow-up remediation actions for employees that fail post-training testing.
+- List of employee certifications and completion certificates for cybersecurity training.
+- Improvement reports based on program feedback and metrics."
+EEE-041,Data Governance and Retention Policy Documentation,"- Data governance framework documents that outline roles, responsibilities, and processes for managing organizational data.
+- Data retention schedules and policies specifying how long different types of data should be kept and the procedures for data disposal.
+- Audit reports demonstrating compliance with data management and retention policies.
+- Documentation of automated and manual processes used to implement data retention requirements.
+- Training records for staff on data governance practices and data handling procedures.
+- Documentation of data classification schemes used to manage data based on its sensitivity and importance."
+EEE-042,Emerging Technology Risk and Opportunity Assessment Documentation,"- Strategic reports evaluating the risks and opportunities associated with adopting new or emerging technologies.
+- Risk assessment templates and completed assessments for specific technologies under consideration.
+- Minutes from meetings or workshops where emerging technologies and their implications were discussed.
+- Records of participation in industry events or education related to emerging technologies and risk management.
+- Innovation pipeline documents that track the evaluation and adoption process for new technologies.
+- Case studies or pilot project reports on the implementation of emerging technologies."
+EEE-043,"Cybersecurity Training, Awareness, and Expertise Access Documentation","- Agendas and materials from cybersecurity awareness events and training sessions.
+- Records of accessing/retaining cybersecurity expertise and resources, including external consultants or internal experts.
+- Partnerships with educational institutions or professional organizations to enhance cybersecurity knowledge.
+- Records of employee participation in external cybersecurity conferences, workshops, or courses.
+- Feedback from employees on the accessibility and usefulness of cybersecurity training and expertise."
+EEE-044,Security Incident and Event Management Documentation,"- Written policies outlining the procedures for managing security incidents and events, including roles and responsibilities.
+- Configuration and operational guidelines for Security Information and Event Management (SIEM) systems.
+- Logs and analysis reports from the SIEM system, demonstrating the detection and handling of security events.
+- Training documentation for personnel responsible for managing the SIEM system and responding to incidents.
+- Audit trails and incident reports that document the response to and resolution of security incidents."
+EEE-045,Data Governance and Lifecycle Management Policy Documentation,"- Data governance charters or policies that define the management of data throughout its lifecycle.
+- Procedures and controls for data creation, storage, usage, archiving, and destruction.
+- Documentation of data lifecycle workflows, including roles involved at each stage.
+- Records of data quality assessments and data cleansing activities.
+- Reports on compliance with legal and regulatory requirements related to data lifecycle management."
+EEE-046,Risk Assessment and Threat Analysis Documentation,"- Standardized risk assessment templates.
+- Completed assessments for relevant organizational assets and processes.
+- Threat analysis reports that identify potential threats and their likelihood and impact on the organization.
+- Documentation of risk assessment training for staff involved in the risk management process.
+- Risk registers or databases that track identified risks and their mitigation status.
+- Historical trend analysis of threats and incidents to inform future risk assessments."
+EEE-047,Vulnerability Management and Remediation Strategy Documentation,"- Policies and procedures for identifying, assessing, and remediating vulnerabilities in systems and software.
+- Vulnerability scan reports and dashboards showing identified vulnerabilities and their remediation status.
+- Change management records for remediation actions taken in response to identified vulnerabilities.
+- Documentation of prioritization criteria for addressing vulnerabilities based on risk.
+- Records of communication with stakeholders regarding vulnerability management efforts and outcomes."
+EEE-048,Exception Management and Vulnerability Handling Documentation,"- Policies and procedures for handling exceptions to standard security policies, including the process for requesting and approving exceptions.
+- Documentation of approved policy exceptions, including justification, risk assessment, and compensating controls.
+- Vulnerability exception records that detail the rationale for not remediating certain vulnerabilities and the associated risk acceptance.
+- Audit reports that review the management of policy and vulnerability exceptions."
+EEE-049,Vulnerability Disclosure and Response Protocol Documentation,"- Procedures for receiving, assessing, and responding to vulnerability disclosures from external researchers, customers, or other entities.
+- Communication templates and protocols for interacting with individuals or organizations reporting vulnerabilities.
+- Records of disclosed vulnerabilities, including the organization's response and remediation actions.
+- Agreements or MOUs with bug bounty platforms or security researchers regarding vulnerability disclosure.
+- Reports summarizing the outcomes of vulnerability disclosures and the effectiveness of the response process."
+EEE-050,Control Assessment and Testing Documentation,"- Schedules and plans for regular assessments and testing of security controls to ensure they are functioning as intended.
+- Results and reports from control assessments, including identified deficiencies and corrective actions taken.
+- Documentation of testing methodologies and criteria used to evaluate the effectiveness of controls.
+- Records of updates or changes to controls based on assessment findings."
+EEE-051,Risk Metrics and Performance Indicator Documentation,"- Key performance indicators (KPIs) and risk metrics used to measure the effectiveness of the organization's risk management program.
+- Dashboards or reports that track and display collected performance indicators and risk metrics.
+- Documentation of the process for collecting, analyzing, and reporting on KPIs and risk metrics.
+- Historical data and trend analysis used to inform risk management decisions and strategies.
+- Records of management reviews or meetings where performance indicators and risk metrics are discussed and used to drive decision making or improvements."
+EEE-052,Technology Architecture and Design Documentation,"- Architecture diagrams and design documents that detail the structure and components of the organization's technology systems, including networks, systems, and applications.
+- Records of architecture review board meetings, including decisions on technology design, changes, and rationales for architectural changes.
+- Documentation of technology standards, design patterns, and best practices adopted in system design.
+- Change history logs and version control records for architectural designs and documents, showing evolution and updates over time.
+- Compliance certificates, reports, and assessments verifying that designs and architecture meet relevant industry standards and regulatory requirements."
+EEE-053,"Project Governance, Management, and Quality Assurance Documentation","- Project governance frameworks or charters that define roles, responsibilities, and decision-making processes.
+- Stakeholder analysis documents and communication plans for engaging with project stakeholders.
+- Project management plans that include quality control measures, checkpoints, risk mitigation strategies, and contingency planning.
+- Risk assessment templates and completed assessments for technology projects, identifying potential delivery risks.
+- Quality assurance policies and procedures for overseeing project deliverables and outcomes.
+- Checklists and tools used for quality control during project execution.
+- Meeting minutes and action items from project steering committees, governance boards, or risk management discussions within project teams, including actions taken to address identified risks.
+- Records of project audits or reviews focused on quality aspects.
+- Feedback and satisfaction surveys from stakeholders regarding project outcomes and engagement.
+- Reports on project performance, governance effectiveness, and risk management effectiveness, including lessons learned.
+- Training documentation for project managers and team members on quality management practices and risk assessment and management techniques.
+- Post-project reviews or retrospectives that analyze risk management effectiveness and lessons learned.
+- Documentation of project management standards, methodologies, and best practices adopted by the organization"
+EEE-054,Technology Service Performance and Support Monitoring Documentation,"- Service level agreements (SLAs) and key performance indicators (KPIs) for technology services and support functions.
+- Documentation for service catalogs, service support systems, or other mechanisms for end-users to request services.
+- Monitoring dashboards or reports that track service performance against SLAs and KPIs.
+- Records of service incidents, including response times, resolution details, and customer feedback.
+- Procedures for managing and improving technology service performance."
+EEE-055,Network and System Segmentation Implementation Documentation,"- Written policies detailing the approach to network security and system segmentation, including criteria for segmenting resources and strategies for enhancing security.
+- Network diagrams showing the segmentation of the network into different zones or segments for security purposes, including firewalls and access control lists.
+- Configuration records, change logs, or documentation demonstrating the implementation of segmentation controls.
+- Audit reports assessing and evaluating the effectiveness of network and system segmentation in reducing risk, isolating, and protecting critical assets.
+- Incident response records showing the role of network segmentation in containing security events."
+EEE-056,Operational Technology and IoT Security Documentation,"- Security policies and procedures specific to operational technology (OT) and Internet of Things (IoT) devices.
+- Inventory lists of OT and IoT devices, including security features and firmware versions.
+- Risk assessments for OT and IoT devices, identifying potential vulnerabilities and mitigation strategies.
+- Configuration standards for various types of OT and IoT devices (e.g., default password reset).
+- Incident response plans that include protocols for addressing security incidents involving OT and IoT devices.
+- Documentation of security patches and updates applied to OT and IoT devices, along with testing results."
+EEE-057,Remote Access Security and Management Documentation,"- Policies governing remote access to the organization's network and systems, including user authentication and authorization procedures and end-user acceptable use policies.
+- Records of remote access configurations and settings, ensuring secure connections (e.g., VPN configurations).
+- Audit trails or logs of remote access sessions, including user activities and access times.
+- Reviews or assessments of remote access security controls, identifying any gaps or improvements needed.
+- Training records for employees and contractors on secure remote access practices."
+EEE-058,Resilience Mechanism Validation and Feedback Documentation,"- Plans and procedures for implementing resilience mechanisms across IT systems and business processes.
+- Business- and associated system-level requirements for resilience.
+- Architecture and design documentation detailing resilience deisgn factors and considerations.
+- Schedules and reports from testing and exercises designed to validate the effectiveness of resilience mechanisms.
+- Change management documentation related to the enhancement of resilience mechanisms.
+- Lessons learned and improvement plans derived from resilience testing activities.
+- Stakeholder feedback on the organization's resilience capabilities, gathered through surveys or interviews."
+EEE-059,Enterprise and Cyber Resilience Policy Documentation,"- Official enterprise resilience strategy documents that outline the organization's approach to achieving and maintaining resilience.
+- Cyber resilience policy documents that specify the measures and controls in place to protect against cyber threats.
+- Board presentations and approvals related to the resilience strategy and cyber resilience policies.
+- Reports from resilience assessments, including gap analyses and recommendations for improvement."
+EEE-060,Cross-Sector Incident Response Coordination Documents,"- Coordination plans that outline how the organization will work with external entities during an incident response.
+- Agreements or MOUs with cross-sector partners and government agencies for collaborative information sharing and/orincident response.
+- After-action reports from joint incident response exercises with cross-sector partners.
+- Communication protocols for sharing information and coordinating actions during cross-sector incidents.
+- Training and exercise records for staff on cross-sector incident response procedures."
+EEE-061,Service Recovery and Critical Operations Resumption Documentation,"- Procedures and checklists for resuming services and recovering critical operations after an incident.
+- Prioritization lists that identify critical services and operations for recovery efforts.
+- Test results and reports from service resumption drills and recovery exercises.
+- Service level agreements (SLAs) with vendors that include provisions for rapid service resumption.
+- Documentation of alternative processes and workarounds to be used when primary operations are disrupted."
+EEE-062,Board Oversight and Risk Management Documentation,"- Minutes from board meetings where risk management reviews are conducted, demonstrating oversight.
+- Risk management review reports that are presented to the board, including findings and recommendations.
+- Policies that define the board's role in overseeing risk management activities.
+- Records of board-directed actions taken in response to risk management reviews.
+- Training materials for board members on risk management principles and their oversight responsibilities."
+EEE-063,Cybersecurity and Technology Officer Accountability Documents,"- Performance goals and objectives set for the Cybersecurity and Technology Officers, including measurable outcomes.
+- Documentation of regular reviews or evaluations of the Cybersecurity and Technology Officers' performance.
+- Records of decisions and actions taken by these officers, demonstrating their accountability for technology and security outcomes.
+- Documentation of any corrective actions or improvements implemented based on performance reviews.
+- Evidence of communication by these officers to the board or senior management regarding cybersecurity and technology matters."
+EEE-064,Roles and Responsibilities in Risk Management Documentation,"- Organizational charts and job descriptions that clearly define roles and responsibilities related to risk management.
+- Documentation of risk management training and awareness programs for personnel across the organization.
+- Records of risk-related decisions and actions taken by personnel, showing accountability.
+- Performance reviews that include assessments of how individuals manage and mitigate risks within their areas of responsibility.
+- Incident reports that detail the involvement and effectiveness of personnel in managing and responding to risks."
+EEE-065,Asset Management and Custodianship Documentation,"- Asset management policies that outline the procedures for asset custodianship, including accountability for asset security and maintenance.
+- Records of asset assignments to custodians, including acknowledgment of responsibilities.
+- Audit trails showing the tracking and verification of asset location, status, and custodianship.
+- Reports from periodic reviews of asset management practices and custodian performance."
+EEE-066,Segregation of Duties in Risk Management Documentation,"- Policies and procedures that establish segregation of duties within risk management activities to prevent conflicts of interest and fraud.
+- Flowcharts or diagrams that illustrate the separation of roles and responsibilities in risk-related processes.
+- Internal control reports that verify the effectiveness of segregation of duties in mitigating risks.
+- Records of changes to duties or responsibilities to maintain proper segregation as the organization evolves."
+EEE-067,Resource Planning and Allocation for Risk Management Documentation,"- Strategic plans that include resource allocation for risk management functions, such as staffing, technology, and training.
+- Budget documents that detail funding dedicated to risk management activities.
+- Capacity and resiliency planning reports that assess the resources needed to effectively manage risks.
+- Documentation of resource adjustments made in response to changes in the risk landscape.
+- Records of resource utilization and efficiency in risk management, including return on investment analyses."
+EEE-068,Threat Monitoring and Detection Program Evaluation Documentation,"- Documentation of the monitoring and detection strategies employed to identify potential security threats and vulnerabilities.
+- Evaluation reports detailing the effectiveness of monitoring tools and detection mechanisms in identifying and mitigating risks.
+- Training records for security personnel on the use of monitoring and detection technologies and techniques.
+- Change logs demonstrating updates and improvements made to monitoring and detection capabilities.
+- Incident case studies showcasing successful detection and response actions facilitated by the monitoring program."
+EEE-069,Crisis Response and Business Continuity Management Documentation,"- Crisis response plans that detail specific actions, communication protocols, templates, and roles during various crisis scenarios.
+- Exercise and drill records, including scenarios, outcomes, and lessons learned, to validate crisis response capabilities.
+- After-action reports from actual crisis events, analyzing the response effectiveness and areas for improvement.
+- Stakeholder feedback on the organization's response during crisis situations, used to refine continuity and crisis response plans."
+EEE-070,Incident Management and Forensic Training Documents,"- Curricula and materials for training programs focused on incident management and forensic investigation techniques.
+- Attendance and completion records for employees who have undergone incident management and forensic training.
+- Certifications or qualifications obtained by staff in incident management and forensic analysis disciplines.
+- Summaries of training exercises, including objectives, scenarios, and participant performance evaluations.
+- Feedback from training participants, used to continuously improve the training content and delivery methods."
+EEE-071,Customer Cybersecurity Awareness Documentation,"- Cybersecurity awareness materials and communications distributed to customers, such as newsletters, alerts, and guidance documents.
+- Records of customer-focused cybersecurity events or webinars, including topics covered and attendee feedback.
+- Documentation of customer portals or platforms that provide security tips, alerts, and updates.
+- Surveys or assessments measuring customer awareness and satisfaction with the organization's cybersecurity communications.
+- Case studies or examples of how customer awareness initiatives have successfully mitigated security risks."
+EEE-072,Cybersecurity Training for Leadership Documentation,"- Agendas and materials from cybersecurity training sessions specifically designed for the organization's governing body and senior management.
+- Records of attendance and participation in cybersecurity training by board members and senior executives.
+- Evaluations or assessments of cybersecurity knowledge before and after training sessions.
+- Documentation of cybersecurity briefings or updates provided to the governing body and senior management on a regular basis.
+- Feedback from senior leaders on the relevance and effectiveness of the cybersecurity training they received."
+EEE-073,Governance Access to Cybersecurity Expertise Documents,"- Contracts or agreements with external cybersecurity experts or advisory firms engaged to support governance activities.
+- Records of cybersecurity expert consultations or briefings provided to the governing body or committees.
+- Documentation of in-house cybersecurity expertise available to the governing body, including staff qualifications and roles.
+- Minutes from governance meetings where cybersecurity experts provided input or guidance on decision-making.
+- Evaluations of the cybersecurity expertise utilized by the governing body, assessing its impact on governance decisions."
+EEE-074,Data Protection and Encryption Documentation,"- Consolidated data protection policies that mandate encryption for sensitive data, detailing standards and handling procedures.
+- Certificates and reports demonstrating compliance with recognized encryption standards.
+- Centralized records of encryption solutions implemented across the organization, including configuration details.
+- Integrated data breach response and incident management plans that specify the use of encryption as a protective measure.
+- Streamlined training documentation for all employees on data protection and encryption best practices."
+EEE-075,Malware and Mobile Code Defense Strategy Documents,"- Policies and procedures for defending against malware and malicious mobile code, including prevention, detection, and response strategies.
+- Configuration records for anti-malware tools and systems, showing protective measures in place.
+- Logs and reports from anti-malware solutions, documenting detections and actions taken.
+- Post-incident analysis documents that evaluate the response to malware incidents and the effectiveness of defense mechanisms."
+EEE-076,Network Infrastructure and Access Control Documentation,"- Network architecture diagrams that detail the infrastructure layout and access control points.
+- Configuration management records for network devices, demonstrating the implementation of access controls.
+- Audit logs and reports verifying compliance with network access policies and procedures.
+- Incident response records showing the effectiveness of network access controls in mitigating unauthorized access."
+EEE-077,Physical and Environmental Security Documents,"- Documentation of environmental controls (e.g., fire suppression, climate control) and physical security measures (e.g., access controls, surveillance systems).
+- Maintenance and inspection records for environmental and physical security equipment.
+- Incident logs related to environmental hazards or physical security breaches, including responses and outcomes.
+- Security audit reports evaluating the adequacy of environmental and physical security controls."
+EEE-078,Resilience Testing and Infrastructure Redundancy Documentation,"- Documentation of resilience testing plans and procedures, including objectives, scenarios, and expected outcomes.
+- Test reports summarizing the results of resilience testing exercises, highlighting strengths and areas for improvement.
+- Infrastructure redundancy designs and implementation records, showing failover capabilities and backup systems.
+- Change management records documenting updates or enhancements made to improve infrastructure redundancy.
+- Stakeholder feedback on the organization's resilience and redundancy capabilities, gathered after testing or actual events."
+EEE-079,Capacity Planning and Resource Utilization Documentation,"- Capacity planning strategies and models that forecast infrastructure and resource needs based on business growth and demand.
+- Utilization monitoring reports and dashboards that track the usage of IT resources and infrastructure.
+- Documentation of actions taken to address capacity constraints or optimize resource utilization.
+- Reviews or assessments of capacity planning and utilization monitoring practices, identifying opportunities for optimization."
+EEE-080,Intrusion Detection and Prevention Systems (IDPS) Documentation,"- Policies and procedures governing the operation of intrusion detection and prevention systems (IDPS).
+- Configuration and management records for IDPS, detailing rule sets, detection mechanisms, and response actions.
+- Logs and alerts generated by IDPS, including analysis of detected intrusions and the effectiveness of prevention measures.
+- Audit or review reports assessing the coverage, configuration, and effectiveness of intrusion detection and prevention measures."
+EEE-081,Incident Analysis and Triage Process Documentation,"- Documentation of standardized processes for analyzing and triaging security incidents, including criteria for categprization and prioritization.
+- Logs and reports from incident management systems showing the application of triage processes in real incidents.
+- After-action reviews or lessons learned documents from incidents, highlighting the effectiveness of analysis and triage procedures.
+- Continuous improvement plans based on feedback and performance metrics from incident analysis activities."
+EEE-082,Forensic Data Security and Impact Assessment Documentation,"- Policies and procedures for conducting forensic analysis and assessing the impact of security incidents.
+- Records of forensic analysis tools and software licenses, ensuring the availability of necessary resources.
+- Documentation of completed forensic analyses, including methodologies, findings, and recommendations for preventing future incidents.
+- Training certifications for personnel responsible for forensic analysis and impact assessments.
+- Summaries of incident impact assessments presented to management, detailing the consequences and lessons learned."
+EEE-083,Incident Escalation and Communication Protocol Documentation,"- Escalation procedures that outline the steps for escalating incidents within the organization, including roles and responsibilities.
+- Templates, protocols, and automated tool configurations for internal and external communication during and after security incidents.
+- Identified fail-over communication methods.
+- Records of incident response exercises testing the escalation and communication processes.
+- Incident logs demonstrating the application of escalation and communication protocols in actual incidents.
+- Feedback from stakeholders on the effectiveness and clarity of communications during incident response."
+EEE-084,Cyber Threat Intelligence Sharing and Distribution Documents,"- Policies and procedures for collecting, analyzing, and distributing cyber threat intelligence within the organization and with external partners.
+- Agreements or memberships with threat intelligence sharing platforms or industry groups.
+- Records of threat intelligence briefings or alerts issued to relevant stakeholders.
+- Evaluations of the threat intelligence program, assessing its contribution to the organization's security posture."
+EEE-085,Vulnerability Mitigation and Incident Containment Documentation,"- Procedures for mitigating vulnerabilities and containing incidents to prevent further damage or data loss.
+- Documentation of vulnerability scans and assessments, including identified vulnerabilities and mitigation actions taken.
+- Incident containment plans, detailing specific containment strategies for different types of security incidents.
+- Records of incident response drills or exercises focusing on containment and mitigation strategies.
+- Post-incident reports analyzing the effectiveness of containment and mitigation efforts, with recommendations for improvement."
+EEE-086,Recovery Strategy and Resilience Plan Documentation,"- Documentation of the organization's recovery strategies, including plans for restoring critical services and operations after an incident.
+- Change logs or records showing updates to recovery strategies and resilience plans based on lessons learned from exercises or actual incidents.
+- Stakeholder feedback and review summaries that have led to updates in recovery strategies or resilience plans.
+- Training session records for staff on updated recovery procedures and resilience measures.
+- Audit reports or assessments that have identified areas for improvement in recovery strategies, leading to plan updates."
+EEE-087,Security Control and Process Improvement Documents,"- Continuous improvement plans for security controls and processes, detailing objectives, actions, timelines, and responsible parties.
+- Budget requests and justifications for improvement recommendations.
+- Documentation of security control assessments, including findings and recommendations for enhancements.
+- Change management records for updates to security processes and controls, including rationale and outcomes.
+- Feedback collection mechanisms and reports from users and stakeholders on security controls, informing improvement plans.
+- Performance metrics and monitoring reports that track the effectiveness of security controls and process improvements over time."
+EEE-088,Incident Management Role and Training Documentation,"- Role definitions and responsibilities for incident management team members, clearly documented and communicated.
+- Training programs and records for individuals involved in incident management, covering their specific roles and responsibilities.
+- Incident response exercises or simulations, including role-playing scenarios that reinforce role clarity and preparedness.
+- Feedback and evaluation reports from incident management activities, assessing role performance and identifying training needs.
+- Organizational charts or matrices that visually represent the incident management structure and roles."
+EEE-089,System Sanitization and Restoration Documents,"- Procedures for the sanitization of systems and data to remove sensitive information securely before disposal or repurposing.
+- Restoration procedures detailing steps to return systems to operational status after an incident or maintenance.
+- Records of system sanitization and restoration activities, including dates, systems involved, and personnel responsible.
+- Training records for IT staff on proper sanitization techniques and restoration protocols.
+- Compliance reports or certifications demonstrating adherence to industry standards for data sanitization and system restoration."
+EEE-090,Security and Resilience Design Standards Documents,"- Official documents outlining security and resilience architectural and design standards that all technology projects and initiatives must adhere to.
+- Checklists and templates used during the design phase of projects to ensure compliance with security and resilience standards.
+- Records of design review sessions where security and resilience considerations were evaluated and enforced.
+- Case studies or examples of projects that successfully implemented these design standards.
+- Audit or review reports assessing adherence to security and resilience design standards across projects."
+EEE-091,Enterprise Resilience Strategy Documentation,"- Documentation of the enterprise resilience strategy, outlining objectives, programs, and initiatives designed to enhance organizational resilience.
+- Records of resilience program meetings, including strategic decisions, program updates, and progress tracking.
+- Training and awareness materials developed to promote resilience across the organization.
+- Performance metrics and reports evaluating the effectiveness of resilience programs and initiatives.
+- Feedback from internal and external stakeholders on the organization's resilience capabilities and areas for improvement."
+EEE-092,Business Continuity Strategy and Exercises Documentation,"- Integrated Business Continuity Plans (BCPs) that address various disruption scenarios, informed by Business Impact Analyses (BIAs).
+- Documentation of regular BCP reviews, reflecting business changes and new insights.
+- Logs from business continuity exercises, including objectives, execution, and actionable feedback.
+- Aggregated stakeholder input on the effectiveness and clarity of continuity plans and exercises.
+- Audit summaries evaluating the readiness and thoroughness of business continuity measures."
+EEE-093,Risk Management Strategy and Framework Documentation,"- Documentation of the organization's risk management strategy and framework, outlining risk identification, assessment, and mitigation processes.
+- Records from risk management framework review sessions, including updates made to adapt to new risks or business changes.
+- Risk registers or databases tracking identified risks, assessments, and mitigation actions over time.
+- Stakeholder reports summarizing the state of risk management within the organization and strategic recommendations.
+- External audit or consultant reviews of the risk management framework, providing independent assessments and suggestions for improvement."
+EEE-094,Technology and Cybersecurity Risk Appetite Documents,"- Official statements or documents defining the organization's risk appetite specifically related to technology and cybersecurity.
+- Board or executive committee meeting minutes discussing and approving the risk appetite statement.
+- Guidelines for aligning IT and cybersecurity initiatives with the defined risk appetite.
+- Reviews or assessments of projects and initiatives to ensure they are within the organization's technology and cybersecurity risk appetite."
+EEE-095,Security Training and Competency Documentation,"- Security awareness and training program documentation, including topics covered, schedules, and target audiences.
+- Records of participation and completion for security training sessions, workshops, and e-learning modules.
+- Assessments or quizzes measuring employee understanding and retention of security concepts post-training.
+- Feedback from employees on the relevance and effectiveness of security training programs.
+- Continuous improvement plans for security training, based on feedback, emerging threats, and organizational changes."
+EEE-096,Incident Detection and Response Coordination Documentation,"- Incident detection policies and procedures that define how potential security events are identified and analyzed.
+- Coordination plans that outline roles and communication protocols for responding to incidents.
+- Logs and reports from detection tools and systems, including details of incident analysis and response actions.
+- Training and exercise records for response teams, demonstrating preparedness and coordination effectiveness.
+- After-action reports and lessons learned from incident responses, used to improve future coordination."
+EEE-097,Third-Party Risk Management Documentation,"- Third-party risk management policies that establish how vendor risks are assessed and managed.
+- Oversight procedures and records of vendor performance reviews, including compliance with security requirements.
+- Documentation of vendor risk assessments, including due diligence findings and mitigation measures.
+- Contracts and agreements with third parties that include clauses related to risk management and security expectations.
+- Training materials for staff involved in managing and overseeing third-party relationships."
+EEE-098,Customer Data Privacy and Compliance Documents,"- Privacy policies and procedures that detail how customer data is protected and used in compliance with relevant laws and regulations.
+- Records of privacy compliance audits, including findings and corrective actions taken.
+- Documentation of customer consent and data handling practices, demonstrating adherence to privacy principles.
+- Training records for staff on data privacy regulations and customer data handling procedures.
+- Incident logs related to customer data privacy, including any breaches and the organization's response."
+EEE-099,Technology Delivery and Quality Assurance Documentation,"- Project delivery plans that include quality assurance checkpoints and acceptance criteria.
+- Quality assurance policies and procedures for technology projects, ensuring deliverables meet specified requirements.
+- Records of testing and validation activities, including test plans, results, and defect tracking.
+- Post-project reviews or retrospectives focusing on delivery quality and lessons learned."
+EEE-100,Resilience Testing and Business Impact Documentation,"- Resilience testing plans and procedures, including objectives and expected outcomes.
+- Business Impact Assessment (BIA) reports that evaluate the potential effects of disruptions on business operations.
+- Records of resilience testing exercises, including scenarios, execution, and lessons learned.
+- Documentation of updates to resilience plans based on testing outcomes and BIA findings.
+- Stakeholder feedback on the organization's resilience and the impact of potential business disruptions."
+EEE-101,Cyber Threat Intelligence Sharing Documentation,"- Cyber threat intelligence policies that outline the process for collecting, analyzing, and sharing threat information.
+- Records of threat intelligence received and shared with internal stakeholders and external partners.
+- Analysis reports based on threat intelligence that inform security strategies and operations.
+- Training records for security analysts on threat intelligence tools and analysis techniques.
+- Membership or participation records in threat intelligence sharing platforms or industry groups."
+EEE-102,Vulnerability Disclosure Management Documentation,"- Vulnerability disclosure policies that define how external reports of potential vulnerabilities are managed and addressed.
+- Documentation of vulnerability disclosures received, including the organization's response and remediation efforts.
+- Communication records with security researchers or reporting parties regarding vulnerability disclosures.
+- Reports summarizing the outcomes of vulnerability disclosures and the effectiveness of the response process."
+EEE-103,Security Policy Review and Update Documents,"- Security policy review schedules and procedures, including criteria for making updates.
+- Change logs or records documenting updates to security policies, including reasons for changes.
+- Meeting minutes from stakeholder meetings, capturing input on proposed policy updates.
+- Training records for staff on updated security policies and new security requirements.
+- Audit or assessment reports that have led to revisions of security policies."
+EEE-104,Risk Tolerance and Management Practice Integration Documentation,"- Documentation of the organization's risk tolerance levels and how these are integrated into risk management practices.
+- Records of risk assessments that consider the organization's risk tolerance when determining mitigation strategies.
+- Reports to management and the board on risk exposures in relation to the defined risk tolerance.
+- Reviews of risk management practices to ensure they remain aligned with the organization's risk tolerance."
+EEE-105,Stakeholder Obligation Compliance and Sector-Specific Risk Analysis Documents,"- Policies and procedures that address stakeholder obligations and sector-specific risks.
+- Sector-specific risk analysis reports that identify unique risks and compliance requirements.
+- Documentation of compliance audits or assessments, including findings and actions taken to address gaps.
+- Agreements or contracts with stakeholders that include compliance with sector-specific obligations and standards."
+EEE-106,Recovery Objectives Critical Infrastructure Documentation,"- Documentation of recovery objectives for critical infrastructure and how these align with business continuity goals.
+- Critical infrastructure analysis reports that assess the resilience and recovery capabilities of essential systems.
+- Records of alignment discussions or decisions between recovery objectives and business needs.
+- Audit reports evaluating the alignment of recovery objectives with the criticality of infrastructure components."
+EEE-107,Data Recovery and Information Flow Mapping Documentation,"- Data recovery strategy documents that outline procedures for restoring lost or corrupted data.
+- Information flow maps that illustrate how data moves through the organization, informing recovery planning.
+- Test reports from data recovery exercises, demonstrating the ability to restore data in line with recovery strategies.
+- Documentation of changes to data recovery strategies based on new business processes or technologies.
+- Training records for IT staff on data recovery procedures and information flow considerations."
+EEE-108,Background and Screening Checks Documents,"- Policies and procedures for conducting background checks and screening of employees, contractors, and third parties.
+- Records of completed background checks and screenings, including dates and outcomes.
+- Compliance reports verifying that background and screening practices meet legal and regulatory requirements.
+- Audit trails showing the integration of background check results into hiring or contracting decisions."
+EEE-109,Email Protection Mechanism Documents,"- Policies and procedures for securing email communications, including spam filters, phishing detection, and encryption.
+- Configuration records for email protection systems, demonstrating the implementation of security measures.
+- Training records for employees on recognizing and reporting suspicious emails and following email security best practices.
+- Incident logs related to email security threats, including actions taken and resolutions.
+- Audit or review reports assessing the effectiveness of email protection mechanisms and identifying areas for improvement."
+EEE-110,Data Recovery and Integrity Assurance Documentation,"- Data recovery plans that describe the procedures for restoring critical data and systems after an incident, including roles and responsibilities.
+- Policies and procedures for regular data integrity checks, ensuring the accuracy and completeness of data both under normal operations and during recovery.
+- Documentation of backup and restoration procedures, including backup schedules, data retention policies, and the scope of backup data.
+- Logs and reports from data integrity and recovery tests, demonstrating successful restoration and validation of data against integrity standards.
+- Checklists, tools, and software used for conducting data integrity checks and for verifying successful data recovery during planned exercises or in response to actual incidents.
+- Service level agreements (SLAs) with third-party vendors that outline responsibilities and expectations for data recovery services, including timeframes for restoration and data integrity guarantees.
+- Training materials and records for IT staff and relevant personnel on data recovery and integrity maintenance procedures, including any certifications or acknowledgments of training completion.
+- Audit reports or reviews that assess the organization's data recovery and integrity assurance practices, including any findings and subsequent corrective actions taken to improve data management.
+- After-action reports and lessons learned from recovery exercises or actual data loss incidents, used to refine and improve recovery strategies and integrity verification processes."
+EEE-111,Disaster Recovery and Validation Program Documentation,"- Disaster Recovery (DR) plans outlining specific recovery steps for Information Technology (IT) systems and data.
+- Schedules and results from regular DR testing, ensuring plans are actionable and up-to-date.
+- Change management records for DR plans, capturing updates and justifications.
+- Records capturing lessons-learned from exercises and the updating of documentation and plans to reflect the improvements.
+- Training and certification records for personnel on DR roles and procedures.
+- Review reports assessing DR plan alignment with overall business recovery objectives and Business Impact Analyses (BIAs)."
+EEE-112,System Development and Lifecycle Integrity Documentation,"- System development lifecycle (SDLC) policies and procedures that ensure integrity throughout the development process.
+- Documentation of code reviews, testing results, and quality assurance measures taken during development.
+- Version control records and release notes for software development projects.
+- Training records for developers on secure coding practices and lifecycle management.
+- Audit reports evaluating the adherence to SDLC processes and the integrity of development practices.
+- Application Security standard, policies, procedures"

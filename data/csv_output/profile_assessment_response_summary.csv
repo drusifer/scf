@@ -1,0 +1,158 @@
+,,,CRI Profile ver. 2.1 Response Distribution Summary,CRI Profile ver. 2.1 Response Distribution Summary,CRI Profile ver. 2.1 Response Distribution Summary,CRI Profile ver. 2.1 Response Distribution Summary,CRI Profile ver. 2.1 Response Distribution Summary,CRI Profile ver. 2.1 Response Distribution Summary,,,,
+,,,,Response Distribution,Response Distribution,Response Distribution,Response Distribution,Response Distribution,Response Distribution,Response Distribution,Response Distribution,Response Distribution
+,,,CRI Profile Total:  ,0,0,0,0,0,0,0,208,110
+Outline Id,Level,Profile Id,Function / Category / Subcategory,Yes,No,Partial,Yes-Risk Based,Yes-Compensating Control,Not Tested,I Don't Know,To Be Assessed,Not Applicable
+001,F,GV,GOVERN,0,0,0,0,0,0,0,64,33
+002,C,GV.OC,Organizational Context,0,0,0,0,0,0,0,7,7
+003,S,GV.OC-01,Organizational Mission,0,0,0,0,0,0,0,1,0
+004,S,GV.OC-02,Stakeholder Risk Management Expectations,0,0,0,0,0,0,0,1,2
+005,S,GV.OC-03,"Legal, Regulatory, & Contractual Requirements",0,0,0,0,0,0,0,2,0
+006,S,GV.OC-04,Stakeholder Service Expectations,0,0,0,0,0,0,0,1,3
+007,S,GV.OC-05,Organizational Service Dependencies,0,0,0,0,0,0,0,2,2
+008,C,GV.RM,Risk Management Strategy,0,0,0,0,0,0,0,15,11
+009,S,GV.RM-01,Risk Management Objectives Agreement,0,0,0,0,0,0,0,4,1
+010,S,GV.RM-02,Risk Appetite & Risk Tolerance Statements,0,0,0,0,0,0,0,1,2
+011,S,GV.RM-03,Enterprise Risk Integration,0,0,0,0,0,0,0,1,3
+012,S,GV.RM-04,Risk Response Strategic Direction,0,0,0,0,0,0,0,1,0
+013,S,GV.RM-05,Lines of Communication,0,0,0,0,0,0,0,2,0
+014,S,GV.RM-06,Standardized Risk Management Method,0,0,0,0,0,0,0,1,0
+015,S,GV.RM-07,Strategic Opportunities,0,0,0,0,0,0,0,0,1
+016,S,GV.RM-08,Technology Assimilation & Implementations,0,0,0,0,0,0,0,4,3
+017,S,GV.RM-09,Business Continuity & Resilience Risk Management,0,0,0,0,0,0,0,1,1
+018,C,GV.RR,"Roles, Responsibilities, and Authorities",0,0,0,0,0,0,0,14,4
+019,S,GV.RR-01,Organizational Leadership Responsibility,0,0,0,0,0,0,0,5,0
+020,S,GV.RR-02,Risk Management Roles & Responsibilities,0,0,0,0,0,0,0,4,3
+021,S,GV.RR-03,Resource Adequacy,0,0,0,0,0,0,0,3,0
+022,S,GV.RR-04,Human Resource Practices,0,0,0,0,0,0,0,2,1
+023,C,GV.PO,"Policies, Processes, and Procedures",0,0,0,0,0,0,0,8,1
+024,S,GV.PO-01,Establishment of Policies & Procedures,0,0,0,0,0,0,0,7,1
+025,S,GV.PO-02,Policy & Procedure Review & Update,0,0,0,0,0,0,0,1,0
+026,C,GV.OV,Oversight,0,0,0,0,0,0,0,5,2
+027,S,GV.OV-01,Risk Management Strategy Outcomes Review,0,0,0,0,0,0,0,3,0
+028,S,GV.OV-02,Risk Management Strategy Review & Adjustment,0,0,0,0,0,0,0,1,1
+029,S,GV.OV-03,Risk Management Performance Measurement,0,0,0,0,0,0,0,1,1
+030,C,GV.SC,Supply Chain Risk Management,0,0,0,0,0,0,0,5,2
+031,S,GV.SC-01,Supply Chain Risk Management Program,0,0,0,0,0,0,0,1,1
+032,S,GV.SC-02,Third Party Roles & Responsibilities,0,0,0,0,0,0,0,1,0
+033,S,GV.SC-03,Supply Chain Risk Management Integration,0,0,0,0,0,0,0,1,0
+034,S,GV.SC-04,Supplier Identification & Prioritization,0,0,0,0,0,0,0,1,0
+035,S,GV.SC-08,Third Party Incident Management Integration,0,0,0,0,0,0,0,1,0
+036,S,GV.SC-09,Supply Chain Security Practice Integration,0,0,0,0,0,0,0,0,1
+037,C,GV.IR,Independent Risk Management Function,0,0,0,0,0,0,0,0,6
+038,S,GV.IR-01,Independent Risk Management Function,0,0,0,0,0,0,0,0,3
+039,S,GV.IR-02,Independent Risk Management Evaluation,0,0,0,0,0,0,0,0,2
+040,S,GV.IR-03,Independent Risk Management Reporting,0,0,0,0,0,0,0,0,1
+041,C,GV.AU,Independent Audit Function,0,0,0,0,0,0,0,10,0
+042,S,GV.AU-01,Independent Audit Compliance Assessment,0,0,0,0,0,0,0,5,0
+043,S,GV.AU-02,Independent Audit Procedures,0,0,0,0,0,0,0,2,0
+044,S,GV.AU-03,Independent Audit Reporting,0,0,0,0,0,0,0,3,0
+045,F,ID,IDENTIFY,0,0,0,0,0,0,0,37,27
+046,C,ID.AM,Asset Management,0,0,0,0,0,0,0,7,6
+047,S,ID.AM-01,Hardware Inventory,0,0,0,0,0,0,0,1,0
+048,S,ID.AM-02,"Software, Services, & Systems Inventory",0,0,0,0,0,0,0,1,0
+049,S,ID.AM-03,Network Communications & Data Flows,0,0,0,0,0,0,0,1,0
+050,S,ID.AM-04,Supplier Services Inventory,0,0,0,0,0,0,0,1,0
+051,S,ID.AM-05,Asset Protection Prioritization,0,0,0,0,0,0,0,0,2
+052,S,ID.AM-07,Data & Metadata Inventory,0,0,0,0,0,0,0,0,1
+053,S,ID.AM-08,Asset Life Cycle Management,0,0,0,0,0,0,0,3,3
+054,C,ID.RA,Risk Assessment,0,0,0,0,0,0,0,18,9
+055,S,ID.RA-01,Asset Vulnerability Identification,0,0,0,0,0,0,0,3,0
+056,S,ID.RA-02,Information Sharing Forums,0,0,0,0,0,0,0,0,2
+057,S,ID.RA-03,Threat Identification,0,0,0,0,0,0,0,3,1
+058,S,ID.RA-04,Impact & Likelihood Analysis,0,0,0,0,0,0,0,1,0
+059,S,ID.RA-05,Risk Exposure Determination & Prioritization,0,0,0,0,0,0,0,1,3
+060,S,ID.RA-06,Risk Response Determination,0,0,0,0,0,0,0,6,0
+061,S,ID.RA-07,Change & Exception Management,0,0,0,0,0,0,0,2,3
+062,S,ID.RA-08,Vulnerability Disclosure Response,0,0,0,0,0,0,0,2,0
+063,C,ID.IM,Improvement,0,0,0,0,0,0,0,12,12
+064,S,ID.IM-01,Continuous Improvements Evaluation,0,0,0,0,0,0,0,3,2
+065,S,ID.IM-02,Tests & Exercises,0,0,0,0,0,0,0,4,5
+066,S,ID.IM-03,Improvements from Lessons Learned,0,0,0,0,0,0,0,1,1
+067,S,ID.IM-04,Plans Affecting Operations,0,0,0,0,0,0,0,4,4
+068,F,PR,PROTECT,0,0,0,0,0,0,0,49,25
+069,C,PR.AA,"Identity Management, Authentication, and Access Control",0,0,0,0,0,0,0,13,0
+070,S,PR.AA-01,Identity & Credential Management,0,0,0,0,0,0,0,2,0
+071,S,PR.AA-02,Identity Binding to Credentials,0,0,0,0,0,0,0,1,0
+072,S,PR.AA-03,Authentication,0,0,0,0,0,0,0,3,0
+073,S,PR.AA-04,Identity Assertions,0,0,0,0,0,0,0,1,0
+074,S,PR.AA-05,Access Authorizations,0,0,0,0,0,0,0,4,0
+075,S,PR.AA-06,Physical Access,0,0,0,0,0,0,0,2,0
+076,C,PR.AT,Awareness and Training,0,0,0,0,0,0,0,11,1
+077,S,PR.AT-01,User Awareness & Training,0,0,0,0,0,0,0,4,0
+078,S,PR.AT-02,Specialized Role Awareness & Training,0,0,0,0,0,0,0,7,1
+079,C,PR.DS,Data Security,0,0,0,0,0,0,0,5,1
+080,S,PR.DS-01,Protection of Data at Rest,0,0,0,0,0,0,0,2,1
+081,S,PR.DS-02,Protection of Data in Transit,0,0,0,0,0,0,0,1,0
+082,S,PR.DS-10,Protection of Data in Use,0,0,0,0,0,0,0,1,0
+083,S,PR.DS-11,Data Backup,0,0,0,0,0,0,0,1,0
+084,C,PR.PS,Platform Security,0,0,0,0,0,0,0,14,17
+085,S,PR.PS-01,Configuration Management,0,0,0,0,0,0,0,7,2
+086,S,PR.PS-02,Software Maintenance & Replacement,0,0,0,0,0,0,0,1,2
+087,S,PR.PS-03,Hardware Maintenance,0,0,0,0,0,0,0,0,1
+088,S,PR.PS-04,Log Record Generation,0,0,0,0,0,0,0,3,0
+089,S,PR.PS-05,Unauthorized Software Installation & Execution,0,0,0,0,0,0,0,3,0
+090,S,PR.PS-06,Secure Systems Development Practices,0,0,0,0,0,0,0,0,10
+091,S,PR.PS-07,"Technology Operations, Service, & Support",0,0,0,0,0,0,0,0,2
+092,C,PR.IR,Technology Infrastructure Resilience,0,0,0,0,0,0,0,6,6
+093,S,PR.IR-01,Logical Access Protections,0,0,0,0,0,0,0,5,3
+094,S,PR.IR-02,Environmental Threat Protections,0,0,0,0,0,0,0,1,0
+095,S,PR.IR-03,Resilience Measures,0,0,0,0,0,0,0,0,1
+096,S,PR.IR-04,Capacity Management,0,0,0,0,0,0,0,0,2
+097,F,DE,DETECT,0,0,0,0,0,0,0,14,10
+098,C,DE.CM,Continuous Monitoring,0,0,0,0,0,0,0,8,7
+099,S,DE.CM-01,Network Monitoring,0,0,0,0,0,0,0,3,3
+100,S,DE.CM-02,Physical Environment Monitoring,0,0,0,0,0,0,0,1,0
+101,S,DE.CM-03,Personnel Activity Monitoring,0,0,0,0,0,0,0,2,1
+102,S,DE.CM-06,Service Provider Monitoring,0,0,0,0,0,0,0,1,1
+103,S,DE.CM-09,"Hardware, Software, & Data Monitoring",0,0,0,0,0,0,0,1,2
+104,C,DE.AE,Adverse Event Analysis,0,0,0,0,0,0,0,6,3
+105,S,DE.AE-02,Potentially Adverse Event Analysis,0,0,0,0,0,0,0,2,0
+106,S,DE.AE-03,Event Information Correlation,0,0,0,0,0,0,0,2,0
+107,S,DE.AE-04,Impact & Scope Determination,0,0,0,0,0,0,0,1,0
+108,S,DE.AE-06,Event Information Sharing,0,0,0,0,0,0,0,1,0
+109,S,DE.AE-07,Contextual Analysis,0,0,0,0,0,0,0,0,2
+110,S,DE.AE-08,Incident Declaration,0,0,0,0,0,0,0,0,1
+111,F,RS,RESPOND,0,0,0,0,0,0,0,12,4
+112,C,RS.MA,Incident Management,0,0,0,0,0,0,0,4,1
+113,S,RS.MA-01,Response Plan Execution,0,0,0,0,0,0,0,1,0
+114,S,RS.MA-02,Incident Triage & Validation,0,0,0,0,0,0,0,1,0
+115,S,RS.MA-03,Incident Categorization & Prioritization,0,0,0,0,0,0,0,1,0
+116,S,RS.MA-04,Incident Escalation,0,0,0,0,0,0,0,0,1
+117,S,RS.MA-05,Recovery Initiation,0,0,0,0,0,0,0,1,0
+118,C,RS.AN,Incident Analysis,0,0,0,0,0,0,0,2,2
+119,S,RS.AN-03,Incident Analysis & Root Cause Determination,0,0,0,0,0,0,0,1,0
+120,S,RS.AN-06,Investigation Documentation,0,0,0,0,0,0,0,0,1
+121,S,RS.AN-07,Incident Data Collection & Preservation,0,0,0,0,0,0,0,0,1
+122,S,RS.AN-08,Incident Magnitude Determination,0,0,0,0,0,0,0,1,0
+123,C,RS.CO,Incident Response Reporting and Communication,0,0,0,0,0,0,0,4,1
+124,S,RS.CO-02,Stakeholder Incident Notification,0,0,0,0,0,0,0,3,0
+125,S,RS.CO-03,Stakeholder Incident Information Sharing,0,0,0,0,0,0,0,1,1
+126,C,RS.MI,Incident Mitigation,0,0,0,0,0,0,0,2,0
+127,S,RS.MI-01,Incident Containment,0,0,0,0,0,0,0,1,0
+128,S,RS.MI-02,Incident Eradication,0,0,0,0,0,0,0,1,0
+129,F,RC,RECOVER,0,0,0,0,0,0,0,10,1
+130,C,RC.RP,Incident Recovery Plan Execution,0,0,0,0,0,0,0,7,1
+131,S,RC.RP-01,Recovery Plan Execution,0,0,0,0,0,0,0,1,0
+132,S,RC.RP-02,Recovery Action Performance,0,0,0,0,0,0,0,2,0
+133,S,RC.RP-03,Backup & Restoration Asset Integrity,0,0,0,0,0,0,0,1,0
+134,S,RC.RP-04,Post-Incident Operational Norms,0,0,0,0,0,0,0,1,0
+135,S,RC.RP-05,Asset Integrity Restoration,0,0,0,0,0,0,0,1,1
+136,S,RC.RP-06,End-of-Incident Determination,0,0,0,0,0,0,0,1,0
+137,C,RC.CO,Incident Recovery Communication,0,0,0,0,0,0,0,3,0
+138,S,RC.CO-03,Recovery Activity Communication,0,0,0,0,0,0,0,2,0
+139,S,RC.CO-04,Public Information Sharing,0,0,0,0,0,0,0,1,0
+140,F,EX,EXTEND,0,0,0,0,0,0,0,22,10
+141,C,EX.DD,Procurement Planning and Due Diligence,0,0,0,0,0,0,0,8,4
+142,S,EX.DD-01,Procurement Planning,0,0,0,0,0,0,0,0,3
+143,S,EX.DD-02,Prospective Third Party Due Diligence,0,0,0,0,0,0,0,4,0
+144,S,EX.DD-03,Technology & Cybersecurity Due Diligence,0,0,0,0,0,0,0,3,0
+145,S,EX.DD-04,Product & Service Due Diligence,0,0,0,0,0,0,0,1,1
+146,C,EX.CN,Third-Party Contracts and Agreements,0,0,0,0,0,0,0,7,0
+147,S,EX.CN-01,Contract General Requirements,0,0,0,0,0,0,0,3,0
+148,S,EX.CN-02,Contract Cybersecurity-Related Requirements,0,0,0,0,0,0,0,4,0
+149,C,EX.MM,Monitoring and Managing Suppliers,0,0,0,0,0,0,0,6,3
+150,S,EX.MM-01,Ongoing Third-Party Monitoring,0,0,0,0,0,0,0,4,2
+151,S,EX.MM-02,Ongoing Third-Party Management,0,0,0,0,0,0,0,2,1
+152,C,EX.TR,Relationship Termination,0,0,0,0,0,0,0,1,3
+153,S,EX.TR-01,Termination Planning,0,0,0,0,0,0,0,0,3
+154,S,EX.TR-02,Termination Practices,0,0,0,0,0,0,0,1,0
