@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+
+# build artifacts
+__pycache__
+build
+.via
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
