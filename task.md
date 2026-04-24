@@ -18,6 +18,13 @@
 - [x] [S2-3] Add UI selector for Size By (Weight/Uniform) near Theme toggle
 - [x] [S2-4] Test sizing toggle animations and label rendering
 
+## Sprint 3: Predictable Label Reading
+
+- [ ] [S3-1] Define branch reading mode for selected node plus two levels below
+- [ ] [S3-2] Replace depth-only label rules with readable font floor and projected-radius thresholds
+- [ ] [S3-3] Add reset-to-reading-view control and clear recovery from free zoom/pan
+- [ ] [S3-4] Verify label readability across click navigation, breadcrumbs, navigator, and manual zoom
+
 ## Backlog
 
 - [ ] [B-1] Export visualization to PDF/PNG

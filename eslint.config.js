@@ -1,6 +1,6 @@
 module.exports = [
     {
-        files: ["viz_sizing.js", "tests/**/*.js"],
+        files: ["viz_sizing.js", "reading_mode.js", "tests/**/*.js"],
         languageOptions: {
             ecmaVersion: 2024,
             sourceType: "commonjs"
@@ -10,13 +10,14 @@ module.exports = [
         }
     },
     {
-        files: ["index.inline.js"],
+        files: ["app.js"],
         languageOptions: {
             ecmaVersion: 2024,
             sourceType: "script",
             globals: {
                 Papa: "readonly",
                 SCFDataProcessor: "readonly",
+                SCFReadingMode: "readonly",
                 SCFSizing: "readonly",
                 Treeselect: "readonly",
                 alert: "readonly",

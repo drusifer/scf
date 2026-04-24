@@ -18,7 +18,7 @@ endif
 
 # ── Bob Protocol Targets ─────────────────────────────────────────────────────
 
-.PHONY: tldr test test-unit lint lint-js lint-inline-js via_index install_bob update_bob pull_bob clean_bob diff_bob preview
+.PHONY: tldr test test-unit lint lint-js lint-app-js via_index install_bob update_bob pull_bob clean_bob diff_bob preview
 
 preview: ## Start a local web server to preview the visualization
 	@echo "Starting preview server at http://localhost:8000"
@@ -35,10 +35,12 @@ test-unit: ## Run project unit tests
 lint: lint-js lint-inline-js ## Run project lint checks
 
 lint-js: ## Run ESLint on project JavaScript modules and tests
-	@npx eslint viz_sizing.js tests/unit
+	@npx eslint viz_sizing.js reading_mode.js tests/unit
 
-lint-inline-js: ## Run ESLint on the main inline JavaScript in index.html
-	@python3 agents/tools/extract_inline_script.py index.html | npx eslint --stdin --stdin-filename index.inline.js
+lint-app-js: ## Run ESLint on the extracted application script
+	@npx eslint app.js
+
+lint-inline-js: lint-app-js ## Backward-compatible alias for app script linting
 
 via_index: ## Build the via index required by the via MCP server
 	@via index "$(CURDIR)"
@@ -241,8 +243,11 @@ lint: ## Run project lint checks
 lint-js: ## Run ESLint on project JavaScript modules and tests
 	@./agents/tools/mkf.py $(V) $@
 
-lint-inline-js: ## Run ESLint on the inline application script
+lint-app-js: ## Run ESLint on the extracted application script
 	@./agents/tools/mkf.py $(V) $@
+
+lint-inline-js: ## Run ESLint on the extracted application script
+	@./agents/tools/mkf.py $(V) lint-app-js
 
 via_index: ## Build the via index required by the via MCP server
 	@./agents/tools/mkf.py $(V) $@
