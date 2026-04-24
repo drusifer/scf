@@ -1,0 +1,21 @@
+name: "SCF 2026.1"
+description: "Secure Controls Framework"
+files:
+  controls: "data/scf_controls_consolidated.csv"
+  domains: "data/scf_domains_2026_1.csv"
+schema:
+  controls:
+    domain_col: "SCF Domain"
+    category_col: "Base ID"
+    subcategory_col: "SCF Control"
+    weight_col: "Relative Control Weighting"
+    control_id_col: "SCF #"
+    control_num_col: "Base ID"
+    description_col: "Secure Controls Framework (SCF) Control Description"
+    tag_cols: ["SCRM TAGS"]
+    # SCF does not provide per-framework relationship tags in the raw CSV
+    mapping_tag_suffix: null 
+  domains:
+    name_col: "SCF Domain"
+    id_col: "SCF Identifier"
+    intent_col: "Principle Intent"

@@ -1,0 +1,20 @@
+name: "CRI Profile v2.1"
+description: "Cybersecurity Risk Institute Profile"
+files:
+  controls: "data/cri_controls_framework_mapping_catalog.csv"
+  domains: "data/cri_domains.csv"
+schema:
+  controls:
+    domain_col: "Function"
+    category_col: "Category"
+    subcategory_col: "Subcategory"
+    weight_col: "Weighting"
+    control_id_col: "Profile Id"
+    control_num_col: "Outline Id"
+    description_col: "CRI Profile v2.1 Diagnostic Statement"
+    tag_cols: ["CRI SUBJECT TAGS", "CRI TIER TAGS"]
+    mapping_tag_suffix: " TAGS"
+  domains:
+    name_col: "Function"
+    id_col: "Profile Id"
+    intent_col: "Diagnostic Statement"
