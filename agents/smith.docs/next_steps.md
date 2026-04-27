@@ -1,10 +1,15 @@
 # Next Steps
 
 ## Immediate Next Action
-If the sprint is implemented, run a live user test of the resulting reading mode.
+Await Mouse Sprint 8 phase plan.
 
 ## Waiting On
-User direction on whether to turn the UX recommendation into an implementation task.
+- Mouse Sprint 8 phase plan.
 
 ## Planned Work
-- [ ] *user test the revised label behavior in a live browser once implemented
+- [x] Re-test CRI tag filter after Neo fixes BUG-1 + BUG-2
+- [x] Gate 1 review for Sprint 8 polish stories
+- [x] Gate 2 review for Sprint 8 architecture
+
+---
+*Last updated: 2026-04-27*

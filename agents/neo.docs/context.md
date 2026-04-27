@@ -1,34 +1,52 @@
-# Agent Local Context
+# Neo Context
 
-> ## Recent Decisions
-> - Implement `sprint_weighting` entirely in `index.html`, preserving `scf_processor.js`.
-> - Preserve the current zoom focus when size mode changes so the page does not reset context for the user.
-> - Implement `sprint_label_reading` in `app.js` plus a small overlay change in `index.html`, with label policy extracted to `reading_mode.js`.
->
-> ## Key Findings
-> - Weight parsing already exists:
->   - `scf_processor.js` exposes `weight` on each control node, so no data pipeline changes were required.
-> - Footer controls are the right integration point:
->   - The approved UX location near the theme selector already exists in `index.html`.
-> - Repo test target is not currently a feature-validating signal:
->   - `make test` fails because the repo lacks an importable `tests` package.
-> - Mapped control sizing bug source:
->   - In `filterData()`, each visible mapping identifier contributed `value: 1`, so mapped controls grew with mapping count instead of staying proportional to the control's own weight.
-> - Current label logic lived in `app.js`:
->   - The prior behavior only considered relative depth and ignored projected readability.
-> - Manual pan/zoom already existed through `d3.zoom()`:
->   - The missing piece was explicit state that distinguishes canonical reading view from free zoom.
-> - `make lint` did not cover the new shared helper by default:
->   - The lint target now includes `reading_mode.js`.
->
-> ## Important Notes
-> Implemented a persisted `Size By` selector with `Impact` and `Uniform` modes.
-> Updated pack sizing/sorting, URL state, and layout refresh behavior to retain zoom focus across sizing changes.
-> Verified the inline app script with `node --check` after extracting it from `index.html`.
-> Follow-up fix: mapped controls now distribute their total size budget across visible mapping leaves, so mapped and unmapped controls remain comparable under impact sizing.
-> `sprint_label_reading` now enforces a branch-scoped reading window of focus + children + readable grandchildren, adds a visible recovery control, and keeps manual pan/zoom from becoming the authority for label eligibility.
-> QA follow-up fixed the remaining policy mismatch:
-> immediate children are always eligible in reading mode now, and grandchildren remain the first density-pruning tier.
->
->---
->*Last updated: 2026-04-23T20:03*
+## Sprint 8 — Context and Polish Implementation (2026-04-27)
+
+- S8-1: `framework_configs.js` SCF `PPTDF_Applicability.raw` now uses real CSV header `PPTDF\nApplicability`.
+- S8-1 test: `tests/unit/test_framework_processor.js` loads the real SCF CSV and asserts Data, Facility, N/A, People, Process, Technology at depth 1.
+- S8-2: `updateFilterBadge()` now counts selected regimes + tag filters + Mapping Quality filters, with a title/aria-label breakdown and correct singular/plural wording.
+- S8-2: `tag-clear-btn` visibility remains based only on active tag/mapping filters, not selected regimes.
+- S8-3: left/right sidebar handles now have dynamic `title` and `aria-label` values.
+- S8-4: `#regime-legend` is bounded/wrapping; legend chips are compact and truncate long names.
+- E2E tests added: activity badge, sidebar labels, legend viewport containment.
+
+## Sprint 7 — CRI UX Remediation Complete (2026-04-25)
+
+### S7-1 — Tag Filter OR/ANY Predicate (tag_filter.js)
+- `buildTagFilterPredicate` line 19: `every()` → `some()`
+- Old: ALL tags on control must be in active set (subset logic)
+- New: at least ONE tag on control must be in active set (OR/ANY)
+- Cross-group AND preserved: control must pass every group with active filters
+- Updated 2 failing tests; added 3 new AC9 tests (total: 37)
+
+### S7-2 — Tooltip Wrapping (index.html)
+- Removed `white-space: nowrap` from `#node-tooltip` inline style
+- `max-w-xs` Tailwind class now controls width; long paths wrap naturally
+- `positionNodeTooltip()` reads `offsetHeight` after display:block — handles taller wrapped tooltips correctly
+
+### S7-3 — Regime Grouping (regime_grouping.js + app.js)
+- Extracted `buildRegimeTreeOptions()` to standalone `regime_grouping.js` (testable)
+- Groups regimes by `name.split(" ")[0]`; groups with count≥2 get parent node (`grp-{prefix}`)
+- `initTreeselect()` branches: CRI (has `mapping_tag_suffix`) → `buildRegimeTreeOptions`; SCF → existing `regimeCatalog` path
+- `inputCallback` + `_initialRegimeValue` both handle `grp-` prefix expansion
+- `regime_grouping.js` added as script tag before `app.js` in index.html
+
+### S7-4 — Detail Panel Quality Tags (app.js showDetails())
+- Removed single-line quality badge from regime header (was cramped/unreadable for multi-entry values)
+- Added "Mapping Quality" section after idWrap block: splits `regimeQualityTags[rid]` by `\n`, renders each trimmed entry as a chip
+- Section hidden if no quality tag; multi-regime loop handles multiple regimes automatically
+
+### S7-5 — Mapping Quality Filter (app.js + index.html)
+- State: `activeMappingQualityFilters = new Set()`, `mappingQualityRegimeId = null`
+- `initMappingQualityFilter()`: shows section only when `selectedRegimeIds.size === 1`; parses Type values via `/Type:\s*([^;]+)/`; renders checkboxes; clears state + hides on 0 or 2+ regimes
+- `applyTagFilter()` rewritten: combines tag + mapping predicates in single pass (AND between them); zero-result overlay covers both
+- `#mapping-quality-section` div added to index.html after Tag Filter accordion
+- `initMappingQualityFilter()` called in `inputCallback` (after updateVisualization) and `switchFramework()` (after initTagFilterPanel)
+- Mapping quality filter state NOT persisted to localStorage (context-dependent, resets on page load)
+
+### Sprint 5 notes still relevant
+- SCRM Focus CSV columns: `PPTDF\nApplicability` has multi-line header — Cypher backlog
+- Binary SCRM flag columns — Cypher backlog
+
+---
+*Last updated: 2026-04-27*

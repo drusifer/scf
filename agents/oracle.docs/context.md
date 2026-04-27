@@ -1,6 +1,7 @@
 # Agent Local Context
 
 > ## Recent Decisions
+> - 2026-04-27: For the next polish sprint after Sprint 7, recommended using existing backlog rather than new discovery: B-PPTDF, B-S7-1 Mapping Quality filter badge count, N1 navigation labels, N2 collapsed-sidebar regime context, and N4 legend viewport containment.
 > - `sprint_weighting` should be implemented in `index.html` without changing `scf_processor.js`.
 > - The sizing mode should default to weighted impact and persist via `localStorage`.
 >
@@ -17,4 +18,4 @@
 > No new documentation artifact was required beyond persona state because the existing sprint docs were already sufficient.
 >
 >---
->*Last updated: 2026-04-23T18:52*
+>*Last updated: 2026-04-27T11:03*

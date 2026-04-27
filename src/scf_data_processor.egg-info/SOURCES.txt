@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/scf_data_processor.egg-info/PKG-INFO
+src/scf_data_processor.egg-info/SOURCES.txt
+src/scf_data_processor.egg-info/dependency_links.txt
+src/scf_data_processor.egg-info/requires.txt
+src/scf_data_processor.egg-info/top_level.txt
+src/scf_py_tools/__init__.py
+src/scf_py_tools/build_cri_centric_mapping.py
+src/scf_py_tools/build_cri_domains.py
+src/scf_py_tools/excel_to_csv.py
+src/scf_py_tools/process_scf_data.py

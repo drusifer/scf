@@ -5,10 +5,10 @@
 # All personas read this file on cold start to adapt their workflow to available tools.
 ---
 
-# Project: bob_protocol
+# Project: Scurity Control Visualizer (scv)
 
 ## Description
-BobProtocol-enabled project.
+A visualization tool that allows cyber governanace practioners to view the relationship between different regulatory and security control framworks
 
 ## Capabilities
 
@@ -22,7 +22,7 @@ via: enabled
 ## Project Standards
 Follow the repository instructions in `AGENTS.md` and persona state files.
 
-## Key Artifacts
+## Key Agent Artifacts
 - `agents/CHAT.md` — Team communication log
 - `agents/AGENTS.md` — Shared agent instructions
 - `agents/*.docs/` — Persona state and instructions

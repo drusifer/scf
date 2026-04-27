@@ -1,9 +1,14 @@
 module.exports = [
     {
-        files: ["viz_sizing.js", "reading_mode.js", "tests/**/*.js"],
+        files: ["viz_sizing.js", "reading_mode.js", "framework_configs.js", "framework_processor.js", "tests/**/*.js"],
         languageOptions: {
             ecmaVersion: 2024,
-            sourceType: "commonjs"
+            sourceType: "commonjs",
+            globals: {
+                Papa: "readonly",
+                module: "writable",
+                require: "readonly"
+            }
         },
         rules: {
             "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
@@ -16,7 +21,8 @@ module.exports = [
             sourceType: "script",
             globals: {
                 Papa: "readonly",
-                SCFDataProcessor: "readonly",
+                FrameworkDataProcessor: "readonly",
+                FRAMEWORK_CONFIGS: "readonly",
                 SCFReadingMode: "readonly",
                 SCFSizing: "readonly",
                 Treeselect: "readonly",

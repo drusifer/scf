@@ -1,10 +1,14 @@
 # Next Steps
 
 ## Immediate Next Action
-Hand off `agents/cypher.docs/sprint_label_reading.md` to Smith for Gate 1 review.
+No product planning action remains for Sprint 8. Implementation can begin with Phase A.
 
 ## Waiting On
-Smith's approval of the new sprint stories.
+- Neo implementation of Sprint 8 Phase A.
 
 ## Planned Work
-- None until Smith approves stories.
+- If a live user can reproduce any closed bug, file a fresh bug with exact reproduction steps and current build details.
+- If implementation reveals product ambiguity, revise Sprint 8 stories with Smith input.
+
+---
+*Last updated: 2026-04-27*

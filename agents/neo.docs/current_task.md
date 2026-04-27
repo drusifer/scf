@@ -1,29 +1,26 @@
 # Current Task
 
-**Status:** Complete
+**Status:** Sprint 8 implementation complete — handing off to Trin for UAT
 **Assigned to:** Neo
-**Started:** 2026-04-23T19:48
-
-## Task Description
-Implement Sprint 3 predictable label reading behavior with TDD, covering branch reading mode, readable label thresholds, and reset-to-reading-view recovery.
+**Sprint:** 8
 
 ## Progress
-- [x] Consult Oracle and confirm `app.js` is the implementation surface
-- [x] Add `reading_mode.js` for testable reading-policy helpers
-- [x] Replace depth-only label rules with projected-radius and density-based eligibility
-- [x] Add reading-view status and `Return to Reading View` control near breadcrumbs
-- [x] Add unit coverage in `tests/unit/test_reading_mode.js`
-- [x] Update lint coverage for the new helper
-- [x] Validate with `make test`, `make lint`, and `make lint-app-js`
-- [x] Address Trin's QA finding so immediate children remain visible in reading mode
-- [x] Re-validate with `make test`, `make lint`, and `make lint-app-js`
-- [x] Hand off to Trin for QA verification
+- [x] Phase A — S8-1: fixed SCF PPTDF raw column config and added real CSV-backed depth-1 PPTDF group unit test
+- [x] Phase B — S8-2: expanded activity badge count to selected regimes + tag filters + Mapping Quality filters; added accessible breakdown
+- [x] Phase B — S8-3: added dynamic sidebar toggle `title`/`aria-label`
+- [x] Phase C — S8-4: bounded/wrapped regime legend and added viewport E2E coverage
 
-## Blockers
-None
+## Validation
+- make test: 38/38 pass
+- make lint: PASS
+- make test-e2e: 17/17 pass
 
-## Oracle Consultations
-- Oracle guidance confirmed the label/zoom work belongs in `app.js` and should remain a minimal change around existing navigation behavior.
+## Sprint 7 Historical Progress
+- [x] Phase A — S7-1: `tag_filter.js:19` `every()` → `some()` (OR/ANY predicate); updated 2 tests; added 3 new AC9 tests (31→37 total tests)
+- [x] Phase A — S7-2: `index.html:592` removed `white-space: nowrap` from `#node-tooltip` inline style
+- [x] Phase B — S7-3: extracted `buildRegimeTreeOptions()` to `regime_grouping.js`; modified `initTreeselect()` to branch on `mapping_tag_suffix`; extended `inputCallback` + `_initialRegimeValue` to handle `grp-` prefix; added `regime_grouping.js` script tag to index.html; 6 unit tests added
+- [x] Phase C — S7-4: `showDetails()` — replaced single-line quality badge in header with multi-chip "Mapping Quality" section after idWrap block (split by `\n`, per-entry chips)
+- [x] Phase C — S7-5: added `activeMappingQualityFilters` + `mappingQualityRegimeId` state; added `initMappingQualityFilter()` function; rewrote `applyTagFilter()` to combine tag + mapping predicates; added `#mapping-quality-section` HTML to index.html; wired `initMappingQualityFilter()` into `inputCallback` + `switchFramework()`
 
 ---
-*Last updated: 2026-04-23T20:03*
+*Last updated: 2026-04-27*

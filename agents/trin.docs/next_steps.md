@@ -1,14 +1,11 @@
 # Next Steps
 
-## Immediate Next Action
-Morpheus should review `sprint_label_reading` for architectural and code-quality fit now that QA has passed.
+## Sprint 8 UAT Complete
 
-## Waiting On
-Morpheus review only.
+38/38 unit + 17/17 E2E pass. Lint clean. Awaiting Morpheus code review.
 
-## Planned Work
-- [ ] Support follow-up QA only if Morpheus finds review issues
-- [ ] Add browser-level checks later if the team wants higher-fidelity UI regression coverage
+## Pending
+- Morpheus review sign-off.
 
 ---
-*Last updated: 2026-04-23T20:03*
+*Last updated: 2026-04-27*

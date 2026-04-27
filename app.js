@@ -1,36 +1,20 @@
 // State
-const DEFAULT_REGIMES = [62, 167, 226]; // CSF 2.0, EU DORA, India SEBI CSCRF
 const SIZE_BY_STORAGE_KEY = "scf_size_by";
+const FRAMEWORK_STORAGE_KEY = "scf_active_framework";
 const { SIZE_BY_WEIGHT, SIZE_BY_UNIFORM } = SCFSizing;
+
+let currentFrameworkKey = localStorage.getItem(FRAMEWORK_STORAGE_KEY) || "scf";
+let processor = new FrameworkDataProcessor(FRAMEWORK_CONFIGS[currentFrameworkKey]);
 let selectedRegimeIds = new Set();
 let currentSizeBy = localStorage.getItem(SIZE_BY_STORAGE_KEY) || SIZE_BY_WEIGHT;
 
-// Load from localStorage or use defaults
-const savedRegimes = localStorage.getItem("scf_selected_regimes");
-if (savedRegimes) {
-    try {
-        selectedRegimeIds = new Set(JSON.parse(savedRegimes));
-    } catch {
-        selectedRegimeIds = new Set(DEFAULT_REGIMES);
-    }
-} else {
-    selectedRegimeIds = new Set(DEFAULT_REGIMES);
-}
-
 let showUnmapped = true;
+let _regimeWasActiveThisSession = false;
 let root;
 let regimeTreeselect;
-let scfData; // Globally available after processing
-const HIERARCHY_ALIASES = {
-    PPTDF_Applicability: "pptd",
-    NIST_CSF_Function_Grouping: "nist",
-    SCF_Domain: "domain",
-    Conformity_Validation_Cadence: "cadent",
-    Relative_Control_Weighting: "weight"
-};
-const REVERSE_ALIASES = Object.fromEntries(Object.entries(HIERARCHY_ALIASES).map(([key, value]) => [value, key]));
-
-const processor = new SCFDataProcessor();
+let scfData;
+let HIERARCHY_ALIASES = processor.config.hierarchy_aliases || {};
+let REVERSE_ALIASES = Object.fromEntries(Object.entries(HIERARCHY_ALIASES).map(([k, v]) => [v, k]));
 let svg;
 let g;
 let node;
@@ -52,6 +36,519 @@ const getProjectedTransform = (x, y, targetView, yOffset = 0) => {
 };
 let isReadingView = true;
 let suppressPanZoomState = false;
+
+// --- Framework helpers ---
+
+function refreshHierarchyAliases() {
+    HIERARCHY_ALIASES = processor.config.hierarchy_aliases || {};
+    REVERSE_ALIASES = Object.fromEntries(Object.entries(HIERARCHY_ALIASES).map(([k, v]) => [v, k]));
+}
+
+function getRegimeSaveKey(fwKey) {
+    return `scf_selected_regimes_${fwKey}`;
+}
+
+function saveSelectedRegimes() {
+    if (!scfData) return;
+    const names = Array.from(selectedRegimeIds).map(id => {
+        const r = scfData.regimeList[id];
+        return r ? r.fullName : null;
+    }).filter(Boolean);
+    localStorage.setItem(getRegimeSaveKey(currentFrameworkKey), JSON.stringify(names));
+}
+
+function resolveRegimeNames(names) {
+    const result = new Set();
+    if (!scfData) return result;
+    names.forEach(name => {
+        const regime = scfData.regimeList.find(r => r.fullName === name);
+        if (regime !== undefined) result.add(regime.id);
+    });
+    return result;
+}
+
+function loadSelectedRegimes() {
+    const saved = localStorage.getItem(getRegimeSaveKey(currentFrameworkKey));
+    if (saved) {
+        try {
+            const names = JSON.parse(saved);
+            if (Array.isArray(names) && names.every(n => typeof n === "string")) {
+                return resolveRegimeNames(names);
+            }
+        } catch {}
+    }
+    return new Set();
+}
+
+function migrateOldRegimeStorage() {
+    const oldKey = "scf_selected_regimes";
+    const old = localStorage.getItem(oldKey);
+    if (!old || localStorage.getItem(getRegimeSaveKey("scf"))) return;
+    try {
+        const indices = JSON.parse(old);
+        if (!Array.isArray(indices) || !indices.every(v => typeof v === "number")) return;
+        if (!scfData) return;
+        const names = indices.map(idx => {
+            const r = scfData.regimeList[idx];
+            return r ? r.fullName : null;
+        }).filter(Boolean);
+        const dropped = indices.length - names.length;
+        localStorage.setItem(getRegimeSaveKey("scf"), JSON.stringify(names));
+        localStorage.removeItem(oldKey);
+        if (dropped > 0) {
+            showToast("Your saved regime selection has been updated for compatibility.");
+        }
+    } catch {}
+}
+
+function showToast(msg) {
+    const toast = document.createElement("div");
+    toast.className = "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--sidebar-color)] border border-[var(--border-muted)] text-[var(--text-primary)] text-xs px-4 py-2 rounded-full shadow-lg pointer-events-none";
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
+}
+
+function showVizError(msg) {
+    const container = document.getElementById("viz-container");
+    if (!container) return;
+    container.innerHTML = `<div class="w-full h-full flex items-center justify-center text-sm text-[var(--text-muted)]">${msg}</div>`;
+}
+
+// --- Tag Filter ---
+
+let activeTagFilters = new Set();
+let tagGroupMap = new Map(); // tag string → column name (group key); reset on framework switch
+let activeMappingQualityFilters = new Set();
+let mappingQualityRegimeId = null;
+
+function getTagFilterKey(fwKey) {
+    return `scf_tag_filters_${fwKey}`;
+}
+
+function saveTagFilters() {
+    localStorage.setItem(getTagFilterKey(currentFrameworkKey), JSON.stringify(Array.from(activeTagFilters)));
+}
+
+function loadTagFilters() {
+    try {
+        const saved = localStorage.getItem(getTagFilterKey(currentFrameworkKey));
+        if (!saved) return;
+        const parsed = JSON.parse(saved);
+        const tags = Array.isArray(parsed) ? parsed : Object.values(parsed).flat();
+        tags.forEach(t => { if (typeof t === "string") activeTagFilters.add(t); });
+    } catch {}
+}
+
+function clearTagFilters() {
+    activeTagFilters.clear();
+    localStorage.removeItem(getTagFilterKey(currentFrameworkKey));
+    document.querySelectorAll(".tag-checkbox").forEach(cb => { cb.checked = false; });
+    document.getElementById("tag-clear-btn")?.classList.add("hidden");
+    activeMappingQualityFilters.clear();
+    initMappingQualityFilter();
+    updateFilterBadge();
+    applyTagFilter();
+    updateChipList();
+}
+
+function updateFilterBadge() {
+    const filterCount = activeTagFilters.size + activeMappingQualityFilters.size;
+    const activityCount = selectedRegimeIds.size + filterCount;
+    const pluralize = (count, singular, plural = `${singular}s`) => `${count} ${count === 1 ? singular : plural}`;
+    const badge = document.getElementById("tag-filter-badge");
+    if (badge) {
+        badge.textContent = activityCount > 0 ? `${activityCount}` : "";
+        badge.classList.toggle("hidden", activityCount === 0);
+        const label = `${pluralize(activityCount, "active context item", "active context items")}: ${pluralize(selectedRegimeIds.size, "regime")}, ${pluralize(activeTagFilters.size, "tag filter")}, ${pluralize(activeMappingQualityFilters.size, "mapping quality filter")}`;
+        badge.setAttribute("title", label);
+        badge.setAttribute("aria-label", label);
+    }
+    document.getElementById("tag-clear-btn")?.classList.toggle("hidden", filterCount === 0);
+}
+
+function showTagZeroResultOverlay() {
+    let overlay = document.getElementById("tag-zero-result");
+    if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.id = "tag-zero-result";
+        overlay.className = "absolute inset-0 flex flex-col items-center justify-center gap-3 pointer-events-none z-10";
+        overlay.innerHTML = `
+            <p class="text-sm text-[var(--text-muted)]">No controls match the selected tags.</p>
+            <button class="pointer-events-auto text-xs text-[var(--accent-blue)] underline" onclick="clearTagFilters()">Clear Filters</button>
+        `;
+        document.getElementById("viz-container")?.appendChild(overlay);
+    }
+    overlay.classList.remove("hidden");
+}
+
+function hideTagZeroResultOverlay() {
+    document.getElementById("tag-zero-result")?.classList.add("hidden");
+}
+
+function applyTagFilter() {
+    if (!root || !node) return;
+
+    const noTagFilter = activeTagFilters.size === 0;
+    const noMappingFilter = activeMappingQualityFilters.size === 0 || mappingQualityRegimeId === null;
+
+    if (noTagFilter && noMappingFilter) {
+        node.style("opacity", null);
+        hideTagZeroResultOverlay();
+        updateFilterBadge();
+        return;
+    }
+
+    const controlPassesTagFilter = noTagFilter
+        ? () => true
+        : buildTagFilterPredicate(tagGroupMap, activeTagFilters);
+
+    const controlPassesMappingFilter = noMappingFilter
+        ? () => true
+        : (data) => {
+            const raw = data.regimeQualityTags?.[mappingQualityRegimeId];
+            if (!raw) return false;
+            return raw.split("\n").some(entry => {
+                const typeMatch = entry.match(/Type:\s*([^;]+)/);
+                return typeMatch && activeMappingQualityFilters.has(typeMatch[1].trim());
+            });
+        };
+
+    const controlMatchMap = new Map();
+    root.descendants().forEach(d => {
+        if (d.data.tags !== undefined) {
+            controlMatchMap.set(d, controlPassesTagFilter(d.data.tags) && controlPassesMappingFilter(d.data));
+        }
+    });
+
+    let matchCount = 0;
+    node.style("opacity", d => {
+        if (d.data.tags) {
+            const matches = controlMatchMap.get(d) || false;
+            if (matches) matchCount++;
+            return matches ? 1.0 : 0.2;
+        }
+        if (d.depth <= 3) {
+            const controlDescendants = d.descendants().filter(desc => desc.data.tags);
+            if (controlDescendants.length === 0) return 1.0;
+            const allDimmed = controlDescendants.every(desc => !controlMatchMap.get(desc));
+            return allDimmed ? 0.5 : 1.0;
+        }
+        return 1.0;
+    });
+
+    if (matchCount === 0) showTagZeroResultOverlay();
+    else hideTagZeroResultOverlay();
+
+    updateFilterBadge();
+}
+
+function initMappingQualityFilter() {
+    const section = document.getElementById("mapping-quality-section");
+    if (!section) return;
+
+    if (selectedRegimeIds.size !== 1) {
+        section.classList.add("hidden");
+        activeMappingQualityFilters.clear();
+        mappingQualityRegimeId = null;
+        return;
+    }
+
+    const regimeId = [...selectedRegimeIds][0];
+    mappingQualityRegimeId = regimeId;
+    section.classList.remove("hidden");
+
+    const typeValues = new Set();
+    if (root) {
+        root.descendants().forEach(d => {
+            if (!d.data.regimeQualityTags) return;
+            const raw = d.data.regimeQualityTags[regimeId];
+            if (!raw) return;
+            raw.split("\n").forEach(entry => {
+                const typeMatch = entry.match(/Type:\s*([^;]+)/);
+                if (typeMatch) typeValues.add(typeMatch[1].trim());
+            });
+        });
+    }
+
+    const container = document.getElementById("mapping-quality-groups");
+    if (!container) return;
+    container.innerHTML = "";
+    Array.from(typeValues).sort().forEach(typeVal => {
+        const label = document.createElement("label");
+        label.className = "flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded px-1 py-0.5";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.className = "w-3 h-3 accent-[var(--accent-blue)]";
+        cb.dataset.type = typeVal;
+        cb.checked = activeMappingQualityFilters.has(typeVal);
+        cb.addEventListener("change", () => {
+            if (cb.checked) activeMappingQualityFilters.add(typeVal);
+            else activeMappingQualityFilters.delete(typeVal);
+            applyTagFilter();
+        });
+        const span = document.createElement("span");
+        span.className = "text-[11px] text-[var(--text-primary)]";
+        span.textContent = typeVal;
+        label.appendChild(cb);
+        label.appendChild(span);
+        container.appendChild(label);
+    });
+}
+
+function updateChipList() {
+    const chipContainer = document.getElementById("tag-chip-list");
+    if (!chipContainer) return;
+    chipContainer.innerHTML = "";
+    activeTagFilters.forEach(tag => {
+        const chip = document.createElement("span");
+        chip.className = "inline-flex items-center gap-1 bg-[var(--accent-blue)]/15 text-[var(--accent-blue)] text-[10px] px-2 py-0.5 rounded-full";
+        const tagText = document.createElement("span");
+        tagText.textContent = tag;
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "opacity-60 hover:opacity-100";
+        removeBtn.textContent = "×";
+        removeBtn.addEventListener("click", () => removeTagFilter(tag));
+        chip.appendChild(tagText);
+        chip.appendChild(removeBtn);
+        chipContainer.appendChild(chip);
+    });
+    chipContainer.classList.toggle("hidden", activeTagFilters.size === 0);
+}
+
+function removeTagFilter(tag) {
+    activeTagFilters.delete(tag);
+    const cb = document.querySelector(`.tag-checkbox[data-tag="${CSS.escape(tag)}"]`);
+    if (cb) cb.checked = false;
+    saveTagFilters();
+    updateFilterBadge();
+    applyTagFilter();
+    updateChipList();
+}
+
+function buildTagGroup(col, tags, isSearchable) {
+    const group = document.createElement("div");
+    group.className = "mb-3";
+    group.dataset.col = col;
+
+    const label = document.createElement("div");
+    label.className = "text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1.5";
+    label.textContent = col.replace(/ TAGS$/i, "").replace(/CRI /i, "");
+    group.appendChild(label);
+
+    if (isSearchable) {
+        const searchWrap = document.createElement("div");
+        searchWrap.className = "mb-1";
+        const searchInput = document.createElement("input");
+        searchInput.type = "text";
+        searchInput.placeholder = "Search tags…";
+        searchInput.className = "w-full text-xs bg-[var(--sidebar-darker)] border border-[var(--border-muted)] rounded px-2 py-1 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none";
+        searchInput.dataset.col = col;
+
+        const noMatch = document.createElement("div");
+        noMatch.className = "hidden text-[10px] text-[var(--text-muted)] italic px-1 py-1";
+        noMatch.dataset.noMatch = col;
+
+        searchInput.addEventListener("input", () => {
+            const q = searchInput.value.toLowerCase();
+            const items = group.querySelectorAll(".tag-item");
+            let visibleCount = 0;
+            items.forEach(item => {
+                const tagText = item.dataset.tag.toLowerCase();
+                const visible = !q || tagText.includes(q);
+                item.classList.toggle("hidden", !visible);
+                if (visible) visibleCount++;
+            });
+            noMatch.textContent = `No tags match '${searchInput.value}'`;
+            noMatch.classList.toggle("hidden", visibleCount > 0 || !q);
+        });
+
+        searchWrap.appendChild(searchInput);
+        searchWrap.appendChild(noMatch);
+        group.appendChild(searchWrap);
+    }
+
+    const list = document.createElement("div");
+    list.className = "flex flex-col gap-0.5 max-h-36 overflow-y-auto";
+
+    tags.forEach(tag => {
+        tagGroupMap.set(tag, col);
+        const item = document.createElement("label");
+        item.className = "tag-item flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded px-1 py-0.5";
+        item.dataset.tag = tag;
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.className = "tag-checkbox w-3 h-3 accent-[var(--accent-blue)]";
+        cb.dataset.col = col;
+        cb.dataset.tag = tag;
+        cb.checked = activeTagFilters.has(tag);
+
+        cb.addEventListener("change", () => {
+            if (cb.checked) activeTagFilters.add(tag);
+            else activeTagFilters.delete(tag);
+            saveTagFilters();
+            updateFilterBadge();
+            applyTagFilter();
+            updateChipList();
+        });
+
+        const span = document.createElement("span");
+        span.className = "text-[11px] text-[var(--text-primary)]";
+        span.textContent = tag;
+
+        item.appendChild(cb);
+        item.appendChild(span);
+        list.appendChild(item);
+    });
+
+    group.appendChild(list);
+    return group;
+}
+
+function initTagFilterPanel(config) {
+    tagGroupMap.clear();
+    const groupsContainer = document.getElementById("tag-filter-groups");
+    if (!groupsContainer) return;
+    groupsContainer.innerHTML = "";
+    updateChipList();
+
+    const tagCols = config.schema.controls.tag_cols || [];
+
+    const tagAccordion = document.getElementById("tag-filter-container")?.closest(".accordion-item");
+    if (tagAccordion) tagAccordion.classList.toggle("hidden", tagCols.length === 0);
+
+    if (tagCols.length === 0) return;
+
+    const rawControls = processor.rawControls;
+
+    tagCols.forEach((col, idx) => {
+        const uniqueTags = new Set();
+        rawControls.forEach(row => {
+            const val = row[col]?.trim();
+            if (!val) return;
+            val.split("\n").forEach(t => { const s = t.trim(); if (s) uniqueTags.add(s); });
+        });
+        const sorted = Array.from(uniqueTags).sort();
+        const isSearchable = idx === 0 && sorted.length > 10;
+        groupsContainer.appendChild(buildTagGroup(col, sorted, isSearchable));
+    });
+
+    if (groupsContainer.querySelectorAll(".tag-checkbox").length === 0) {
+        groupsContainer.innerHTML = "";
+        const empty = document.createElement("p");
+        empty.className = "text-xs text-[var(--text-muted)] italic mt-1";
+        empty.textContent = "No tag filters are available for this framework.";
+        groupsContainer.appendChild(empty);
+    }
+
+    loadTagFilters();
+    document.querySelectorAll(".tag-checkbox").forEach(cb => {
+        cb.checked = activeTagFilters.has(cb.dataset.tag);
+    });
+    updateFilterBadge();
+    updateChipList();
+}
+
+function updateFrameworkBadge() {
+    const badge = document.getElementById("framework-badge");
+    if (badge) badge.textContent = processor.config.name;
+}
+
+// --- Node Tooltip ---
+
+function getNodeTooltipPath(d) {
+    if (d.depth === 0) return processor.config.name;
+    return d.ancestors().reverse().filter(a => a.depth > 0).map(a => a.data.name).join(" › ");
+}
+
+function positionNodeTooltip(event, el) {
+    const pad = 16;
+    let x = event.clientX + 12;
+    let y = event.clientY + 8;
+    if (x + el.offsetWidth > window.innerWidth - pad) x = event.clientX - el.offsetWidth - 12;
+    if (y + el.offsetHeight > window.innerHeight - pad) y = event.clientY - el.offsetHeight - 8;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+}
+
+function showNodeTooltip(event, d) {
+    const el = document.getElementById("node-tooltip");
+    if (!el) return;
+    el.textContent = getNodeTooltipPath(d);
+    el.style.display = "block";
+    positionNodeTooltip(event, el);
+}
+
+function hideNodeTooltip() {
+    const el = document.getElementById("node-tooltip");
+    if (el) el.style.display = "none";
+}
+
+function updateRegimeLabel() {
+    const el = document.getElementById("regime-label");
+    if (el) el.textContent = processor.config.regime_label || "Compliance Regimes";
+}
+
+function updateOnboardingHint() {
+    const hint = document.getElementById("onboarding-hint");
+    if (!hint) return;
+    const noRegimes = selectedRegimeIds.size === 0;
+    const isSCF = currentFrameworkKey === "scf";
+    const hasEverSelected = localStorage.getItem("scf_hint_dismissed") === "true";
+    // Show on page load only if user has never selected; always re-show on deselect-to-empty (AC2).
+    const shouldShow = noRegimes && isSCF && (!hasEverSelected || _regimeWasActiveThisSession);
+    hint.classList.toggle("hidden", !shouldShow);
+}
+
+function updateFrameworkToggle() {
+    document.querySelectorAll(".framework-btn").forEach(btn => {
+        const isActive = btn.dataset.fw === currentFrameworkKey;
+        btn.classList.toggle("bg-[var(--accent-blue)]", isActive);
+        btn.classList.toggle("text-white", isActive);
+        btn.classList.toggle("font-semibold", isActive);
+        btn.classList.toggle("bg-transparent", !isActive);
+        btn.classList.toggle("text-[var(--text-muted)]", !isActive);
+        const cfg = FRAMEWORK_CONFIGS[btn.dataset.fw];
+        if (cfg?.description) btn.title = cfg.description;
+    });
+}
+
+async function switchFramework(key) {
+    if (key === currentFrameworkKey) return;
+
+    const overlay = document.getElementById("framework-loading");
+    if (overlay) overlay.classList.remove("hidden");
+
+    saveSelectedRegimes();
+    currentFrameworkKey = key;
+    localStorage.setItem(FRAMEWORK_STORAGE_KEY, key);
+
+    processor = new FrameworkDataProcessor(FRAMEWORK_CONFIGS[key]);
+    refreshHierarchyAliases();
+
+    try {
+        scfData = await processor.init();
+    } catch (err) {
+        showVizError(`Failed to load ${FRAMEWORK_CONFIGS[key].name}: ${err.message}`);
+        if (overlay) overlay.classList.add("hidden");
+        return;
+    }
+
+    selectedRegimeIds = loadSelectedRegimes();
+    clearTagFilters();
+    initTreeselect();
+    initHierarchyFieldsTreeselect();
+    initTagFilterPanel(processor.config);
+    initMappingQualityFilter();
+    updateVisualization();
+    updateFrameworkBadge();
+    updateRegimeLabel();
+    updateFrameworkToggle();
+    updateLegend();
+
+    if (overlay) overlay.classList.add("hidden");
+}
 
 function setSizeBy(value) {
     currentSizeBy = value === SIZE_BY_UNIFORM ? SIZE_BY_UNIFORM : SIZE_BY_WEIGHT;
@@ -174,6 +671,7 @@ const getLabelOpacity = (d, currentFocus, targetView, isHovered = false) => {
 };
 
 const getLabelDisplay = (d, currentFocus, targetView) => {
+    if (d.depth === 0) return "none";
     return SCFReadingMode.getLabelEligibility(getLabelMetrics(d, currentFocus, targetView)) ? "inline" : "none";
 };
 
@@ -245,6 +743,7 @@ function updateVisualization() {
             .attr("fill", "rgba(255,255,255,0.2)")
             .style("font-size", "14px")
             .text("No regimes selected or no matching controls found.");
+        updateOnboardingHint();
         return;
     }
 
@@ -312,7 +811,7 @@ function updateVisualization() {
         })
         .style("stroke", (d) => d.children ? "var(--node-stroke)" : "transparent")
         .style("stroke-width", 0.5)
-        .on("mouseover", function handleMouseOver(_event, d) {
+        .on("mouseover", function handleMouseOver(event, d) {
             d3.select(this)
                 .style("stroke", "var(--node-stroke-hover)")
                 .style("stroke-width", d.depth === 4 ? "3px" : "2px");
@@ -323,6 +822,12 @@ function updateVisualization() {
                 .style("fill-opacity", 1)
                 .style("font-size", getLabelSize(d, focus, targetView, true))
                 .style("font-weight", 700);
+
+            showNodeTooltip(event, d);
+        })
+        .on("mousemove", function handleMouseMove(event) {
+            const el = document.getElementById("node-tooltip");
+            if (el && el.style.display !== "none") positionNodeTooltip(event, el);
         })
         .on("mouseout", function handleMouseOut(_event, d) {
             d3.select(this)
@@ -338,6 +843,8 @@ function updateVisualization() {
                     const depthDiff = currentNode.depth - focus.depth;
                     return depthDiff === 0 ? "700" : "400";
                 });
+
+            hideNodeTooltip();
         })
         .on("click", (event, d) => {
             if (focus !== d) {
@@ -407,6 +914,9 @@ function updateVisualization() {
     window.externalZoom = (d) => {
         zoom({ stopPropagation() {} }, d);
     };
+
+    applyTagFilter();
+    updateOnboardingHint();
 }
 
 function setupPanZoom() {
@@ -667,9 +1177,27 @@ function toggleSidebar(side) {
         main.style.marginRight = isOpen ? "384px" : "0";
     }
 
+    updateSidebarToggleA11y(side);
+
     setTimeout(() => {
         handleResize();
     }, 400);
+}
+
+function updateSidebarToggleA11y(side) {
+    const isLeft = side === "left";
+    const sidebar = document.getElementById(isLeft ? "left-sidebar" : "right-sidebar");
+    const button = sidebar?.querySelector(".sidebar-handle");
+    if (!button || !sidebar) return;
+
+    const collapsed = isLeft
+        ? sidebar.classList.contains("collapsed")
+        : !sidebar.classList.contains("open");
+    const label = isLeft
+        ? (collapsed ? "Expand filters sidebar" : "Collapse filters sidebar")
+        : (collapsed ? "Expand details panel" : "Collapse details panel");
+    button.setAttribute("title", label);
+    button.setAttribute("aria-label", label);
 }
 
 function handleResize() {
@@ -797,23 +1325,29 @@ function applyURLFocus() {
 }
 
 function initTreeselect() {
-    const options = Object.keys(scfData.regimeCatalog).sort().map((category) => ({
-        name: category,
-        value: `cat-${category}`,
-        children: scfData.regimeCatalog[category].map((regime) => ({
-            name: regime.name,
-            value: regime.id
-        }))
-    }));
+    let options;
+    if (processor.config.schema.controls.mapping_tag_suffix) {
+        options = buildRegimeTreeOptions(scfData.regimeList);
+    } else {
+        options = Object.keys(scfData.regimeCatalog).sort().map((category) => ({
+            name: category,
+            value: `cat-${category}`,
+            children: scfData.regimeCatalog[category].map((regime) => ({
+                name: regime.name,
+                value: regime.id
+            }))
+        }));
+    }
 
     const container = document.getElementById("treeselect-container");
+    container.innerHTML = "";
     regimeTreeselect = new Treeselect({
         parentHtmlContainer: container,
         value: window._initialRegimeValue || Array.from(selectedRegimeIds),
         options,
         isMultiple: true,
         isSearchable: true,
-        placeholder: "Search frameworks...",
+        placeholder: "Search or select a compliance regime…",
         clearable: true,
         alwaysOpen: true,
         staticList: true,
@@ -827,14 +1361,24 @@ function initTreeselect() {
                     if (categoryRegimes) {
                         categoryRegimes.forEach((regime) => accumulator.push(regime.id));
                     }
+                } else if (typeof currentValue === "string" && currentValue.startsWith("grp-")) {
+                    const prefix = currentValue.replace("grp-", "");
+                    scfData.regimeList.filter(r => r.name.split(" ")[0] === prefix)
+                                      .forEach(r => accumulator.push(r.id));
                 }
 
                 return accumulator;
             }, []);
 
             selectedRegimeIds = new Set(selectedIds);
-            localStorage.setItem("scf_selected_regimes", JSON.stringify(Array.from(selectedRegimeIds)));
+            updateFilterBadge();
+            if (selectedRegimeIds.size > 0) {
+                localStorage.setItem("scf_hint_dismissed", "true");
+                _regimeWasActiveThisSession = true;
+            }
+            saveSelectedRegimes();
             updateVisualization();
+            initMappingQualityFilter();
             updateLegend();
             updateURL();
         }
@@ -850,17 +1394,33 @@ function initTreeselect() {
                 if (categoryRegimes) {
                     categoryRegimes.forEach((regime) => accumulator.push(regime.id));
                 }
+            } else if (typeof currentValue === "string" && currentValue.startsWith("grp-")) {
+                const prefix = currentValue.replace("grp-", "");
+                scfData.regimeList.filter(r => r.name.split(" ")[0] === prefix)
+                                  .forEach(r => accumulator.push(r.id));
             }
 
             return accumulator;
         }, []);
         selectedRegimeIds = new Set(selectedIds);
+        updateFilterBadge();
+        window._initialRegimeValue = null;
     }
 }
 
 function initHierarchyFieldsTreeselect() {
     const container = document.getElementById("hierarchy-fields-treeselect");
     if (!container) {
+        return;
+    }
+
+    const hierarchyAccordion = document.getElementById("hierarchy-fields-accordion");
+    if (hierarchyAccordion) {
+        hierarchyAccordion.style.display = processor.config.show_hierarchy_customizer === false ? "none" : "";
+    }
+
+    if (processor.config.show_hierarchy_customizer === false) {
+        container.innerHTML = "";
         return;
     }
 
@@ -1017,10 +1577,10 @@ function updateLegend() {
         }
 
         const item = document.createElement("div");
-        item.className = "bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 shadow-xl";
+        item.className = "bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 shadow-xl max-w-48";
         item.innerHTML = `
             <div class="w-2 h-2 rounded-full" style="background: ${getRegimeColor(rid)}"></div>
-            <span class="text-[9px] font-bold text-white uppercase tracking-wider">${regime.name}</span>
+            <span class="text-[9px] font-bold text-white uppercase tracking-wider truncate">${regime.name}</span>
         `;
         container.appendChild(item);
     });
@@ -1033,18 +1593,37 @@ function showDetails(data) {
 
     const safeSetText = (id, text) => {
         const element = document.getElementById(id);
-        if (element) {
-            element.innerText = text;
-        }
+        if (element) element.innerText = text;
     };
+    const cfg = processor.config;
 
     safeSetText("detail-id", data.name.split(":")[0]);
     safeSetText("detail-title", data.name.split(":")[1]?.trim() || data.name);
-    safeSetText("detail-desc", data.description || "No description provided.");
+    safeSetText("detail-desc", data.description || "No description available for this control in the current framework.");
     safeSetText("detail-weight", data.weight || "1.0");
 
-    const pptdf = Object.keys(HIERARCHY_ALIASES).find((key) => data[key]) || "Unspecified";
+    const descLabel = document.getElementById("detail-desc-label");
+    if (descLabel) descLabel.textContent = cfg.schema.controls.description_col || "Description";
+
+    const pptdf = Object.keys(HIERARCHY_ALIASES).find((key) => data[key]) || cfg.key.toUpperCase();
     safeSetText("detail-pptdf", pptdf.replace(/_/g, " "));
+
+    // Tags section
+    const tagsContainer = document.getElementById("detail-tags");
+    if (tagsContainer) {
+        if (data.tags && data.tags.length > 0) {
+            tagsContainer.innerHTML = "";
+            data.tags.forEach(tag => {
+                const chip = document.createElement("span");
+                chip.className = "inline-block text-[10px] px-2 py-0.5 rounded-full bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] border border-[var(--accent-blue)]/20";
+                chip.textContent = tag;
+                tagsContainer.appendChild(chip);
+            });
+            tagsContainer.parentElement?.classList.remove("hidden");
+        } else {
+            tagsContainer.parentElement?.classList.add("hidden");
+        }
+    }
 
     const mapContainer = document.getElementById("detail-mappings");
     if (mapContainer) {
@@ -1055,22 +1634,60 @@ function showDetails(data) {
 
         Object.entries(mappings).forEach(([rid, ids]) => {
             hasMappings = true;
-            const regimeInfo = scfData.regimeList[rid];
-            if (!regimeInfo || !selectedRegimeIds.has(Number.parseInt(rid, 10))) {
+            const ridNum = Number.parseInt(rid, 10);
+            const regimeInfo = scfData.regimeList[ridNum];
+            if (!regimeInfo || !selectedRegimeIds.has(ridNum)) {
                 return;
             }
 
             const element = document.createElement("div");
             element.className = "bg-white/5 rounded-lg p-3 border border-white/5";
-            element.innerHTML = `
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="w-2 h-2 rounded-full" style="background: ${getRegimeColor(rid)}"></div>
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${regimeInfo.name}</span>
-                </div>
-                <div class="flex flex-wrap gap-2">
-                    ${ids.map((id) => `<span class="text-xs bg-black/40 px-2 py-1 rounded border border-white/10 text-gray-300 font-mono">${id}</span>`).join("")}
-                </div>
-            `;
+
+            const header = document.createElement("div");
+            header.className = "flex items-center gap-2 mb-2";
+            const dot = document.createElement("div");
+            dot.className = "w-2 h-2 rounded-full flex-shrink-0";
+            dot.style.background = getRegimeColor(rid);
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "text-[10px] font-bold text-gray-400 uppercase tracking-widest";
+            nameSpan.textContent = regimeInfo.name;
+            header.appendChild(dot);
+            header.appendChild(nameSpan);
+
+            element.appendChild(header);
+
+            const idWrap = document.createElement("div");
+            idWrap.className = "flex flex-wrap gap-2";
+            ids.forEach(id => {
+                const chip = document.createElement("span");
+                chip.className = "text-xs bg-black/40 px-2 py-1 rounded border border-white/10 text-gray-300 font-mono";
+                chip.textContent = id;
+                idWrap.appendChild(chip);
+            });
+            element.appendChild(idWrap);
+
+            const qualityTagRaw = data.regimeQualityTags?.[rid];
+            if (qualityTagRaw) {
+                const qtSection = document.createElement("div");
+                qtSection.className = "mt-2 pt-2 border-t border-white/5";
+                const qtLabel = document.createElement("div");
+                qtLabel.className = "text-[9px] text-gray-500 uppercase tracking-widest mb-1";
+                qtLabel.textContent = "Mapping Quality";
+                qtSection.appendChild(qtLabel);
+                const qtChips = document.createElement("div");
+                qtChips.className = "flex flex-wrap gap-1";
+                qualityTagRaw.split("\n").forEach(entry => {
+                    const trimmed = entry.trim();
+                    if (!trimmed) return;
+                    const qt = document.createElement("span");
+                    qt.className = "text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-gray-300";
+                    qt.textContent = trimmed;
+                    qtChips.appendChild(qt);
+                });
+                qtSection.appendChild(qtChips);
+                element.appendChild(qtSection);
+            }
+
             mapContainer.appendChild(element);
         });
 
@@ -1107,17 +1724,22 @@ function closeDetails() {
 
 function updateBreadcrumbs(d) {
     const crumb = document.getElementById("breadcrumbs");
-    if (!d) {
-        return;
-    }
+    if (!d) return;
 
-    const ancestors = d.ancestors().reverse();
+    // Collapse consecutive identical labels — render-layer only, hierarchy unchanged.
+    // Shallowest node of each group is kept as the click target (AC3).
+    const collapsed = d.ancestors().reverse().reduce((acc, node) => {
+        const label = node.data.name.split(":")[0];
+        if (acc.length > 0 && acc[acc.length - 1].label === label) return acc;
+        acc.push({ node, label });
+        return acc;
+    }, []);
+
     crumb.innerHTML = "";
-
-    ancestors.forEach((currentNode, index) => {
-        const isLast = index === ancestors.length - 1;
+    collapsed.forEach(({ node, label }, index) => {
+        const isLast = index === collapsed.length - 1;
         const span = document.createElement("span");
-        span.textContent = currentNode.data.name.split(":")[0];
+        span.textContent = label;
         span.className = isLast
             ? "font-bold text-slate-900 dark:text-white"
             : "cursor-pointer hover:text-blue-500 transition-colors duration-200 text-slate-500 dark:text-slate-400";
@@ -1125,7 +1747,7 @@ function updateBreadcrumbs(d) {
         if (!isLast) {
             span.onclick = (event) => {
                 event.stopPropagation();
-                zoom(event, currentNode);
+                zoom(event, node);
             };
         }
 
@@ -1156,6 +1778,9 @@ window.setTheme = (theme) => {
     }
 };
 window.setSizeBy = setSizeBy;
+window.switchFramework = switchFramework;
+window.removeTagFilter = removeTagFilter;
+window.clearTagFilters = clearTagFilters;
 window.returnToReadingView = returnToReadingView;
 window.toggleSidebar = toggleSidebar;
 window.toggleAccordion = toggleAccordion;
@@ -1175,17 +1800,27 @@ window.addEventListener("load", async () => {
     try {
         applyURLState();
 
-        scfData = await processor.init("data/scf_controls_2026_1.csv", "data/scf_domains_2026_1.csv");
+        scfData = await processor.init();
+
+        migrateOldRegimeStorage();
+        selectedRegimeIds = loadSelectedRegimes();
 
         initViz();
         initTreeselect();
         initHierarchyFieldsTreeselect();
         initHierarchyNavigatorTreeselect();
+        initTagFilterPanel(processor.config);
 
+        updateFrameworkBadge();
+        updateRegimeLabel();
+        updateFrameworkToggle();
+        updateSidebarToggleA11y("left");
+        updateSidebarToggleA11y("right");
+        updateFilterBadge();
         updateLegend();
         applyURLFocus();
     } catch (error) {
-        console.error("Failed to initialize SCF Visualizer:", error);
-        alert("Error loading SCF data. Please ensure CSV files are accessible.");
+        console.error("Failed to initialize visualizer:", error);
+        showVizError(`Failed to load ${processor.config.name}. Please ensure data files are accessible.`);
     }
 });

@@ -1,10 +1,14 @@
 # Next Steps
 
 ## Immediate Next Action
-Hand off to Morpheus for final sprint plan review.
+Track Neo's Sprint 8 Phase A implementation.
 
 ## Waiting On
-Morpheus's review.
+Neo completion of S8-1.
 
 ## Planned Work
-- [ ] Monitor Neo's progress on Sprint 3 once implementation starts.
+- [ ] Monitor Neo's progress on Phase A (S8-1)
+- [ ] Track phase gate completions and unblock as needed
+
+---
+*Last updated: 2026-04-27*

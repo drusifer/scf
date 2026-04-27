@@ -1,33 +1,48 @@
 # Agent Local Context
 
-> ## Recent Decisions
-> - `sprint_weighting` verification should use the sprint story as the source of truth.
-> - Because `make test` is currently broken at the repo level, syntax validation plus code/spec review is the available QA gate in this session.
-> - `sprint_label_reading` QA should use the sprint story plus architecture doc as the expected-result source of truth.
->
-> ## Key Findings
-> - Acceptance criteria coverage is present in code:
->   - `index.html` now contains a persisted `Size By` control, weighted/uniform sizing logic, and focus-preserving updates.
-> - Verification limits are environmental:
->   - `make test` fails before reaching feature checks because `tests/` is not importable.
-> - Direct JavaScript syntax validation passed:
->   - The extracted inline script from `index.html` passes `node --check`.
-> - QA tooling is now real and runnable:
->   - `make test`, `make test-unit`, `make lint`, `make lint-js`, and `make lint-inline-js` are configured and pass in this repo.
-> - Testable logic was extracted:
->   - Shared sizing behavior now lives in `viz_sizing.js`, which is covered by `tests/unit/test_viz_sizing.js`.
-> - Reading-mode policy is testable:
->   - `reading_mode.js` now contains the branch reading helper logic and has unit coverage.
-> - The initial Sprint 3 QA failure was corrected:
->   - `reading_mode.js` now keeps immediate children eligible in reading mode while grandchildren remain the first density-pruning tier.
->
-> ## Important Notes
-> QA reviewed the feature against `agents/cypher.docs/sprint_weighting.md`.
-> Residual risk remains around browser-only behavior such as visual smoothness and label overlap because no browser automation or manual browser session was run here.
-> Added `eslint.config.js` plus `agents/tools/extract_inline_script.py` so static analysis can cover both shared JS modules and the main inline app script in `index.html`.
-> For `sprint_label_reading`, automated gates pass (`make test`, `make lint`) and the helper logic now matches the approved child/grandchild rules.
-> Residual risk is still browser-only behavior:
-> no live browser session or automation was run for visual transitions and pan/zoom feel.
->
->---
->*Last updated: 2026-04-23T20:03*
+## Sprint 8 — UAT Complete (2026-04-27)
+
+### New Coverage
+- Unit: `S8-1: SCF default hierarchy uses real PPTDF groups from CSV` verifies Data, Facility, N/A, People, Process, Technology and rejects single Uncategorized collapse.
+- E2E test 15: S8-2 activity badge counts selected regimes + Mapping Quality filters and exposes an accessible breakdown.
+- E2E test 16: S8-3 sidebar toggle labels and titles update with state.
+- E2E test 17: S8-4 regime legend stays within 1440x900 viewport in light and dark mode.
+
+### Verification
+- `make test`: 38/38 pass.
+- `make lint`: PASS.
+- `make test-e2e`: 17/17 pass.
+
+### Test Notes
+- For S8-2 Mapping Quality, selected known singleton regime `MAS CHN AND TRMG` because it has `Type:` mapping tags.
+- Clear-filter verification invokes `window.clearTagFilters()` to avoid Treeselect's always-open static list intercepting sidebar clicks, a known testing hazard from Sprint 7.
+
+## Sprint 7 — UAT Complete (2026-04-25)
+
+### New E2E Tests
+- Test 11 extended: S7-2 tooltip `white-space` assertion — `getAttribute('style')` must not contain 'white-space'
+- Test 12 (S7-3): CRI regime grouping — looks for FFIEC group in `.treeselect-list__item` text
+- Test 13 (S7-5): Mapping Quality section — uses `[group="false"][level="0"]` selector for flat CRI leaves at root level
+- Test 14 (S7-1): Tag filter OR — `scrollIntoViewIfNeeded` then label click with `force:true` bypasses treeselect overlap
+
+### Key Treeselect Learnings
+- `alwaysOpen: true, staticList: true` → list is always in DOM, can intercept clicks on elements below it
+- Item attributes: `group="false"` = leaf/selectable item; `group="true"` = expandable group node
+- Item attribute: `level="0"` = root-level; `level="1"` = child inside a group
+- Flat leaves (not part of any group) have `group="false"` AND `level="0"`
+- Children of collapsed groups have `treeselect-list__item--hidden` class → not clickable/visible
+
+### Sprint 5 Context
+- `initTagFilterPanel` empty-state fix: `querySelectorAll(".tag-checkbox").length === 0` not `children.length === 0`
+- `#onboarding-hint` safe from D3 SVG clear
+- SCF `tag_cols: []` hides entire Tag Filters accordion
+- `_regimeWasActiveThisSession` is module-level let
+
+### Infrastructure
+- Playwright 1.59.1, headless Chromium, arm64
+- Port 8001, Python HTTP server auto-start
+- CommonJS (no `"type": "module"` in package.json)
+- `force: true` needed for clicks overlapped by static treeselect list
+
+---
+*Last updated: 2026-04-27*

@@ -1,13 +1,13 @@
 # Next Steps
 
 ## Immediate Next Action
-None. The knowledge question for `sprint_weighting` is resolved.
+None. The polish-sprint knowledge query is resolved.
 
 ## Waiting On
-Neo implementation only if follow-up documentation gaps appear.
+Cypher sprint story drafting only if follow-up documentation gaps appear.
 
 ## Planned Work
-- [ ] Record additional decisions only if the weighting implementation diverges from the approved sprint docs
+- [ ] Record additional decisions only if the polish sprint scope changes materially
 
 ---
-*Last updated: 2026-04-23T18:52*
+*Last updated: 2026-04-27T11:03*

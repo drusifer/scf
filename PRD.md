@@ -61,6 +61,24 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
     - **Hover Pop:** Individual labels enlarge significantly (28px Bold) on hover for instant inspection.
 * **Requirement:** **Detail Panel:** Slide-out drawer displaying full descriptions, impact weights, and regime mappings with color-coded linkages.
 
+## **4.6 Framework Switching (NEW)**
+
+* **Requirement:** A persistent **Framework Selector** (e.g., segmented toggle in the left sidebar header) allows users to switch between **SCF 2026.1** and **CRI Profile v2.1** as the active data source. The active framework is driven by its YAML config (`configs/scf.yaml` / `configs/cri.yaml`).
+* **Requirement:** On switch, the visualization re-renders using the new framework's schema — hierarchy (domain → category → subcategory), control IDs, descriptions, weights, and available regime columns — all sourced from the YAML `schema` mapping, not hard-coded column names.
+* **Requirement:** The regime selector list repopulates from the newly loaded dataset's available mapping columns. Previously selected regimes that do not exist in the new framework are silently dropped; any that do exist are preserved.
+* **Requirement:** The active framework selection is persisted to `localStorage` so it survives page reload.
+* **Requirement:** A framework badge (name from YAML `name` field) is visible in the chart area at all times so users always know which dataset is active.
+
+## **4.7 Tag-Based Filtering (NEW)**
+
+* **Requirement:** A **Tag Filter Panel** is available within the left sidebar, below the regime selector. It renders the distinct tag values from the active framework's `tag_cols` (defined in YAML) as a multi-select checklist.
+* **Requirement:** For CRI, two tag groups are shown: **Subject Tags** (107 hashtag-style values, e.g. `#architecture`) and **Tier Tags** (Tier 1–4). For SCF, one tag group is shown: **SCRM Tier Tags** (TIER 1 STRATEGIC / TIER 2 OPERATIONAL / TIER 3 TACTICAL).
+* **Requirement:** When one or more tags are selected, only controls whose tag columns contain at least one of the selected tags are **included** in the viz; all others are dimmed (opacity reduced) but not removed, preserving hierarchy context.
+* **Requirement:** A **"Clear Tags"** action resets all tag filters to show all controls.
+* **Requirement:** The Tag Filter Panel includes a search/filter input so users can find specific tag values without scrolling the full list (critical for CRI's 107-tag subject list).
+* **Requirement:** Active tag filter state is persisted to `localStorage` alongside framework and regime selection.
+* **Requirement:** When the framework switches, tag filter state is cleared and the panel repopulates with the new framework's tags.
+
 ## **5\. User Stories**
 
 | ID | Persona | Requirement | Value |
@@ -70,6 +88,11 @@ The **SCF Zoomable Circle Packing Relationship Visualizer** is an interactive, b
 | **US.3** | Architect | I want to group controls by PPTDF (People, Process, Tech) | To identify if my security program is over-reliant on technology vs. process. |
 | **US.4** | Manager | I want to click a specific control bubble | To read its full description and understand its relationship to other controls. |
 | **US.5** | User | I want to search for "Encryption" | To immediately find and zoom into all data protection related controls. |
+| **US.6** | Compliance Manager | I want to switch from SCF to CRI Profile v2.1 with one click | To view my controls mapped to financial-sector-specific regimes (FFIEC, NYDFS, MAS) instead of the SCF baseline. |
+| **US.7** | Risk Officer | I want to filter CRI controls to only "Tier 1" and "Tier 2" controls | To quickly see which foundational controls my program must prioritize for baseline compliance. |
+| **US.8** | Security Architect | I want to filter SCF controls by SCRM TIER 1 STRATEGIC tag | To isolate the supply-chain controls relevant to my enterprise risk program. |
+| **US.9** | CRI Analyst | I want to filter by subject tag `#authentication` | To see every CRI control related to authentication and understand its regime coverage in one view. |
+| **US.10** | User | I want my framework choice and active tag filters to persist across sessions | So I don't have to re-configure the view every time I open the tool. |
 
 ## **6\. Technical Constraints & Standards**
 

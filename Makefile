@@ -18,7 +18,12 @@ endif
 
 # ── Bob Protocol Targets ─────────────────────────────────────────────────────
 
-.PHONY: tldr test test-unit lint lint-js lint-app-js via_index install_bob update_bob pull_bob clean_bob diff_bob preview
+.PHONY: tldr test test-unit test-e2e screenshots lint lint-js lint-app-js via_index install_bob update_bob pull_bob clean_bob diff_bob preview venv
+
+venv: ## Create .venv and install dependencies from pyproject.toml
+	@python3 -m venv .venv
+	@. .venv/bin/activate && pip install -e .
+	@echo "venv ready: .venv/bin/python"
 
 preview: ## Start a local web server to preview the visualization
 	@echo "Starting preview server at http://localhost:8000"
@@ -29,13 +34,23 @@ tldr: ## Show TL;DR summaries from all project files (quick orientation for agen
 
 test: test-unit ## Run unit tests
 
-test-unit: ## Run project unit tests
+test-e2e: node_modules ## Run Playwright E2E tests and capture screenshots
+	@npx playwright test
+
+screenshots: node_modules ## Capture UX screenshots for Smith review (alias for test-e2e)
+	@npx playwright test
+
+node_modules: package.json ## Install Node.js dependencies
+	npm install
+	@touch node_modules
+
+test-unit: node_modules ## Run project unit tests
 	@node --test $$(find tests/unit -name '*.js' -type f | sort)
 
 lint: lint-js lint-inline-js ## Run project lint checks
 
 lint-js: ## Run ESLint on project JavaScript modules and tests
-	@npx eslint viz_sizing.js reading_mode.js tests/unit
+	@npx eslint viz_sizing.js reading_mode.js tag_filter.js framework_configs.js framework_processor.js tests/unit
 
 lint-app-js: ## Run ESLint on the extracted application script
 	@npx eslint app.js
@@ -179,7 +194,7 @@ else
 #   make tldr V=-vv        stderr + filtered failures to terminal
 #   make tldr V=-vvv       stderr + full stdout to terminal
 
-.PHONY: help chat test test-unit lint lint-js lint-inline-js via_index install_bob update_bob pull_bob clean_bob diff_bob preview
+.PHONY: help chat test test-unit test-e2e screenshots lint lint-js lint-inline-js via_index install_bob update_bob pull_bob clean_bob diff_bob preview venv
 
 install_bob: ## Copy agents into a project and set up skill links (usage: make install_bob TARGET=/path/to/project)
 	@$(MAKE) MKF_ACTIVE=1 install_bob TARGET="$(TARGET)"
@@ -228,6 +243,9 @@ chat: ## Post a message to CHAT.md (usage: make chat MSG="<msg>" [PERSONA="<name
 		$(if $(CMD),--cmd "$(CMD)") \
 		$(if $(TO),--to "$(TO)")
 
+venv: ## Create .venv and install dependencies from pyproject.toml
+	@./agents/tools/mkf.py $(V) $@
+
 preview: ## Start a local web server to preview the visualization
 	@./agents/tools/mkf.py $(V) $@
 
@@ -235,6 +253,12 @@ test: ## Run unit tests
 	@./agents/tools/mkf.py $(V) $@
 
 test-unit: ## Run project unit tests
+	@./agents/tools/mkf.py $(V) $@
+
+test-e2e: ## Run Playwright E2E tests and capture UX screenshots
+	@./agents/tools/mkf.py $(V) $@
+
+screenshots: ## Capture UX screenshots for Smith review
 	@./agents/tools/mkf.py $(V) $@
 
 lint: ## Run project lint checks

@@ -11,7 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/treeselectjs@0.11.0/dist/treeselectjs.umd.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs@0.11.0/dist/treeselectjs.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="scf_processor.js"></script>
+    <script src="framework_configs.js"></script>
+    <script src="framework_processor.js"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
@@ -461,31 +462,37 @@
 <body class="flex h-screen w-full">
     <!-- Sidebar -->
     <aside id="left-sidebar" class="left-sidebar glass w-80 h-full flex flex-col border-r z-20 shadow-2xl">
-        <button class="sidebar-handle" onclick="toggleSidebar('left')" title="Toggle Sidebar">
+        <button class="sidebar-handle" onclick="toggleSidebar('left')" title="Collapse filters sidebar" aria-label="Collapse filters sidebar">
             <span id="left-toggle-icon">◀</span>
+            <span id="tag-filter-badge" class="hidden absolute -top-1 -right-1 bg-[var(--accent-blue)] text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center"></span>
         </button>
         <div class="p-6 border-b border-white/10">
             <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
                 SCF Visualizer
             </h1>
             <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter">Zoomable Relationship Engine</p>
+            <!-- Framework Selector -->
+            <div id="framework-selector" class="flex rounded-lg overflow-hidden border border-[var(--border-muted)] mt-3">
+                <button data-fw="scf" class="framework-btn flex-1 py-1.5 text-xs font-medium transition-colors" onclick="switchFramework('scf')">SCF 2026.1</button>
+                <button data-fw="cri" class="framework-btn flex-1 py-1.5 text-xs font-medium transition-colors" onclick="switchFramework('cri')">CRI Profile v2.1</button>
+            </div>
         </div>
 
         <div class="flex-1 flex flex-col overflow-hidden">
             <!-- Regime Selector -->
             <div id="regime-item" class="accordion-item border-b border-white/10 open">
                 <div class="accordion-header" onclick="toggleAccordion('regime-selector')">
-                    <span class="text-sm font-semibold flex items-center gap-2">
+                    <span id="regime-label" class="text-sm font-semibold flex items-center gap-2">
                         🛡️ Compliance Regimes
                     </span>
                 </div>
-                <div id="regime-selector" class="accordion-content p-4 overflow-y-auto" style="max-height: 40vh;">
+                <div id="regime-selector" class="accordion-content p-4 overflow-y-auto" style="max-height: 30vh;">
                     <div id="treeselect-container" class="w-full"></div>
                 </div>
             </div>
 
             <!-- Hierarchy Fields Accordion -->
-            <div class="accordion-item border-b border-white/10 open">
+            <div id="hierarchy-fields-accordion" class="accordion-item border-b border-white/10 open">
                 <div class="accordion-header" onclick="toggleAccordion('hierarchy-fields-container')">
                     <span class="text-sm font-semibold flex items-center gap-2">
                         🏗️ Hierarchy Fields
@@ -497,6 +504,35 @@
                     <div class="mt-2 text-[10px] text-gray-500 italic px-2 leading-tight text-indigo-400/60">
                         * Selection order defines hierarchical depth
                     </div>
+                </div>
+            </div>
+
+            <!-- Tag Filter Accordion -->
+            <div class="accordion-item border-b border-white/10 open">
+                <div class="accordion-header" onclick="toggleAccordion('tag-filter-container')">
+                    <span class="text-sm font-semibold flex items-center gap-2">
+                        🏷️ Tag Filters
+                    </span>
+                </div>
+                <div id="tag-filter-container" class="accordion-content p-4 overflow-y-auto" style="max-height: 40vh;">
+                    <!-- Selected tag chips -->
+                    <div id="tag-chip-list" class="hidden flex flex-wrap gap-1 mb-2"></div>
+                    <!-- Clear button -->
+                    <div class="flex items-center justify-end mb-2">
+                        <button id="tag-clear-btn" class="hidden text-xs text-[var(--accent-blue)]" onclick="clearTagFilters()">Clear Filters</button>
+                    </div>
+                    <!-- Tag groups injected by initTagFilterPanel() -->
+                    <div id="tag-filter-groups"></div>
+                </div>
+            </div>
+
+            <!-- Mapping Quality Filter — shown only when exactly 1 regime selected -->
+            <div id="mapping-quality-section" class="hidden accordion-item border-t border-[var(--border-muted)]">
+                <div class="px-4 py-3">
+                    <div class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2">
+                        Mapping Quality
+                    </div>
+                    <div id="mapping-quality-groups" class="flex flex-col gap-0.5"></div>
                 </div>
             </div>
 
@@ -552,10 +588,29 @@
     <main class="flex-grow relative h-screen overflow-hidden">
         <!-- Header Status -->
 
-        <div id="viz-container" class="w-full h-full"></div>
+        <div id="viz-container" class="w-full h-full">
+            <div id="onboarding-hint" class="hidden absolute inset-0 flex items-end justify-center pb-12 pointer-events-none z-10 transition-opacity duration-300">
+                <p class="text-sm text-[var(--text-muted)] opacity-80">
+                    Select a compliance regime from the left panel to see coverage.
+                </p>
+            </div>
+        </div>
+
+        <!-- Node hover tooltip — position: fixed, follows cursor, HTML overlay over SVG -->
+        <div id="node-tooltip"
+             class="fixed z-50 pointer-events-none text-xs text-white bg-gray-900/90 rounded border border-white/10 shadow-lg px-3 py-1.5 max-w-xs"
+             style="display: none;"></div>
+
+        <!-- Framework Loading Overlay -->
+        <div id="framework-loading" class="hidden absolute inset-0 flex items-center justify-center bg-[var(--bg-deep)]/80 z-20">
+            <div class="w-8 h-8 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full animate-spin"></div>
+        </div>
+
+        <!-- Framework Badge -->
+        <div id="framework-badge" class="absolute bottom-3 left-3 text-xs px-2 py-0.5 rounded-full bg-[var(--sidebar-color)]/90 text-[var(--text-primary)] border border-[var(--border-muted)] backdrop-blur-sm pointer-events-none"></div>
 
         <!-- Legend Overlay -->
-        <div id="regime-legend" class="absolute bottom-8 right-8 flex flex-col gap-2 pointer-events-none">
+        <div id="regime-legend" class="absolute bottom-8 right-8 flex flex-col flex-wrap content-end gap-2 pointer-events-none max-h-[40vh] max-w-[min(28rem,calc(100vw-3rem))]">
             <!-- Selected regime colors show here -->
         </div>
 
@@ -583,7 +638,7 @@
     <aside id="right-sidebar"
         class="fixed top-0 right-0 h-full w-96 glass z-30 shadow-2xl flex flex-col border-l border-white/10">
         <!-- Unified Handle (Inside) -->
-        <button onclick="toggleSidebar('right')" class="sidebar-handle">
+        <button onclick="toggleSidebar('right')" class="sidebar-handle" title="Collapse details panel" aria-label="Collapse details panel">
             <span id="right-toggle-icon">◀</span>
         </button>
 
@@ -616,9 +671,13 @@
                 </div>
 
                 <div class="bg-white/5 rounded-xl p-5 border border-white/10">
-                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Functional Summary
-                    </h4>
+                    <h4 id="detail-desc-label" class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Description</h4>
                     <p id="detail-desc" class="text-sm text-gray-300 leading-relaxed"></p>
+                </div>
+
+                <div class="hidden">
+                    <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Tags</h4>
+                    <div id="detail-tags" class="flex flex-wrap gap-1.5"></div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
@@ -644,6 +703,8 @@
 
     <script src="viz_sizing.js"></script>
     <script src="reading_mode.js"></script>
+    <script src="tag_filter.js"></script>
+    <script src="regime_grouping.js"></script>
     <script src="app.js"></script>
 </body>
 
