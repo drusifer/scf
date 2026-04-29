@@ -9,7 +9,7 @@ Welcome to the **SCF Visualizer**! This guide will help you navigate the complex
 - **Pan/Move:** **Click and drag** the background or any circle to move the view.
 - **Focus Zoom:** **Click** on any circle to zoom directly into that category or control.
 - **Toggle Sidebars:** Click the **◀ / ▶ handles** on the center-edges of the screen to collapse or expand the left and right sidebars.
-- **Reset View:** Click the background or the root "SCF 2025.4" node to reset the visualization.
+- **Reset View:** Click the background or the root node (e.g., "SCF 2026.1" or "CRI Profile v2.1") to reset the visualization.
 
 ### 2. Labels & Interaction
 - **Hover:** Move your mouse over a circle to **enlarge** its label (28px Bold) and see its border highlight.
@@ -27,6 +27,12 @@ The hierarchy navigator (located in the **Right Sidebar**) lets you search or ju
 Located in the **Left Sidebar**, this section allows you to define the depth of the visualization.
 - **Reorder Fields:** Drag or select fields like "PPTDF Applicability" or "SCF Domain" to change how controls are grouped.
 - **Dynamic Grouping:** The visualization updates immediately to reflect your chosen hierarchy.
+
+### 🏷️ Tag Filters
+Customize the visualization by filtering for specific control attributes.
+- **Labeled Groups:** Tags are automatically grouped by their label (e.g., **RELATIONSHIP:**, **TYPE:**).
+- **Strict Filtering:** Selecting a value (like "Full") will hide all nodes that do not match that specific criteria.
+- **Recursive Hiding:** If a Domain or Category has no matching controls after filtering, it is hidden entirely from the view to keep the workspace clean.
 
 ### 🛡️ Compliance Regimes
 Choose which frameworks you want to visualize.

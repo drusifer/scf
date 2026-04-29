@@ -1,43 +1,25 @@
-module.exports = [
+import globals from "globals";
+
+export default [
     {
-        files: ["viz_sizing.js", "reading_mode.js", "framework_configs.js", "framework_processor.js", "tests/**/*.js"],
+        files: ["**/*.js"],
         languageOptions: {
             ecmaVersion: 2024,
-            sourceType: "commonjs",
+            sourceType: "module",
             globals: {
-                Papa: "readonly",
-                module: "writable",
-                require: "readonly"
-            }
-        },
-        rules: {
-            "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
-        }
-    },
-    {
-        files: ["app.js"],
-        languageOptions: {
-            ecmaVersion: 2024,
-            sourceType: "script",
-            globals: {
-                Papa: "readonly",
-                FrameworkDataProcessor: "readonly",
-                FRAMEWORK_CONFIGS: "readonly",
-                SCFReadingMode: "readonly",
-                SCFSizing: "readonly",
-                Treeselect: "readonly",
-                alert: "readonly",
-                console: "readonly",
+                ...globals.browser,
+                ...globals.node,
                 d3: "readonly",
-                document: "readonly",
-                localStorage: "readonly",
-                setTimeout: "readonly",
-                tailwind: "readonly",
-                window: "readonly"
+                Papa: "readonly",
+                Treeselect: "readonly"
             }
         },
         rules: {
-            "no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+            "indent": ["error", 4, { "SwitchCase": 1 }],
+            "quotes": ["error", "double"],
+            "semi": ["error", "always"],
+            "no-unused-vars": ["warn"],
+            "no-console": "off"
         }
     }
 ];

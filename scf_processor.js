@@ -46,9 +46,9 @@ class SCFDataProcessor {
 
         // Process Domains
         domainsData.data.forEach(row => {
-            const name = row['SCF Domain']?.trim();
+            const name = row["SCF Domain"]?.trim();
             if (name) {
-                this.domains[name] = row['Principle Intent']?.trim();
+                this.domains[name] = row["Principle Intent"]?.trim();
             }
         });
 
@@ -59,10 +59,10 @@ class SCFDataProcessor {
 
         rawRegimeHeaders.forEach((h, i) => {
             if (!h) return;
-            const lines = h.split('\n');
+            const lines = h.split("\n");
             const category = lines[0]?.trim() || "General";
-            const name = lines.slice(1).map(l => l.trim()).filter(l => l).join(' ') || category;
-            const fullName = h.trim().replace(/\n/g, ' ').replace(/\r/g, '');
+            const name = lines.slice(1).map(l => l.trim()).filter(l => l).join(" ") || category;
+            const fullName = h.trim().replace(/\n/g, " ").replace(/\r/g, "");
 
             const regimeInfo = { id: i, category, name, fullName };
             this.regimeList.push(regimeInfo);
@@ -82,20 +82,20 @@ class SCFDataProcessor {
         const regimeStartIdx = 30;
 
         this.rawControls.forEach(row => {
-            const scfId = row['SCF #']?.trim();
+            const scfId = row["SCF #"]?.trim();
             if (!scfId) return;
 
-            const scfName = row['SCF Control']?.trim();
-            const desc = row['Secure Controls Framework (SCF)\nControl Description']?.trim();
-            const weightStr = row['Relative Control Weighting']?.trim();
+            const scfName = row["SCF Control"]?.trim();
+            const desc = row["Secure Controls Framework (SCF)\nControl Description"]?.trim();
+            const weightStr = row["Relative Control Weighting"]?.trim();
 
             const pathValues = hierarchy.map(id => {
                 const colInfo = this.hierarchyColumns.find(c => c.id === id);
                 if (!colInfo) return "Uncategorized";
 
                 // Robust normalization: lowercase and remove all non-alphanumeric
-                const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-                const targetKey = normalize(id.includes('_') ? colInfo.raw : id); // Handle both ID and raw fallback
+                const normalize = (s) => s ? s.toLowerCase().replace(/[^a-z0-9]/g, "") : "";
+                const targetKey = normalize(id.includes("_") ? colInfo.raw : id); // Handle both ID and raw fallback
 
                 // Find matching key in row
                 const actualKey = Object.keys(row).find(k => normalize(k) === targetKey);
@@ -113,7 +113,7 @@ class SCFDataProcessor {
                 this.regimeList.forEach((rInfo, i) => {
                     const val = row[this.header[regimeStartIdx + i]]?.trim();
                     if (val) {
-                        const identifiers = val.toLowerCase() === 'x' ? [scfId] : val.replace(/\n/g, ',').split(',').map(id => id.trim()).filter(id => id);
+                        const identifiers = val.toLowerCase() === "x" ? [scfId] : val.replace(/\n/g, ",").split(",").map(id => id.trim()).filter(id => id);
                         if (!controlNode.mappings[i]) controlNode.mappings[i] = [];
                         const existing = new Set(controlNode.mappings[i]);
                         identifiers.forEach(id => existing.add(id));
@@ -141,7 +141,7 @@ class SCFDataProcessor {
             this.regimeList.forEach((rInfo, i) => {
                 const val = row[this.header[regimeStartIdx + i]]?.trim();
                 if (val) {
-                    const identifiers = val.toLowerCase() === 'x' ? [scfId] : val.replace(/\n/g, ',').split(',').map(id => id.trim()).filter(id => id);
+                    const identifiers = val.toLowerCase() === "x" ? [scfId] : val.replace(/\n/g, ",").split(",").map(id => id.trim()).filter(id => id);
                     controlNode.mappings[i] = identifiers;
                 }
             });

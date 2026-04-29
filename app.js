@@ -1,151 +1,67 @@
-// State
-const SIZE_BY_STORAGE_KEY = "scf_size_by";
-const FRAMEWORK_STORAGE_KEY = "scf_active_framework";
-const { SIZE_BY_WEIGHT, SIZE_BY_UNIFORM } = SCFSizing;
+import { FRAMEWORK_CONFIGS } from "./framework_configs.js";
+import { SCFSizing } from "./viz_sizing.js";
+import { SCFReadingMode } from "./reading_mode.js";
+import { buildRegimeTreeOptions } from "./regime_grouping.js";
+import { VizUtils } from "./viz_utils.js";
+import { StateManager } from "./state_manager.js";
+import { URLSync } from "./url_sync.js";
+import { UIComponents } from "./ui_components.js";
+import { FilterLogic } from "./filter_logic.js";
+import { ComponentInit } from "./component_init.js";
+import { VizEngine } from "./viz_engine.js";
 
-let currentFrameworkKey = localStorage.getItem(FRAMEWORK_STORAGE_KEY) || "scf";
-let processor = new FrameworkDataProcessor(FRAMEWORK_CONFIGS[currentFrameworkKey]);
-let selectedRegimeIds = new Set();
-let currentSizeBy = localStorage.getItem(SIZE_BY_STORAGE_KEY) || SIZE_BY_WEIGHT;
-
-let showUnmapped = true;
-let _regimeWasActiveThisSession = false;
+// Initialize state
+StateManager.init();
+let vizEngine;
 let root;
-let regimeTreeselect;
-let scfData;
-let HIERARCHY_ALIASES = processor.config.hierarchy_aliases || {};
-let REVERSE_ALIASES = Object.fromEntries(Object.entries(HIERARCHY_ALIASES).map(([k, v]) => [v, k]));
-let svg;
-let g;
 let node;
 let label;
-let width;
-let height;
-let d3Zoom;
 let focus;
 let view;
-const colors = d3.scaleOrdinal(d3.schemeTableau10);
-const getRegimeColor = (rid) => colors(rid);
-const getNodeKey = (d) => d.ancestors().map((currentNode) => currentNode.data.name).reverse().join(" > ");
-const getProjectedScale = (targetView) => width / targetView[2];
-const getProjectedRadius = (radius, targetView) => radius * getProjectedScale(targetView);
-const getTargetView = (targetNode) => [targetNode.x, targetNode.y, targetNode.r * 2];
-const getProjectedTransform = (x, y, targetView, yOffset = 0) => {
-    const k = getProjectedScale(targetView);
-    return `translate(${(x - targetView[0]) * k},${(y - targetView[1]) * k + yOffset})`;
-};
+
 let isReadingView = true;
 let suppressPanZoomState = false;
 
 // --- Framework helpers ---
 
 function refreshHierarchyAliases() {
-    HIERARCHY_ALIASES = processor.config.hierarchy_aliases || {};
-    REVERSE_ALIASES = Object.fromEntries(Object.entries(HIERARCHY_ALIASES).map(([k, v]) => [v, k]));
+    StateManager.hierarchyAliases = StateManager.processor.config.hierarchy_aliases || {};
+    StateManager.reverseAliases = Object.fromEntries(Object.entries(StateManager.hierarchyAliases).map(([k, v]) => [v, k]));
 }
-
-function getRegimeSaveKey(fwKey) {
-    return `scf_selected_regimes_${fwKey}`;
-}
-
-function saveSelectedRegimes() {
-    if (!scfData) return;
-    const names = Array.from(selectedRegimeIds).map(id => {
-        const r = scfData.regimeList[id];
-        return r ? r.fullName : null;
-    }).filter(Boolean);
-    localStorage.setItem(getRegimeSaveKey(currentFrameworkKey), JSON.stringify(names));
-}
-
-function resolveRegimeNames(names) {
-    const result = new Set();
-    if (!scfData) return result;
-    names.forEach(name => {
-        const regime = scfData.regimeList.find(r => r.fullName === name);
-        if (regime !== undefined) result.add(regime.id);
-    });
-    return result;
-}
-
-function loadSelectedRegimes() {
-    const saved = localStorage.getItem(getRegimeSaveKey(currentFrameworkKey));
-    if (saved) {
-        try {
-            const names = JSON.parse(saved);
-            if (Array.isArray(names) && names.every(n => typeof n === "string")) {
-                return resolveRegimeNames(names);
-            }
-        } catch {}
-    }
-    return new Set();
-}
+refreshHierarchyAliases();
 
 function migrateOldRegimeStorage() {
     const oldKey = "scf_selected_regimes";
     const old = localStorage.getItem(oldKey);
-    if (!old || localStorage.getItem(getRegimeSaveKey("scf"))) return;
+    if (!old || localStorage.getItem(StateManager.getRegimeSaveKey("scf"))) return;
     try {
         const indices = JSON.parse(old);
         if (!Array.isArray(indices) || !indices.every(v => typeof v === "number")) return;
-        if (!scfData) return;
+        if (!StateManager.scfData) return;
         const names = indices.map(idx => {
-            const r = scfData.regimeList[idx];
+            const r = StateManager.scfData.regimeList[idx];
             return r ? r.fullName : null;
         }).filter(Boolean);
         const dropped = indices.length - names.length;
-        localStorage.setItem(getRegimeSaveKey("scf"), JSON.stringify(names));
+        localStorage.setItem(StateManager.getRegimeSaveKey("scf"), JSON.stringify(names));
         localStorage.removeItem(oldKey);
         if (dropped > 0) {
-            showToast("Your saved regime selection has been updated for compatibility.");
+            UIComponents.showToast("Your saved regime selection has been updated for compatibility.");
         }
     } catch {}
 }
 
-function showToast(msg) {
-    const toast = document.createElement("div");
-    toast.className = "fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[var(--sidebar-color)] border border-[var(--border-muted)] text-[var(--text-primary)] text-xs px-4 py-2 rounded-full shadow-lg pointer-events-none";
-    toast.textContent = msg;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-}
-
-function showVizError(msg) {
-    const container = document.getElementById("viz-container");
-    if (!container) return;
-    container.innerHTML = `<div class="w-full h-full flex items-center justify-center text-sm text-[var(--text-muted)]">${msg}</div>`;
-}
+const showVizError = UIComponents.showVizError;
 
 // --- Tag Filter ---
 
-let activeTagFilters = new Set();
-let tagGroupMap = new Map(); // tag string → column name (group key); reset on framework switch
-let activeMappingQualityFilters = new Set();
-let mappingQualityRegimeId = null;
-
-function getTagFilterKey(fwKey) {
-    return `scf_tag_filters_${fwKey}`;
-}
-
-function saveTagFilters() {
-    localStorage.setItem(getTagFilterKey(currentFrameworkKey), JSON.stringify(Array.from(activeTagFilters)));
-}
-
-function loadTagFilters() {
-    try {
-        const saved = localStorage.getItem(getTagFilterKey(currentFrameworkKey));
-        if (!saved) return;
-        const parsed = JSON.parse(saved);
-        const tags = Array.isArray(parsed) ? parsed : Object.values(parsed).flat();
-        tags.forEach(t => { if (typeof t === "string") activeTagFilters.add(t); });
-    } catch {}
-}
-
-function clearTagFilters() {
-    activeTagFilters.clear();
-    localStorage.removeItem(getTagFilterKey(currentFrameworkKey));
+function clearTagFilters(event) {
+    if (event) event.stopPropagation();
+    StateManager.activeTagFilters.clear();
+    localStorage.removeItem(StateManager.getTagFilterKey(StateManager.currentFrameworkKey));
     document.querySelectorAll(".tag-checkbox").forEach(cb => { cb.checked = false; });
     document.getElementById("tag-clear-btn")?.classList.add("hidden");
-    activeMappingQualityFilters.clear();
+    StateManager.activeMappingQualityFilters.clear();
     initMappingQualityFilter();
     updateFilterBadge();
     applyTagFilter();
@@ -153,14 +69,14 @@ function clearTagFilters() {
 }
 
 function updateFilterBadge() {
-    const filterCount = activeTagFilters.size + activeMappingQualityFilters.size;
-    const activityCount = selectedRegimeIds.size + filterCount;
+    const filterCount = StateManager.activeTagFilters.size + StateManager.activeMappingQualityFilters.size;
+    const activityCount = StateManager.selectedRegimeIds.size + filterCount;
     const pluralize = (count, singular, plural = `${singular}s`) => `${count} ${count === 1 ? singular : plural}`;
     const badge = document.getElementById("tag-filter-badge");
     if (badge) {
         badge.textContent = activityCount > 0 ? `${activityCount}` : "";
         badge.classList.toggle("hidden", activityCount === 0);
-        const label = `${pluralize(activityCount, "active context item", "active context items")}: ${pluralize(selectedRegimeIds.size, "regime")}, ${pluralize(activeTagFilters.size, "tag filter")}, ${pluralize(activeMappingQualityFilters.size, "mapping quality filter")}`;
+        const label = `${pluralize(activityCount, "active context item", "active context items")}: ${pluralize(StateManager.selectedRegimeIds.size, "regime")}, ${pluralize(StateManager.activeTagFilters.size, "tag filter")}, ${pluralize(StateManager.activeMappingQualityFilters.size, "mapping quality filter")}`;
         badge.setAttribute("title", label);
         badge.setAttribute("aria-label", label);
     }
@@ -185,114 +101,111 @@ function showTagZeroResultOverlay() {
 function hideTagZeroResultOverlay() {
     document.getElementById("tag-zero-result")?.classList.add("hidden");
 }
-
 function applyTagFilter() {
     if (!root || !node) return;
 
-    const noTagFilter = activeTagFilters.size === 0;
-    const noMappingFilter = activeMappingQualityFilters.size === 0 || mappingQualityRegimeId === null;
-
-    if (noTagFilter && noMappingFilter) {
-        node.style("opacity", null);
-        hideTagZeroResultOverlay();
-        updateFilterBadge();
-        return;
-    }
-
-    const controlPassesTagFilter = noTagFilter
-        ? () => true
-        : buildTagFilterPredicate(tagGroupMap, activeTagFilters);
-
-    const controlPassesMappingFilter = noMappingFilter
-        ? () => true
-        : (data) => {
-            const raw = data.regimeQualityTags?.[mappingQualityRegimeId];
-            if (!raw) return false;
-            return raw.split("\n").some(entry => {
-                const typeMatch = entry.match(/Type:\s*([^;]+)/);
-                return typeMatch && activeMappingQualityFilters.has(typeMatch[1].trim());
-            });
-        };
-
-    const controlMatchMap = new Map();
-    root.descendants().forEach(d => {
-        if (d.data.tags !== undefined) {
-            controlMatchMap.set(d, controlPassesTagFilter(d.data.tags) && controlPassesMappingFilter(d.data));
-        }
-    });
+    const matchMap = FilterLogic.calculateMatchMap(
+        root,
+        StateManager.tagGroupMap,
+        StateManager.activeTagFilters,
+        StateManager.mappingQualityRegimeId,
+        StateManager.activeMappingQualityFilters
+    );
 
     let matchCount = 0;
-    node.style("opacity", d => {
-        if (d.data.tags) {
-            const matches = controlMatchMap.get(d) || false;
-            if (matches) matchCount++;
-            return matches ? 1.0 : 0.2;
-        }
-        if (d.depth <= 3) {
-            const controlDescendants = d.descendants().filter(desc => desc.data.tags);
-            if (controlDescendants.length === 0) return 1.0;
-            const allDimmed = controlDescendants.every(desc => !controlMatchMap.get(desc));
-            return allDimmed ? 0.5 : 1.0;
-        }
-        return 1.0;
+    node.style("visibility", d => {
+        const visibility = FilterLogic.getFilteredVisibility(d, matchMap);
+        if (d.data.tags && visibility === "visible") matchCount++;
+        return visibility;
     });
 
-    if (matchCount === 0) showTagZeroResultOverlay();
+    label.style("visibility", d => FilterLogic.getFilteredVisibility(d, matchMap));
+
+    if (matchCount === 0 && (StateManager.activeTagFilters.size > 0 || StateManager.activeMappingQualityFilters.size > 0)) showTagZeroResultOverlay();
     else hideTagZeroResultOverlay();
 
     updateFilterBadge();
 }
 
 function initMappingQualityFilter() {
-    const section = document.getElementById("mapping-quality-section");
-    if (!section) return;
+    const groupsContainer = document.getElementById("tag-filter-groups");
+    if (!groupsContainer) return;
 
-    if (selectedRegimeIds.size !== 1) {
-        section.classList.add("hidden");
-        activeMappingQualityFilters.clear();
-        mappingQualityRegimeId = null;
+    // Clear previously injected mapping quality groups
+    groupsContainer.querySelectorAll(".mapping-quality-group").forEach(el => el.remove());
+
+    const selectedRegimeIds = StateManager.selectedRegimeIds;
+    const isCRI = !!StateManager.processor.config.schema.controls.mapping_tag_suffix;
+
+    if (!isCRI || selectedRegimeIds.size !== 1) {
+        StateManager.mappingQualityRegimeId = null;
+        StateManager.activeMappingQualityFilters.clear();
         return;
     }
 
-    const regimeId = [...selectedRegimeIds][0];
-    mappingQualityRegimeId = regimeId;
-    section.classList.remove("hidden");
+    const rid = Array.from(selectedRegimeIds)[0];
+    StateManager.mappingQualityRegimeId = rid;
+    const rInfo = StateManager.scfData.regimeList[rid];
+    
+    const labeledTags = new Map();
 
-    const typeValues = new Set();
-    if (root) {
-        root.descendants().forEach(d => {
-            if (!d.data.regimeQualityTags) return;
-            const raw = d.data.regimeQualityTags[regimeId];
-            if (!raw) return;
-            raw.split("\n").forEach(entry => {
-                const typeMatch = entry.match(/Type:\s*([^;]+)/);
-                if (typeMatch) typeValues.add(typeMatch[1].trim());
+    StateManager.processor.rawControls.forEach(row => {
+        const val = row[rInfo.tagsCol];
+        if (!val) return;
+        val.split("\n").forEach(line => {
+            line.split(";").forEach(segment => {
+                const parts = segment.split(":");
+                if (parts.length >= 2) {
+                    const label = parts[0].trim() + ":";
+                    const value = parts.slice(1).join(":").trim();
+                    if (!labeledTags.has(label)) labeledTags.set(label, new Set());
+                    labeledTags.get(label).add(value);
+                }
             });
         });
-    }
+    });
 
-    const container = document.getElementById("mapping-quality-groups");
-    if (!container) return;
-    container.innerHTML = "";
-    Array.from(typeValues).sort().forEach(typeVal => {
-        const label = document.createElement("label");
-        label.className = "flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded px-1 py-0.5";
-        const cb = document.createElement("input");
-        cb.type = "checkbox";
-        cb.className = "w-3 h-3 accent-[var(--accent-blue)]";
-        cb.dataset.type = typeVal;
-        cb.checked = activeMappingQualityFilters.has(typeVal);
-        cb.addEventListener("change", () => {
-            if (cb.checked) activeMappingQualityFilters.add(typeVal);
-            else activeMappingQualityFilters.delete(typeVal);
-            applyTagFilter();
+    Array.from(labeledTags.keys()).sort().forEach(label => {
+        const values = Array.from(labeledTags.get(label)).sort();
+        const group = document.createElement("div");
+        group.className = "filter-group mapping-quality-group";
+        const groupLabel = document.createElement("div");
+        groupLabel.className = "filter-group-label";
+        groupLabel.textContent = label;
+        group.appendChild(groupLabel);
+
+        const list = document.createElement("div");
+        list.className = "filter-list";
+        values.forEach(val => {
+            const fullTag = `${label} ${val}`;
+            const item = document.createElement("label");
+            item.className = "filter-item";
+            item.dataset.val = val.toLowerCase();
+            item.dataset.tag = fullTag;
+            
+            const cb = document.createElement("input");
+            cb.type = "checkbox";
+            cb.className = "checkbox-ui mapping-quality-checkbox tag-checkbox";
+            cb.dataset.label = label;
+            cb.dataset.value = val;
+            cb.checked = StateManager.activeMappingQualityFilters.has(fullTag);
+            cb.addEventListener("change", () => {
+                if (cb.checked) StateManager.activeMappingQualityFilters.add(fullTag);
+                else StateManager.activeMappingQualityFilters.delete(fullTag);
+                updateFilterBadge();
+                applyTagFilter();
+            });
+
+            const span = document.createElement("span");
+            span.className = "filter-item-label";
+            span.textContent = val;
+
+            item.appendChild(cb);
+            item.appendChild(span);
+            list.appendChild(item);
         });
-        const span = document.createElement("span");
-        span.className = "text-[11px] text-[var(--text-primary)]";
-        span.textContent = typeVal;
-        label.appendChild(cb);
-        label.appendChild(span);
-        container.appendChild(label);
+        group.appendChild(list);
+        groupsContainer.appendChild(group);
     });
 }
 
@@ -300,9 +213,9 @@ function updateChipList() {
     const chipContainer = document.getElementById("tag-chip-list");
     if (!chipContainer) return;
     chipContainer.innerHTML = "";
-    activeTagFilters.forEach(tag => {
+    StateManager.activeTagFilters.forEach(tag => {
         const chip = document.createElement("span");
-        chip.className = "inline-flex items-center gap-1 bg-[var(--accent-blue)]/15 text-[var(--accent-blue)] text-[10px] px-2 py-0.5 rounded-full";
+        chip.className = "chip-ui";
         const tagText = document.createElement("span");
         tagText.textContent = tag;
         const removeBtn = document.createElement("button");
@@ -313,89 +226,58 @@ function updateChipList() {
         chip.appendChild(removeBtn);
         chipContainer.appendChild(chip);
     });
-    chipContainer.classList.toggle("hidden", activeTagFilters.size === 0);
+    chipContainer.classList.toggle("hidden", StateManager.activeTagFilters.size === 0);
 }
 
 function removeTagFilter(tag) {
-    activeTagFilters.delete(tag);
+    StateManager.activeTagFilters.delete(tag);
     const cb = document.querySelector(`.tag-checkbox[data-tag="${CSS.escape(tag)}"]`);
     if (cb) cb.checked = false;
-    saveTagFilters();
+    StateManager.saveTagFilters();
     updateFilterBadge();
     applyTagFilter();
     updateChipList();
 }
 
-function buildTagGroup(col, tags, isSearchable) {
+function buildTagGroup(labelStr, values) {
     const group = document.createElement("div");
-    group.className = "mb-3";
-    group.dataset.col = col;
+    group.className = "filter-group";
+    group.dataset.label = labelStr;
 
     const label = document.createElement("div");
-    label.className = "text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1.5";
-    label.textContent = col.replace(/ TAGS$/i, "").replace(/CRI /i, "");
+    label.className = "filter-group-label";
+    label.textContent = labelStr;
     group.appendChild(label);
 
-    if (isSearchable) {
-        const searchWrap = document.createElement("div");
-        searchWrap.className = "mb-1";
-        const searchInput = document.createElement("input");
-        searchInput.type = "text";
-        searchInput.placeholder = "Search tags…";
-        searchInput.className = "w-full text-xs bg-[var(--sidebar-darker)] border border-[var(--border-muted)] rounded px-2 py-1 text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none";
-        searchInput.dataset.col = col;
-
-        const noMatch = document.createElement("div");
-        noMatch.className = "hidden text-[10px] text-[var(--text-muted)] italic px-1 py-1";
-        noMatch.dataset.noMatch = col;
-
-        searchInput.addEventListener("input", () => {
-            const q = searchInput.value.toLowerCase();
-            const items = group.querySelectorAll(".tag-item");
-            let visibleCount = 0;
-            items.forEach(item => {
-                const tagText = item.dataset.tag.toLowerCase();
-                const visible = !q || tagText.includes(q);
-                item.classList.toggle("hidden", !visible);
-                if (visible) visibleCount++;
-            });
-            noMatch.textContent = `No tags match '${searchInput.value}'`;
-            noMatch.classList.toggle("hidden", visibleCount > 0 || !q);
-        });
-
-        searchWrap.appendChild(searchInput);
-        searchWrap.appendChild(noMatch);
-        group.appendChild(searchWrap);
-    }
-
     const list = document.createElement("div");
-    list.className = "flex flex-col gap-0.5 max-h-36 overflow-y-auto";
+    list.className = "filter-list";
 
-    tags.forEach(tag => {
-        tagGroupMap.set(tag, col);
+    values.forEach(val => {
+        const fullTag = `${labelStr} ${val}`;
         const item = document.createElement("label");
-        item.className = "tag-item flex items-center gap-2 cursor-pointer hover:bg-white/5 rounded px-1 py-0.5";
-        item.dataset.tag = tag;
+        item.className = "filter-item";
+        item.dataset.tag = fullTag;
+        item.dataset.val = val.toLowerCase();
 
         const cb = document.createElement("input");
         cb.type = "checkbox";
-        cb.className = "tag-checkbox w-3 h-3 accent-[var(--accent-blue)]";
-        cb.dataset.col = col;
-        cb.dataset.tag = tag;
-        cb.checked = activeTagFilters.has(tag);
+        cb.className = "checkbox-ui tag-checkbox";
+        cb.dataset.label = labelStr;
+        cb.dataset.value = val;
+        cb.checked = StateManager.activeTagFilters.has(fullTag);
 
         cb.addEventListener("change", () => {
-            if (cb.checked) activeTagFilters.add(tag);
-            else activeTagFilters.delete(tag);
-            saveTagFilters();
+            if (cb.checked) StateManager.activeTagFilters.add(fullTag);
+            else StateManager.activeTagFilters.delete(fullTag);
+            StateManager.saveTagFilters();
             updateFilterBadge();
             applyTagFilter();
             updateChipList();
         });
 
         const span = document.createElement("span");
-        span.className = "text-[11px] text-[var(--text-primary)]";
-        span.textContent = tag;
+        span.className = "filter-item-label";
+        span.textContent = val;
 
         item.appendChild(cb);
         item.appendChild(span);
@@ -407,32 +289,97 @@ function buildTagGroup(col, tags, isSearchable) {
 }
 
 function initTagFilterPanel(config) {
-    tagGroupMap.clear();
+    StateManager.tagGroupMap.clear();
     const groupsContainer = document.getElementById("tag-filter-groups");
     if (!groupsContainer) return;
     groupsContainer.innerHTML = "";
     updateChipList();
 
     const tagCols = config.schema.controls.tag_cols || [];
+    const mappingSuffix = config.schema.controls.mapping_tag_suffix;
 
-    const tagAccordion = document.getElementById("tag-filter-container")?.closest(".accordion-item");
-    if (tagAccordion) tagAccordion.classList.toggle("hidden", tagCols.length === 0);
+    const tagAccordion = document.getElementById("tag-filter-container")?.closest(".panel-item");
+    if (tagAccordion) tagAccordion.classList.toggle("hidden", tagCols.length === 0 && !mappingSuffix);
 
-    if (tagCols.length === 0) return;
+    if (tagCols.length === 0 && !mappingSuffix) return;
 
-    const rawControls = processor.rawControls;
+    const rawControls = StateManager.processor.rawControls;
+    const selectedRegimeIds = StateManager.selectedRegimeIds;
+    const labeledTags = new Map(); // label -> Set of values
 
-    tagCols.forEach((col, idx) => {
-        const uniqueTags = new Set();
-        rawControls.forEach(row => {
-            const val = row[col]?.trim();
-            if (!val) return;
-            val.split("\n").forEach(t => { const s = t.trim(); if (s) uniqueTags.add(s); });
+    // Determine which controls are visible based on selected regimes
+    const activeControls = selectedRegimeIds.size === 0 
+        ? rawControls 
+        : rawControls.filter(row => {
+            return StateManager.processor.regimeList.some(rInfo => {
+                if (!selectedRegimeIds.has(rInfo.id)) return false;
+                const val = row[rInfo.col]?.trim();
+                return val && val.toLowerCase() !== "";
+            });
         });
-        const sorted = Array.from(uniqueTags).sort();
-        const isSearchable = idx === 0 && sorted.length > 10;
-        groupsContainer.appendChild(buildTagGroup(col, sorted, isSearchable));
+
+    function parseAndAddTags(val) {
+        if (!val) return;
+        val.split("\n").forEach(line => {
+            line.split(";").forEach(segment => {
+                const parts = segment.split(":");
+                if (parts.length >= 2) {
+                    const label = parts[0].trim() + ":";
+                    const value = parts.slice(1).join(":").trim();
+                    if (label && value) {
+                        if (!labeledTags.has(label)) labeledTags.set(label, new Set());
+                        labeledTags.get(label).add(value);
+                    }
+                } else {
+                    const tag = segment.trim();
+                    if (tag) {
+                        if (!labeledTags.has("Subject Area:")) labeledTags.set("Subject Area:", new Set());
+                        labeledTags.get("Subject Area:").add(tag);
+                    }
+                }
+            });
+        });
+    }
+
+    tagCols.forEach(col => {
+        activeControls.forEach(row => parseAndAddTags(row[col]));
     });
+
+    if (mappingSuffix) {
+        StateManager.processor.regimeList.forEach(rInfo => {
+            if (selectedRegimeIds.size > 0 && !selectedRegimeIds.has(rInfo.id)) return;
+            activeControls.forEach(row => parseAndAddTags(row[rInfo.tagsCol]));
+        });
+    }
+
+    Array.from(labeledTags.keys()).sort().forEach(label => {
+        const values = Array.from(labeledTags.get(label)).sort((a, b) => {
+            return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+        });
+        groupsContainer.appendChild(buildTagGroup(label, values));
+    });
+
+    // Wire up global search
+    const globalSearchInput = document.getElementById("tag-global-search");
+    if (globalSearchInput) {
+        // Reset search on framework switch
+        globalSearchInput.value = "";
+        globalSearchInput.addEventListener("input", () => {
+            const q = globalSearchInput.value.toLowerCase();
+            const groups = groupsContainer.querySelectorAll(".tag-group-container");
+            groups.forEach(group => {
+                const items = group.querySelectorAll(".tag-item");
+                let visibleCount = 0;
+                items.forEach(item => {
+                    const visible = !q || item.dataset.val.includes(q);
+                    item.classList.toggle("hidden", !visible);
+                    if (visible) visibleCount++;
+                });
+                // Hide entire group if no items match
+                group.classList.toggle("hidden", visibleCount === 0 && q !== "");
+            });
+        });
+    }
 
     if (groupsContainer.querySelectorAll(".tag-checkbox").length === 0) {
         groupsContainer.innerHTML = "";
@@ -442,9 +389,10 @@ function initTagFilterPanel(config) {
         groupsContainer.appendChild(empty);
     }
 
-    loadTagFilters();
+    StateManager.loadTagFilters();
     document.querySelectorAll(".tag-checkbox").forEach(cb => {
-        cb.checked = activeTagFilters.has(cb.dataset.tag);
+        const fullTag = cb.dataset.label + " " + cb.dataset.value;
+        cb.checked = StateManager.activeTagFilters.has(fullTag);
     });
     updateFilterBadge();
     updateChipList();
@@ -452,13 +400,22 @@ function initTagFilterPanel(config) {
 
 function updateFrameworkBadge() {
     const badge = document.getElementById("framework-badge");
-    if (badge) badge.textContent = processor.config.name;
+    if (badge) badge.textContent = StateManager.processor.config.name;
+
+    const isCRI = StateManager.currentFrameworkKey === "cri";
+    document.getElementById("size-by-as")?.classList.toggle("hidden", !isCRI);
+    document.getElementById("size-by-fcs")?.classList.toggle("hidden", !isCRI);
+    
+    // Reset to 'weight' if current sizing is not available for this framework
+    if (!isCRI && (StateManager.currentSizeBy === "alignment" || StateManager.currentSizeBy === "functional")) {
+        setSizeBy("weight");
+    }
 }
 
 // --- Node Tooltip ---
 
 function getNodeTooltipPath(d) {
-    if (d.depth === 0) return processor.config.name;
+    if (d.depth === 0) return StateManager.processor.config.name;
     return d.ancestors().reverse().filter(a => a.depth > 0).map(a => a.data.name).join(" › ");
 }
 
@@ -487,23 +444,23 @@ function hideNodeTooltip() {
 
 function updateRegimeLabel() {
     const el = document.getElementById("regime-label");
-    if (el) el.textContent = processor.config.regime_label || "Compliance Regimes";
+    if (el) el.textContent = StateManager.processor.config.regime_label || "Compliance Regimes";
 }
 
 function updateOnboardingHint() {
     const hint = document.getElementById("onboarding-hint");
     if (!hint) return;
-    const noRegimes = selectedRegimeIds.size === 0;
-    const isSCF = currentFrameworkKey === "scf";
+    const noRegimes = StateManager.selectedRegimeIds.size === 0;
+    const isSCF = StateManager.currentFrameworkKey === "scf";
     const hasEverSelected = localStorage.getItem("scf_hint_dismissed") === "true";
     // Show on page load only if user has never selected; always re-show on deselect-to-empty (AC2).
-    const shouldShow = noRegimes && isSCF && (!hasEverSelected || _regimeWasActiveThisSession);
+    const shouldShow = noRegimes && isSCF && (!hasEverSelected || StateManager._regimeWasActiveThisSession);
     hint.classList.toggle("hidden", !shouldShow);
 }
 
 function updateFrameworkToggle() {
     document.querySelectorAll(".framework-btn").forEach(btn => {
-        const isActive = btn.dataset.fw === currentFrameworkKey;
+        const isActive = btn.dataset.fw === StateManager.currentFrameworkKey;
         btn.classList.toggle("bg-[var(--accent-blue)]", isActive);
         btn.classList.toggle("text-white", isActive);
         btn.classList.toggle("font-semibold", isActive);
@@ -515,31 +472,28 @@ function updateFrameworkToggle() {
 }
 
 async function switchFramework(key) {
-    if (key === currentFrameworkKey) return;
+    if (key === StateManager.currentFrameworkKey) return;
 
     const overlay = document.getElementById("framework-loading");
     if (overlay) overlay.classList.remove("hidden");
 
-    saveSelectedRegimes();
-    currentFrameworkKey = key;
-    localStorage.setItem(FRAMEWORK_STORAGE_KEY, key);
-
-    processor = new FrameworkDataProcessor(FRAMEWORK_CONFIGS[key]);
+    StateManager.saveSelectedRegimes();
+    StateManager.setFramework(key);
     refreshHierarchyAliases();
 
     try {
-        scfData = await processor.init();
+        StateManager.scfData = await StateManager.processor.init();
     } catch (err) {
         showVizError(`Failed to load ${FRAMEWORK_CONFIGS[key].name}: ${err.message}`);
         if (overlay) overlay.classList.add("hidden");
         return;
     }
 
-    selectedRegimeIds = loadSelectedRegimes();
+    StateManager.selectedRegimeIds = StateManager.loadSelectedRegimes();
     clearTagFilters();
     initTreeselect();
     initHierarchyFieldsTreeselect();
-    initTagFilterPanel(processor.config);
+    initTagFilterPanel(StateManager.processor.config);
     initMappingQualityFilter();
     updateVisualization();
     updateFrameworkBadge();
@@ -551,71 +505,39 @@ async function switchFramework(key) {
 }
 
 function setSizeBy(value) {
-    currentSizeBy = value === SIZE_BY_UNIFORM ? SIZE_BY_UNIFORM : SIZE_BY_WEIGHT;
-    localStorage.setItem(SIZE_BY_STORAGE_KEY, currentSizeBy);
+    StateManager.setSizeBy(value);
 
     const select = document.getElementById("size-by-select");
     if (select) {
-        select.value = currentSizeBy;
+        select.value = StateManager.currentSizeBy;
     }
 
     updateVisualization();
     updateURL();
 }
 
-function getLabelMetrics(d, currentFocus, targetView) {
-    const siblingIndex = d.parent?.children ? d.parent.children.indexOf(d) : 0;
-    return {
-        nodeDepth: d.depth,
-        focusDepth: currentFocus.depth,
-        projectedRadius: getProjectedRadius(d.r, targetView),
-        siblingIndex,
-        focusProjectedRadius: getProjectedRadius(currentFocus.r, targetView)
-    };
-}
-
-function updateReadingViewUI() {
-    const status = document.getElementById("reading-view-status");
-    const indicator = document.getElementById("reading-view-indicator");
-    const labelText = document.getElementById("reading-view-label");
-    const button = document.getElementById("return-to-reading-view");
-
-    if (!status || !indicator || !labelText || !button) {
-        return;
-    }
-
-    const inReadingView = isReadingView;
-    status.classList.toggle("border-amber-500/30", !inReadingView);
-    status.classList.toggle("text-amber-700", !inReadingView);
-    status.classList.toggle("dark:text-amber-300", !inReadingView);
-    indicator.classList.toggle("bg-emerald-500", inReadingView);
-    indicator.classList.toggle("bg-amber-500", !inReadingView);
-    labelText.textContent = inReadingView ? "Reading View" : "Free Zoom View";
-    button.classList.toggle("hidden", inReadingView);
-}
-
 function setReadingViewState(nextState) {
     isReadingView = nextState;
-    updateReadingViewUI();
+    UIComponents.updateReadingViewUI(isReadingView);
 }
 
 function resetPanZoomTransform(duration = 0) {
-    if (!svg || !d3Zoom) {
+    if (!vizEngine.svg || !vizEngine.d3Zoom) {
         return;
     }
 
     suppressPanZoomState = true;
 
     if (duration > 0) {
-        svg.transition().duration(duration).call(d3Zoom.transform, d3.zoomIdentity);
+        vizEngine.svg.transition().duration(duration).call(vizEngine.d3Zoom.transform, d3.zoomIdentity);
         window.setTimeout(() => {
             suppressPanZoomState = false;
         }, duration + 50);
         return;
     }
 
-    svg.call(d3Zoom.transform, d3.zoomIdentity);
-    g.attr("transform", null);
+    vizEngine.svg.call(vizEngine.d3Zoom.transform, d3.zoomIdentity);
+    vizEngine.g.attr("transform", null);
     suppressPanZoomState = false;
 }
 
@@ -635,18 +557,8 @@ const getLabelSize = (d, currentFocus, targetView, isHovered = false) => {
         return "16px";
     }
 
-    const fontSize = SCFReadingMode.getLabelFontSize(getLabelMetrics(d, currentFocus, targetView));
+    const fontSize = SCFReadingMode.getLabelFontSize(VizUtils.getLabelMetrics(d, currentFocus, vizEngine.width, targetView));
     return `${fontSize}px`;
-};
-
-const getLabelOffset = (d, radius, currentFocus) => {
-    const depthDiff = d.depth - (currentFocus?.depth || 0);
-    // Only top-anchor the Focus node (Header) to keep center clear for primary children
-    if (depthDiff === 0 && d.children && d.children.length > 0) {
-        return -radius * 0.9;
-    }
-
-    return 0;
 };
 
 const getLabelOpacity = (d, currentFocus, targetView, isHovered = false) => {
@@ -654,7 +566,7 @@ const getLabelOpacity = (d, currentFocus, targetView, isHovered = false) => {
         return 1;
     }
 
-    const densityTier = SCFReadingMode.getLabelDensityTier(getLabelMetrics(d, currentFocus, targetView));
+    const densityTier = SCFReadingMode.getLabelDensityTier(VizUtils.getLabelMetrics(d, currentFocus, vizEngine.width, targetView));
     if (densityTier === "focus") {
         return 0.82;
     }
@@ -672,7 +584,7 @@ const getLabelOpacity = (d, currentFocus, targetView, isHovered = false) => {
 
 const getLabelDisplay = (d, currentFocus, targetView) => {
     if (d.depth === 0) return "none";
-    return SCFReadingMode.getLabelEligibility(getLabelMetrics(d, currentFocus, targetView)) ? "inline" : "none";
+    return SCFReadingMode.getLabelEligibility(VizUtils.getLabelMetrics(d, currentFocus, vizEngine.width, targetView)) ? "inline" : "none";
 };
 
 function refreshLabelContent(currentFocus, targetView) {
@@ -705,40 +617,28 @@ function refreshLabelContent(currentFocus, targetView) {
 
 // --- D3 Initialization ---
 function initViz() {
-    const container = document.getElementById("viz-container");
-    width = container.clientWidth;
-    height = container.clientHeight;
-
-    d3.select("#viz-container").selectAll("svg").remove();
-
-    svg = d3.select("#viz-container").append("svg")
-        .attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`)
-        .style("display", "block")
-        .style("background", "transparent")
-        .style("cursor", "pointer")
-        .on("click", (event) => {
-            zoom(event, root);
-            closeDetails(); // Close panel when clicking background
-        });
-
-    g = svg.append("g");
+    vizEngine.init();
+    vizEngine.svg.on("click", (event) => {
+        zoom(event, root);
+        closeDetails(); // Close panel when clicking background
+    });
     updateVisualization();
 }
 
 function updateVisualization() {
-    if (!scfData) {
+    if (!StateManager.scfData) {
         return;
     }
 
     const previousFocusName = focus?.data?.name;
-    const previousLayout = root ? new Map(root.descendants().map((d) => [getNodeKey(d), { x: d.x, y: d.y, r: d.r }])) : new Map();
+    const previousLayout = root ? new Map(root.descendants().map((d) => [VizUtils.getNodeKey(d), { x: d.x, y: d.y, r: d.r }])) : new Map();
 
     // Re-build hierarchy based on selection
-    const filteredData = filterData(JSON.parse(JSON.stringify(scfData)));
+    const filteredData = filterData(JSON.parse(JSON.stringify(StateManager.scfData)));
 
     if (!filteredData || !filteredData.children || filteredData.children.length === 0) {
-        g.selectAll("*").remove();
-        g.append("text")
+        vizEngine.g.selectAll("*").remove();
+        vizEngine.g.append("text")
             .attr("text-anchor", "middle")
             .attr("fill", "rgba(255,255,255,0.2)")
             .style("font-size", "14px")
@@ -747,17 +647,9 @@ function updateVisualization() {
         return;
     }
 
-    const pack = (data) => d3.pack()
-        .size([width, height])
-        .padding((d) => d.depth === 1 ? 5 : 2)(
-            d3.hierarchy(data)
-                .sum((d) => d.value ?? SCFSizing.getLeafSizeValue(d, currentSizeBy))
-                .sort((a, b) => (b.value ?? 0) - (a.value ?? 0) || d3.ascending(a.data.name, b.data.name))
-        );
-
-    root = pack(filteredData);
+    root = vizEngine.pack(filteredData, (d) => SCFSizing.getLeafSizeValue(d, StateManager.currentSizeBy));
     focus = previousFocusName ? root.descendants().find((d) => d.data.name === previousFocusName) || root : root;
-    const targetView = getTargetView(focus);
+    const targetView = VizUtils.getTargetView(focus);
 
     // Assign unique persistent IDs for this render to ensure Treeselect values are stable
     root.descendants().forEach((d, index) => {
@@ -772,41 +664,23 @@ function updateVisualization() {
     setupPanZoom();
     setupHierarchyNavigator();
 
-    g.selectAll("*").remove();
+    vizEngine.g.selectAll("*").remove();
 
-    node = g.append("g")
+    node = vizEngine.g.append("g")
         .selectAll("circle")
         .data(root.descendants().slice(1))
         .join("circle")
         .attr("class", (d) => `node node--${d.depth} ${d.children ? "" : "node--leaf"}`)
         .style("fill", (d) => {
-            if (d.depth === 1) {
-                return "var(--scf-depth-1)";
-            }
-
-            if (d.depth === 2) {
-                return "var(--scf-depth-2)";
-            }
-
-            if (d.depth === 3) {
-                return "var(--scf-depth-3)";
-            }
-
-            if (d.depth === 4) {
-                return "var(--scf-depth-4)";
-            }
-
-            if (d.depth === 5 || d.depth === 6) {
-                return getRegimeColor(d.data.regimeId);
-            }
-
+            if (d.depth === 1) return "var(--scf-depth-1)";
+            if (d.depth === 2) return "var(--scf-depth-2)";
+            if (d.depth === 3) return "var(--scf-depth-3)";
+            if (d.depth === 4) return "var(--scf-depth-4)";
+            if (d.depth === 5 || d.depth === 6) return vizEngine.getRegimeColor(d.data.regimeId);
             return "var(--node-fill-default)";
         })
         .style("fill-opacity", (d) => {
-            if (d.depth === 5) {
-                return 0.2; // Manual opacity for regime groups
-            }
-
+            if (d.depth === 5) return 0.2; // Manual opacity for regime groups
             return d.children ? 0.4 : 0.8;
         })
         .style("stroke", (d) => d.children ? "var(--node-stroke)" : "transparent")
@@ -861,7 +735,7 @@ function updateVisualization() {
             closeDetails();
         });
 
-    label = g.append("g")
+    label = vizEngine.g.append("g")
         .attr("pointer-events", "none")
         .attr("text-anchor", "middle")
         .selectAll("text")
@@ -871,23 +745,24 @@ function updateVisualization() {
 
     refreshLabelContent(focus, targetView);
 
-    const getInitialLayout = (d) => previousLayout.get(getNodeKey(d)) || { x: focus.x, y: focus.y, r: 0 };
+    const getInitialLayout = (d) => previousLayout.get(VizUtils.getNodeKey(d)) || { x: focus.x, y: focus.y, r: 0 };
 
     node.attr("transform", (d) => {
         const initial = getInitialLayout(d);
-        return getProjectedTransform(initial.x, initial.y, targetView);
+        return VizUtils.getProjectedTransform(initial.x, initial.y, vizEngine.width, targetView);
     }).attr("r", (d) => {
         const initial = getInitialLayout(d);
-        return getProjectedRadius(initial.r, targetView);
+        return VizUtils.getProjectedRadius(initial.r, vizEngine.width, targetView);
     });
 
     label.attr("transform", (d) => {
         const initial = getInitialLayout(d);
-        return getProjectedTransform(
+        return VizUtils.getProjectedTransform(
             initial.x,
             initial.y,
+            vizEngine.width,
             targetView,
-            getLabelOffset(d, getProjectedRadius(initial.r, targetView), focus)
+            VizUtils.getLabelOffset(d, VizUtils.getProjectedRadius(initial.r, vizEngine.width, targetView), focus)
         );
     });
 
@@ -897,12 +772,12 @@ function updateVisualization() {
 
     updateNodeStyles(focus);
 
-    const transition = svg.transition().duration(previousLayout.size > 0 ? 650 : 0);
+    const transition = vizEngine.svg.transition().duration(previousLayout.size > 0 ? 300 : 0);
     node.transition(transition)
-        .attr("transform", (d) => getProjectedTransform(d.x, d.y, targetView))
-        .attr("r", (d) => getProjectedRadius(d.r, targetView));
+        .attr("transform", (d) => VizUtils.getProjectedTransform(d.x, d.y, vizEngine.width, targetView))
+        .attr("r", (d) => VizUtils.getProjectedRadius(d.r, vizEngine.width, targetView));
     label.transition(transition)
-        .attr("transform", (d) => getProjectedTransform(d.x, d.y, targetView, getLabelOffset(d, getProjectedRadius(d.r, targetView), focus)));
+        .attr("transform", (d) => VizUtils.getProjectedTransform(d.x, d.y, vizEngine.width, targetView, VizUtils.getLabelOffset(d, VizUtils.getProjectedRadius(d.r, vizEngine.width, targetView), focus)));
 
     view = targetView;
     setReadingViewState(true);
@@ -920,16 +795,16 @@ function updateVisualization() {
 }
 
 function setupPanZoom() {
-    d3Zoom = d3.zoom()
+    vizEngine.d3Zoom = d3.zoom()
         .scaleExtent([0.1, 40])
         .on("zoom", (event) => {
-            g.attr("transform", event.transform);
+            vizEngine.g.attr("transform", event.transform);
             if (!suppressPanZoomState) {
                 setReadingViewState(event.transform.k === 1 && event.transform.x === 0 && event.transform.y === 0);
             }
         });
 
-    svg.call(d3Zoom).on("dblclick.zoom", null);
+    vizEngine.svg.call(vizEngine.d3Zoom).on("dblclick.zoom", null);
     window.zoomReset = () => {
         returnToReadingView();
     };
@@ -950,26 +825,11 @@ function updateNodeStyles(focusNode) {
                 .style("stroke-width", "2.5px");
         } else {
             element.style("fill", (currentNode) => {
-                if (currentNode.depth === 1) {
-                    return "var(--scf-depth-1)";
-                }
-
-                if (currentNode.depth === 2) {
-                    return "var(--scf-depth-2)";
-                }
-
-                if (currentNode.depth === 3) {
-                    return "var(--scf-depth-3)";
-                }
-
-                if (currentNode.depth === 4) {
-                    return "var(--scf-depth-4)";
-                }
-
-                if (currentNode.depth === 5 || currentNode.depth === 6) {
-                    return getRegimeColor(currentNode.data.regimeId);
-                }
-
+                if (currentNode.depth === 1) return "var(--scf-depth-1)";
+                if (currentNode.depth === 2) return "var(--scf-depth-2)";
+                if (currentNode.depth === 3) return "var(--scf-depth-3)";
+                if (currentNode.depth === 4) return "var(--scf-depth-4)";
+                if (currentNode.depth === 5 || currentNode.depth === 6) return vizEngine.getRegimeColor(currentNode.data.regimeId);
                 return "var(--node-fill-default)";
             })
                 .style("stroke", (currentNode) => currentNode.children ? "var(--node-stroke)" : "transparent")
@@ -977,10 +837,7 @@ function updateNodeStyles(focusNode) {
         }
 
         element.style("fill-opacity", (currentNode) => {
-            if (currentNode.depth === 5) {
-                return 0.2;
-            }
-
+            if (currentNode.depth === 5) return 0.2;
             return currentNode.children ? 0.4 : 0.8;
         });
     });
@@ -991,9 +848,9 @@ function zoomTo(v) {
         return;
     }
 
-    const k = width / v[2];
+    const k = vizEngine.width / v[2];
     view = v;
-    label.attr("transform", (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k + getLabelOffset(d, d.r * k, focus)})`);
+    label.attr("transform", (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k + VizUtils.getLabelOffset(d, d.r * k, focus)})`);
     node.attr("transform", (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
     node.attr("r", (d) => d.r * k);
 }
@@ -1004,9 +861,9 @@ function zoom(_event, d, options = {}) {
     }
 
     focus = d;
-    const targetView = getTargetView(focus);
-    const transition = svg.transition()
-        .duration(750)
+    const targetView = VizUtils.getTargetView(focus);
+    const transition = vizEngine.svg.transition()
+        .duration(400)
         .tween("zoom", () => {
             const interpolation = d3.interpolateZoom(view, targetView);
             return (t) => zoomTo(interpolation(t));
@@ -1061,25 +918,11 @@ function setupHierarchyNavigator() {
     }
 
     const options = [buildOptions(root)];
-    const container = document.getElementById("hierarchy-navigator-treeselect");
-    container.innerHTML = "";
-
-    new Treeselect({
-        parentHtmlContainer: container,
+    ComponentInit.initSingleTreeselect(
+        "hierarchy-navigator-treeselect",
         options,
-        value: "",
-        isSingleSelect: true,
-        isSearchable: true,
-        isIndependentNodes: true,
-        isBranchSelectable: true,
-        placeholder: "Jump to Control or Domain...",
-        clearable: true,
-        alwaysOpen: true,
-        showCheckbox: false,
-        showTags: false,
-        staticList: true,
-        openLevel: 10,
-        inputCallback: (value) => {
+        "Jump to Control or Domain...",
+        (value) => {
             if (!value || Array.isArray(value)) {
                 return;
             }
@@ -1098,43 +941,45 @@ function setupHierarchyNavigator() {
 
             closeDetails();
         }
-    });
+    );
 }
 
 function filterData(data) {
     function recurse(nodeData, depth) {
         if (depth === 4 || nodeData.mappings) {
             const regimeGroups = {};
-            const visibleMappingLeafCount = SCFSizing.getVisibleMappingLeafCount(nodeData.mappings, selectedRegimeIds);
 
             for (const [regimeId, identifiers] of Object.entries(nodeData.mappings || {})) {
                 const rid = Number.parseInt(regimeId, 10);
-                if (!selectedRegimeIds.has(rid)) {
+                if (!StateManager.selectedRegimeIds.has(rid)) {
                     continue;
                 }
 
-                const regInfo = scfData.regimeList[rid];
+                const regInfo = StateManager.scfData.regimeList[rid];
                 const regimeName = regInfo.name;
 
                 if (!regimeGroups[regimeName]) {
                     regimeGroups[regimeName] = {
                         name: regimeName,
                         regimeId: rid,
-                        children: []
+                        children: [],
+                        nodeType: "regime"
                     };
                 }
 
                 identifiers.forEach((id) => {
+                    const qualityTag = nodeData.regimeQualityTags?.[rid]?.[id] || "";
                     regimeGroups[regimeName].children.push({
                         name: id,
                         regimeId: rid,
-                        value: SCFSizing.getMappedLeafValue(nodeData, visibleMappingLeafCount, currentSizeBy)
+                        qualityTag: qualityTag,
+                        nodeType: "mapping"
                     });
                 });
             }
 
             const validRegimeNodes = Object.values(regimeGroups);
-            if (validRegimeNodes.length === 0 && !showUnmapped) {
+            if (validRegimeNodes.length === 0 && !StateManager.showUnmapped) {
                 return null;
             }
 
@@ -1159,61 +1004,10 @@ function filterData(data) {
     return recurse(data, 0);
 }
 
-function toggleSidebar(side) {
-    const isLeft = side === "left";
-    const sidebar = document.getElementById(isLeft ? "left-sidebar" : "right-sidebar");
-    const icon = document.getElementById(isLeft ? "left-toggle-icon" : "right-toggle-icon");
-    const main = document.querySelector("main");
-
-    if (isLeft) {
-        sidebar.classList.toggle("collapsed");
-        const isCollapsed = sidebar.classList.contains("collapsed");
-        icon.innerText = isCollapsed ? "▶" : "◀";
-        main.style.marginLeft = isCollapsed ? "0" : "320px";
-    } else {
-        sidebar.classList.toggle("open");
-        const isOpen = sidebar.classList.contains("open");
-        icon.innerText = isOpen ? "▶" : "◀";
-        main.style.marginRight = isOpen ? "384px" : "0";
-    }
-
-    updateSidebarToggleA11y(side);
-
-    setTimeout(() => {
-        handleResize();
-    }, 400);
-}
-
-function updateSidebarToggleA11y(side) {
-    const isLeft = side === "left";
-    const sidebar = document.getElementById(isLeft ? "left-sidebar" : "right-sidebar");
-    const button = sidebar?.querySelector(".sidebar-handle");
-    if (!button || !sidebar) return;
-
-    const collapsed = isLeft
-        ? sidebar.classList.contains("collapsed")
-        : !sidebar.classList.contains("open");
-    const label = isLeft
-        ? (collapsed ? "Expand filters sidebar" : "Collapse filters sidebar")
-        : (collapsed ? "Expand details panel" : "Collapse details panel");
-    button.setAttribute("title", label);
-    button.setAttribute("aria-label", label);
-}
-
 function handleResize() {
-    const container = document.getElementById("viz-container");
-    if (!container) {
-        return;
-    }
-
-    width = container.clientWidth;
-    height = container.clientHeight;
-
-    if (svg) {
-        svg.attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`);
-        if (root && view) {
-            zoomTo([view[0], view[1], view[2]]);
-        }
+    vizEngine.handleResize();
+    if (root && view) {
+        zoomTo([view[0], view[1], view[2]]);
     }
 }
 
@@ -1221,168 +1015,116 @@ window.addEventListener("resize", handleResize);
 
 function toggleAccordion(id) {
     const content = document.getElementById(id);
-    const item = content.parentElement;
-    if (content.style.maxHeight && content.style.maxHeight !== "0px") {
-        content.style.maxHeight = "0px";
-        item.classList.remove("open");
-        return;
-    }
+    if (!content) return;
+    const item = content.closest(".panel-item");
+    if (!item) return;
 
-    content.style.maxHeight = "500px";
-    item.classList.add("open");
+    item.classList.toggle("open");
 }
 
 function updateURL() {
-    const params = new URLSearchParams();
-
-    if (window.regimeTreeselect) {
-        const value = regimeTreeselect.value;
-        if (value && value.length > 0) {
-            params.set("r", value.join(","));
-        }
-    } else if (selectedRegimeIds.size > 0) {
-        params.set("r", Array.from(selectedRegimeIds).join(","));
-    }
-
-    if (processor.currentHierarchy.length > 0) {
-        const aliased = processor.currentHierarchy.map((id) => HIERARCHY_ALIASES[id] || id);
-        params.set("h", aliased.join(","));
-    }
-
-    if (showUnmapped) {
-        params.set("u", "1");
-    }
-
-    if (currentSizeBy !== SIZE_BY_WEIGHT) {
-        params.set("s", currentSizeBy);
-    }
-
-    if (focus && focus !== root) {
-        params.set("f", focus.data.name);
-    }
-
-    const newHash = params.toString();
-    if (window.location.hash.substring(1) !== newHash) {
-        window.history.replaceState(null, null, `#${newHash}`);
-    }
+    URLSync.updateURL({
+        selectedRegimeIds: StateManager.selectedRegimeIds,
+        processor: StateManager.processor,
+        hierarchyAliases: StateManager.hierarchyAliases,
+        showUnmapped: StateManager.showUnmapped,
+        currentSizeBy: StateManager.currentSizeBy,
+        focus,
+        root
+    });
 }
 
 function applyURLState() {
-    const hash = window.location.hash.substring(1);
-    if (!hash) {
-        return;
-    }
+    const state = URLSync.applyURLState({
+        reverseAliases: StateManager.reverseAliases
+    });
+    if (!state) return;
 
-    const params = new URLSearchParams(hash);
-
-    if (params.has("u")) {
-        showUnmapped = params.get("u") === "1";
+    if (state.showUnmapped !== undefined) {
+        StateManager.showUnmapped = state.showUnmapped;
         const toggle = document.getElementById("toggle-unmapped");
         if (toggle) {
-            toggle.checked = showUnmapped;
+            toggle.checked = StateManager.showUnmapped;
         }
     }
 
-    if (params.has("s")) {
-        const sizeBy = params.get("s");
-        currentSizeBy = sizeBy === SIZE_BY_UNIFORM ? SIZE_BY_UNIFORM : SIZE_BY_WEIGHT;
+    if (state.currentSizeBy) {
+        StateManager.currentSizeBy = state.currentSizeBy;
     }
 
-    if (params.has("h")) {
-        const aliased = params.get("h").split(",");
-        const fields = aliased.map((alias) => REVERSE_ALIASES[alias] || alias);
-        if (fields.length > 0) {
-            processor.currentHierarchy = fields;
-        }
+    if (state.hierarchyFields) {
+        StateManager.processor.currentHierarchy = state.hierarchyFields;
     }
 
-    if (params.has("r")) {
-        const rawValues = params.get("r").split(",");
-        window._initialRegimeValue = rawValues.map((value) => value.startsWith("cat-") ? value : Number(value));
+    if (state.initialRegimeValue) {
+        window._initialRegimeValue = state.initialRegimeValue;
     }
 }
 
 function applyURLFocus() {
-    const hash = window.location.hash.substring(1);
-    if (!hash) {
-        return;
-    }
-
-    const params = new URLSearchParams(hash);
-    const focusName = params.get("f");
-
-    if (focusName && root) {
-        const target = root.descendants().find((d) => d.data.name === focusName);
-        if (target) {
-            setTimeout(() => {
-                window.externalZoom(target);
-                if (target.data.mappings) {
-                    showDetails(target.data);
-                }
-            }, 500);
-        }
+    const target = URLSync.applyURLFocus(root);
+    if (target) {
+        setTimeout(() => {
+            window.externalZoom(target);
+            if (target.data.mappings) {
+                showDetails(target.data);
+            }
+        }, 500);
     }
 }
 
 function initTreeselect() {
     let options;
-    if (processor.config.schema.controls.mapping_tag_suffix) {
-        options = buildRegimeTreeOptions(scfData.regimeList);
+    if (StateManager.processor.config.schema.controls.mapping_tag_suffix) {
+        options = buildRegimeTreeOptions(StateManager.scfData.regimeList);
     } else {
-        options = Object.keys(scfData.regimeCatalog).sort().map((category) => ({
+        options = Object.keys(StateManager.scfData.regimeCatalog).sort().map((category) => ({
             name: category,
             value: `cat-${category}`,
-            children: scfData.regimeCatalog[category].map((regime) => ({
+            children: StateManager.scfData.regimeCatalog[category].map((regime) => ({
                 name: regime.name,
                 value: regime.id
             }))
         }));
     }
 
-    const container = document.getElementById("treeselect-container");
-    container.innerHTML = "";
-    regimeTreeselect = new Treeselect({
-        parentHtmlContainer: container,
-        value: window._initialRegimeValue || Array.from(selectedRegimeIds),
+    ComponentInit.initTreeselect(
+        "treeselect-container",
         options,
-        isMultiple: true,
-        isSearchable: true,
-        placeholder: "Search or select a compliance regime…",
-        clearable: true,
-        alwaysOpen: true,
-        staticList: true,
-        inputCallback: (value) => {
+        window._initialRegimeValue || Array.from(StateManager.selectedRegimeIds),
+        (value) => {
             const selectedIds = value.reduce((accumulator, currentValue) => {
                 if (typeof currentValue === "number") {
                     accumulator.push(currentValue);
                 } else if (typeof currentValue === "string" && currentValue.startsWith("cat-")) {
                     const categoryName = currentValue.replace("cat-", "");
-                    const categoryRegimes = scfData.regimeCatalog[categoryName];
+                    const categoryRegimes = StateManager.scfData.regimeCatalog[categoryName];
                     if (categoryRegimes) {
                         categoryRegimes.forEach((regime) => accumulator.push(regime.id));
                     }
                 } else if (typeof currentValue === "string" && currentValue.startsWith("grp-")) {
                     const prefix = currentValue.replace("grp-", "");
-                    scfData.regimeList.filter(r => r.name.split(" ")[0] === prefix)
-                                      .forEach(r => accumulator.push(r.id));
+                    StateManager.scfData.regimeList.filter(r => r.name.split(" ")[0] === prefix)
+                        .forEach(r => accumulator.push(r.id));
                 }
 
                 return accumulator;
             }, []);
 
-            selectedRegimeIds = new Set(selectedIds);
+            StateManager.selectedRegimeIds = new Set(selectedIds);
             updateFilterBadge();
-            if (selectedRegimeIds.size > 0) {
+            if (StateManager.selectedRegimeIds.size > 0) {
                 localStorage.setItem("scf_hint_dismissed", "true");
-                _regimeWasActiveThisSession = true;
+                StateManager._regimeWasActiveThisSession = true;
             }
-            saveSelectedRegimes();
+            StateManager.saveSelectedRegimes();
             updateVisualization();
+            initTagFilterPanel(StateManager.processor.config);
             initMappingQualityFilter();
             updateLegend();
             updateURL();
         }
-    });
+    );
 
     if (window._initialRegimeValue) {
         const selectedIds = window._initialRegimeValue.reduce((accumulator, currentValue) => {
@@ -1390,19 +1132,19 @@ function initTreeselect() {
                 accumulator.push(currentValue);
             } else if (typeof currentValue === "string" && currentValue.startsWith("cat-")) {
                 const categoryName = currentValue.replace("cat-", "");
-                const categoryRegimes = scfData.regimeCatalog[categoryName];
+                const categoryRegimes = StateManager.scfData.regimeCatalog[categoryName];
                 if (categoryRegimes) {
                     categoryRegimes.forEach((regime) => accumulator.push(regime.id));
                 }
             } else if (typeof currentValue === "string" && currentValue.startsWith("grp-")) {
                 const prefix = currentValue.replace("grp-", "");
-                scfData.regimeList.filter(r => r.name.split(" ")[0] === prefix)
-                                  .forEach(r => accumulator.push(r.id));
+                StateManager.scfData.regimeList.filter(r => r.name.split(" ")[0] === prefix)
+                    .forEach(r => accumulator.push(r.id));
             }
 
             return accumulator;
         }, []);
-        selectedRegimeIds = new Set(selectedIds);
+        StateManager.selectedRegimeIds = new Set(selectedIds);
         updateFilterBadge();
         window._initialRegimeValue = null;
     }
@@ -1416,24 +1158,24 @@ function initHierarchyFieldsTreeselect() {
 
     const hierarchyAccordion = document.getElementById("hierarchy-fields-accordion");
     if (hierarchyAccordion) {
-        hierarchyAccordion.style.display = processor.config.show_hierarchy_customizer === false ? "none" : "";
+        hierarchyAccordion.style.display = StateManager.processor.config.show_hierarchy_customizer === false ? "none" : "";
     }
 
-    if (processor.config.show_hierarchy_customizer === false) {
+    if (StateManager.processor.config.show_hierarchy_customizer === false) {
         container.innerHTML = "";
         return;
     }
 
     const renderWidget = () => {
         container.innerHTML = "";
-        const active = processor.currentHierarchy || [];
-        const allColumns = processor.hierarchyColumns;
+        const active = StateManager.processor.currentHierarchy || [];
+        const allColumns = StateManager.processor.hierarchyColumns;
 
         const activeWrapper = document.createElement("div");
         activeWrapper.className = "flex flex-col gap-2 mb-4";
 
         if (active.length > 0) {
-            activeWrapper.innerHTML = '<div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Active Hierarchy Order</div>';
+            activeWrapper.innerHTML = "<div class=\"text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1\">Active Hierarchy Order</div>";
             active.forEach((id, index) => {
                 const column = allColumns.find((currentColumn) => currentColumn.id === id);
                 if (!column) {
@@ -1450,23 +1192,23 @@ function initHierarchyFieldsTreeselect() {
                     <span class="text-xs opacity-50 group-hover:opacity-100 group-hover:text-red-400 transition-opacity">✕</span>
                 `;
                 item.onclick = () => {
-                    processor.currentHierarchy.splice(index, 1);
+                    StateManager.processor.currentHierarchy.splice(index, 1);
                     updateState();
                 };
                 activeWrapper.appendChild(item);
             });
         } else {
-            activeWrapper.innerHTML = '<div class="text-xs text-gray-500 italic p-2 text-center border border-dashed border-white/10 rounded">No hierarchy levels selected.<br>Select fields below to start.</div>';
+            activeWrapper.innerHTML = "<div class=\"text-xs text-gray-500 italic p-2 text-center border border-dashed border-white/10 rounded\">No hierarchy levels selected.<br>Select fields below to start.</div>";
         }
         container.appendChild(activeWrapper);
 
         const availableWrapper = document.createElement("div");
         availableWrapper.className = "flex flex-wrap gap-2";
-        availableWrapper.innerHTML = '<div class="w-full text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Available Fields</div>';
+        availableWrapper.innerHTML = "<div class=\"w-full text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1\">Available Fields</div>";
 
         const available = allColumns.filter((column) => !active.includes(column.id));
         if (available.length === 0) {
-            availableWrapper.innerHTML += '<div class="text-xs text-gray-600 italic">All fields selected.</div>';
+            availableWrapper.innerHTML += "<div class=\"text-xs text-gray-600 italic\">All fields selected.</div>";
         }
 
         available.forEach((column) => {
@@ -1474,7 +1216,7 @@ function initHierarchyFieldsTreeselect() {
             button.className = "bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white px-2 py-1 rounded text-xs border border-white/5 transition-colors text-left";
             button.innerText = column.name;
             button.onclick = () => {
-                processor.currentHierarchy.push(column.id);
+                StateManager.processor.currentHierarchy.push(column.id);
                 updateState();
             };
             availableWrapper.appendChild(button);
@@ -1483,7 +1225,7 @@ function initHierarchyFieldsTreeselect() {
     };
 
     const updateState = () => {
-        scfData = processor.buildTree(processor.currentHierarchy);
+        StateManager.scfData = StateManager.processor.buildTree(StateManager.processor.currentHierarchy);
         updateVisualization();
         updateURL();
         setTimeout(initHierarchyNavigatorTreeselect, 50);
@@ -1531,20 +1273,11 @@ function initHierarchyNavigatorTreeselect() {
         }
     }
 
-    new Treeselect({
-        parentHtmlContainer: container,
-        options: nestedOptions,
-        value: null,
-        isSingleSelect: true,
-        isSearchable: true,
-        placeholder: "Jump to Control or Domain...",
-        clearable: true,
-        alwaysOpen: true,
-        staticList: true,
-        showCheckbox: false,
-        disableBranchNodes: false,
-        expandSelected: true,
-        inputCallback: (value) => {
+    ComponentInit.initSingleTreeselect(
+        "hierarchy-navigator-treeselect",
+        nestedOptions,
+        "Jump to Control or Domain...",
+        (value) => {
             if (!value) {
                 return;
             }
@@ -1557,21 +1290,22 @@ function initHierarchyNavigatorTreeselect() {
                 }
             }
         }
-    });
+    );
 }
 
 function toggleUnmappedVisibility(checked) {
-    showUnmapped = checked;
+    StateManager.showUnmapped = checked;
     updateVisualization();
     updateURL();
 }
 
 function updateLegend() {
     const container = document.getElementById("regime-legend");
+    if (!container) return;
     container.innerHTML = "";
 
-    selectedRegimeIds.forEach((rid) => {
-        const regime = scfData.regimeList[rid];
+    StateManager.selectedRegimeIds.forEach((rid) => {
+        const regime = StateManager.scfData.regimeList[rid];
         if (!regime) {
             return;
         }
@@ -1579,7 +1313,7 @@ function updateLegend() {
         const item = document.createElement("div");
         item.className = "bg-black/60 backdrop-blur px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 shadow-xl max-w-48";
         item.innerHTML = `
-            <div class="w-2 h-2 rounded-full" style="background: ${getRegimeColor(rid)}"></div>
+            <div class="w-2 h-2 rounded-full" style="background: ${vizEngine.getRegimeColor(rid)}"></div>
             <span class="text-[9px] font-bold text-white uppercase tracking-wider truncate">${regime.name}</span>
         `;
         container.appendChild(item);
@@ -1591,11 +1325,16 @@ function showDetails(data) {
         return;
     }
 
+    const detailPanel = document.getElementById("detail-panel");
+    if (detailPanel && !detailPanel.classList.contains("open")) {
+        toggleAccordion("detail-panel-content");
+    }
+
     const safeSetText = (id, text) => {
         const element = document.getElementById(id);
         if (element) element.innerText = text;
     };
-    const cfg = processor.config;
+    const cfg = StateManager.processor.config;
 
     safeSetText("detail-id", data.name.split(":")[0]);
     safeSetText("detail-title", data.name.split(":")[1]?.trim() || data.name);
@@ -1605,7 +1344,7 @@ function showDetails(data) {
     const descLabel = document.getElementById("detail-desc-label");
     if (descLabel) descLabel.textContent = cfg.schema.controls.description_col || "Description";
 
-    const pptdf = Object.keys(HIERARCHY_ALIASES).find((key) => data[key]) || cfg.key.toUpperCase();
+    const pptdf = Object.keys(StateManager.hierarchyAliases).find((key) => data[key]) || cfg.key.toUpperCase();
     safeSetText("detail-pptdf", pptdf.replace(/_/g, " "));
 
     // Tags section
@@ -1615,7 +1354,7 @@ function showDetails(data) {
             tagsContainer.innerHTML = "";
             data.tags.forEach(tag => {
                 const chip = document.createElement("span");
-                chip.className = "inline-block text-[10px] px-2 py-0.5 rounded-full bg-[var(--accent-blue)]/10 text-[var(--accent-blue)] border border-[var(--accent-blue)]/20";
+                chip.className = "chip-ui";
                 chip.textContent = tag;
                 tagsContainer.appendChild(chip);
             });
@@ -1635,19 +1374,19 @@ function showDetails(data) {
         Object.entries(mappings).forEach(([rid, ids]) => {
             hasMappings = true;
             const ridNum = Number.parseInt(rid, 10);
-            const regimeInfo = scfData.regimeList[ridNum];
-            if (!regimeInfo || !selectedRegimeIds.has(ridNum)) {
+            const regimeInfo = StateManager.scfData.regimeList[ridNum];
+            if (!regimeInfo || !StateManager.selectedRegimeIds.has(ridNum)) {
                 return;
             }
 
             const element = document.createElement("div");
-            element.className = "bg-white/5 rounded-lg p-3 border border-white/5";
+            element.className = "detail-card";
 
             const header = document.createElement("div");
             header.className = "flex items-center gap-2 mb-2";
             const dot = document.createElement("div");
             dot.className = "w-2 h-2 rounded-full flex-shrink-0";
-            dot.style.background = getRegimeColor(rid);
+            dot.style.background = vizEngine.getRegimeColor(rid);
             const nameSpan = document.createElement("span");
             nameSpan.className = "text-[10px] font-bold text-gray-400 uppercase tracking-widest";
             nameSpan.textContent = regimeInfo.name;
@@ -1666,22 +1405,32 @@ function showDetails(data) {
             });
             element.appendChild(idWrap);
 
-            const qualityTagRaw = data.regimeQualityTags?.[rid];
-            if (qualityTagRaw) {
+            const qualityTagsForRegime = data.regimeQualityTags?.[rid];
+            if (qualityTagsForRegime) {
                 const qtSection = document.createElement("div");
                 qtSection.className = "mt-2 pt-2 border-t border-white/5";
                 const qtLabel = document.createElement("div");
                 qtLabel.className = "text-[9px] text-gray-500 uppercase tracking-widest mb-1";
-                qtLabel.textContent = "Mapping Quality";
+                qtLabel.textContent = "Mapping Quality / Metadata";
                 qtSection.appendChild(qtLabel);
                 const qtChips = document.createElement("div");
                 qtChips.className = "flex flex-wrap gap-1";
-                qualityTagRaw.split("\n").forEach(entry => {
-                    const trimmed = entry.trim();
-                    if (!trimmed) return;
+
+                // qualityTagsForRegime is now { controlId: "Tag1: Val1; Tag2: Val2" }
+                // Aggregate all unique tags for this regime + control combo
+                const uniqueTags = new Set();
+                Object.values(qualityTagsForRegime).forEach(tagStr => {
+                    if (!tagStr) return;
+                    tagStr.split(";").forEach(t => {
+                        const trimmed = t.trim();
+                        if (trimmed) uniqueTags.add(trimmed);
+                    });
+                });
+
+                Array.from(uniqueTags).sort().forEach(tag => {
                     const qt = document.createElement("span");
                     qt.className = "text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-gray-300";
-                    qt.textContent = trimmed;
+                    qt.textContent = tag;
                     qtChips.appendChild(qt);
                 });
                 qtSection.appendChild(qtChips);
@@ -1692,7 +1441,7 @@ function showDetails(data) {
         });
 
         if (!hasMappings) {
-            mapContainer.innerHTML = '<div class="text-xs text-gray-600 italic p-2 dark:text-gray-500">No active mappings for selected regimes.</div>';
+            mapContainer.innerHTML = "<div class=\"text-xs text-gray-600 italic p-2 dark:text-gray-500\">No active mappings for selected regimes.</div>";
         }
     }
 
@@ -1723,43 +1472,7 @@ function closeDetails() {
 }
 
 function updateBreadcrumbs(d) {
-    const crumb = document.getElementById("breadcrumbs");
-    if (!d) return;
-
-    // Collapse consecutive identical labels — render-layer only, hierarchy unchanged.
-    // Shallowest node of each group is kept as the click target (AC3).
-    const collapsed = d.ancestors().reverse().reduce((acc, node) => {
-        const label = node.data.name.split(":")[0];
-        if (acc.length > 0 && acc[acc.length - 1].label === label) return acc;
-        acc.push({ node, label });
-        return acc;
-    }, []);
-
-    crumb.innerHTML = "";
-    collapsed.forEach(({ node, label }, index) => {
-        const isLast = index === collapsed.length - 1;
-        const span = document.createElement("span");
-        span.textContent = label;
-        span.className = isLast
-            ? "font-bold text-slate-900 dark:text-white"
-            : "cursor-pointer hover:text-blue-500 transition-colors duration-200 text-slate-500 dark:text-slate-400";
-
-        if (!isLast) {
-            span.onclick = (event) => {
-                event.stopPropagation();
-                zoom(event, node);
-            };
-        }
-
-        crumb.appendChild(span);
-
-        if (!isLast) {
-            const separator = document.createElement("span");
-            separator.className = "mx-1 opacity-30 text-gray-500 dark:text-gray-400";
-            separator.textContent = "/";
-            crumb.appendChild(separator);
-        }
-    });
+    UIComponents.updateBreadcrumbs(d, zoom);
 }
 
 // --- Theme Management ---
@@ -1782,45 +1495,49 @@ window.switchFramework = switchFramework;
 window.removeTagFilter = removeTagFilter;
 window.clearTagFilters = clearTagFilters;
 window.returnToReadingView = returnToReadingView;
-window.toggleSidebar = toggleSidebar;
+window.toggleSidebar = (side) => UIComponents.toggleSidebar(side, handleResize);
 window.toggleAccordion = toggleAccordion;
 window.toggleUnmappedVisibility = toggleUnmappedVisibility;
 
 const storedTheme = localStorage.getItem("scf_theme") || "system";
-setTheme(storedTheme);
-setSizeBy(currentSizeBy);
+window.setTheme(storedTheme);
 
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
     if (localStorage.getItem("scf_theme") === "system") {
-        setTheme("system");
+        window.setTheme("system");
     }
 });
 
-window.addEventListener("load", async () => {
+async function initialize() {
     try {
+        vizEngine = new VizEngine("viz-container", StateManager);
         applyURLState();
 
-        scfData = await processor.init();
+        StateManager.scfData = await StateManager.processor.init();
 
         migrateOldRegimeStorage();
-        selectedRegimeIds = loadSelectedRegimes();
+        StateManager.selectedRegimeIds = StateManager.loadSelectedRegimes();
 
         initViz();
+        setSizeBy(StateManager.currentSizeBy);
         initTreeselect();
         initHierarchyFieldsTreeselect();
         initHierarchyNavigatorTreeselect();
-        initTagFilterPanel(processor.config);
+        initTagFilterPanel(StateManager.processor.config);
+        initMappingQualityFilter();
 
         updateFrameworkBadge();
         updateRegimeLabel();
         updateFrameworkToggle();
-        updateSidebarToggleA11y("left");
-        updateSidebarToggleA11y("right");
+        UIComponents.updateSidebarToggleA11y("left");
+        UIComponents.updateSidebarToggleA11y("right");
         updateFilterBadge();
         updateLegend();
         applyURLFocus();
     } catch (error) {
         console.error("Failed to initialize visualizer:", error);
-        showVizError(`Failed to load ${processor.config.name}. Please ensure data files are accessible.`);
+        showVizError(`Failed to load ${StateManager.processor.config.name}. Please ensure data files are accessible.`);
     }
-});
+}
+
+initialize();

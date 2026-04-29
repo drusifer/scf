@@ -10,7 +10,8 @@ Type `*help` for complete command reference with examples.
 
 ## Primary Documentation
 
-### Getting Started
+### Architecture & Design
+- **[Unified Filtering Architecture](morpheus.docs/unified_filtering_arch.md)** - Matcher pattern and recursive visibility logic
 - **[STARTUP.md](../STARTUP.md)** - LLM startup instructions
 - **[README.md](../README.md)** - Project overview and team reference
 - **[SHORTHAND_GUIDE.md](../SHORTHAND_GUIDE.md)** - Complete trigger/command reference

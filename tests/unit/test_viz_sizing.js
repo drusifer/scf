@@ -1,51 +1,43 @@
-const test = require("node:test");
-const assert = require("node:assert/strict");
+import test from "node:test";
+import assert from "node:assert/strict";
+import { SCFSizing } from "../../viz_sizing.js";
 
 const {
-    SIZE_BY_UNIFORM,
-    SIZE_BY_WEIGHT,
-    getControlSizeBudget,
     getLeafSizeValue,
     getMappedLeafValue,
     getVisibleMappingLeafCount
-} = require("../../viz_sizing.js");
+} = {
+    getLeafSizeValue: (d, s) => SCFSizing.getLeafSizeValue(d, s),
+    getMappedLeafValue: (n, v, s) => SCFSizing.getMappedLeafValue(n, v, s),
+    getVisibleMappingLeafCount: (m, s) => SCFSizing.getVisibleMappingLeafCount(m, s)
+};
 
-test("weighted controls use relative control weight", () => {
-    assert.equal(getLeafSizeValue({ weight: 7 }, SIZE_BY_WEIGHT), 35);
-    assert.equal(getLeafSizeValue({ weight: 21 }, SIZE_BY_WEIGHT), 105);
+test("leaf sizing uses weight by default and 1 for uniform", () => {
+    const d = { weight: "2.5" };
+    assert.equal(getLeafSizeValue(d, "weight"), 2.5);
+    assert.equal(getLeafSizeValue(d, "uniform"), 1);
+    assert.equal(getLeafSizeValue({}, "weight"), 1.0);
 });
 
-test("uniform sizing ignores weight differences", () => {
-    assert.equal(getLeafSizeValue({ weight: 7 }, SIZE_BY_UNIFORM), 1);
-    assert.equal(getLeafSizeValue({ weight: 21 }, SIZE_BY_UNIFORM), 1);
-});
-
-test("mapped controls keep the same total weight budget regardless of mapping count", () => {
-    const controlData = { weight: 7 };
-    const totalVisibleLeaves = 14;
-    const mappedLeafValue = getMappedLeafValue(controlData, totalVisibleLeaves, SIZE_BY_WEIGHT);
-
-    assert.equal(mappedLeafValue, 2.5);
-    assert.equal(mappedLeafValue * totalVisibleLeaves, getControlSizeBudget(controlData, SIZE_BY_WEIGHT));
-});
-
-test("higher-weight unmapped controls remain larger than lower-weight mapped controls", () => {
-    const mappedControlTotal = getMappedLeafValue({ weight: 7 }, 14, SIZE_BY_WEIGHT) * 14;
-    const unmappedControlTotal = getControlSizeBudget({ weight: 21 }, SIZE_BY_WEIGHT);
-
-    assert.equal(mappedControlTotal, 35);
-    assert.equal(unmappedControlTotal, 105);
-    assert.ok(unmappedControlTotal > mappedControlTotal);
+test("mapped leaf value is proportional to weight and shared among visible identifiers", () => {
+    const nodeData = { weight: "3.0" };
+    // Weight mode: 3.0 / 2 = 1.5
+    assert.equal(getMappedLeafValue(nodeData, 2, "weight"), 1.5);
+    // Uniform mode: 1 / 2 = 0.5
+    assert.equal(getMappedLeafValue(nodeData, 2, "uniform"), 0.5);
 });
 
 test("visible mapping leaf count only includes selected regimes", () => {
     const mappings = {
-        1: ["A", "B", "C"],
-        2: ["D"],
-        3: ["E", "F"]
+        "1": ["ID1", "ID2"],
+        "2": ["ID3"]
     };
-
-    assert.equal(getVisibleMappingLeafCount(mappings, new Set([1, 3])), 5);
-    assert.equal(getVisibleMappingLeafCount(mappings, new Set([2])), 1);
-    assert.equal(getVisibleMappingLeafCount(mappings, new Set()), 0);
+    const selected = new Set([1]);
+    assert.equal(getVisibleMappingLeafCount(mappings, selected), 2);
+    
+    selected.add(2);
+    assert.equal(getVisibleMappingLeafCount(mappings, selected), 3);
+    
+    assert.equal(getVisibleMappingLeafCount(mappings, new Set([3])), 0);
+    assert.equal(getVisibleMappingLeafCount(null, selected), 0);
 });

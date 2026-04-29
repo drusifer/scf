@@ -1,8 +1,14 @@
 {
+  "type": "module",
   "dependencies": {
     "papaparse": "^5.5.3"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1"
+    "@playwright/test": "^1.59.1",
+    "d3": "^7.9.0",
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0",
+    "stylelint": "^17.9.1",
+    "stylelint-config-standard": "^40.0.0"
   }
 }

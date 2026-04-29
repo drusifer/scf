@@ -55,10 +55,17 @@ if __name__ == "__main__":
     output_dir = "csv_output"
     os.makedirs(output_dir, exist_ok=True)
     
-    files = [f for f in os.listdir('.') if f.endswith('.xlsx')]
+    if len(sys.argv) > 1:
+        files = sys.argv[1:]
+    else:
+        files = [f for f in os.listdir('.') if f.endswith('.xlsx')]
+        
     if not files:
-        print("No .xlsx files found in current directory.")
+        print("No .xlsx files provided or found in current directory.")
         sys.exit(0)
         
     for f in files:
-        process_excel(f, output_dir)
+        if os.path.exists(f):
+            process_excel(f, output_dir)
+        else:
+            print(f"File not found: {f}")

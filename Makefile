@@ -18,7 +18,7 @@ endif
 
 # ── Bob Protocol Targets ─────────────────────────────────────────────────────
 
-.PHONY: tldr test test-unit test-e2e screenshots lint lint-js lint-app-js via_index install_bob update_bob pull_bob clean_bob diff_bob preview venv
+.PHONY: tldr test test-unit test-e2e screenshots lint lint-js lint-css lint-app-js via_index install_bob update_bob pull_bob clean_bob diff_bob preview venv
 
 venv: ## Create .venv and install dependencies from pyproject.toml
 	@python3 -m venv .venv
@@ -47,10 +47,13 @@ node_modules: package.json ## Install Node.js dependencies
 test-unit: node_modules ## Run project unit tests
 	@node --test $$(find tests/unit -name '*.js' -type f | sort)
 
-lint: lint-js lint-inline-js ## Run project lint checks
+lint: lint-js lint-css lint-inline-js ## Run project lint checks
 
 lint-js: ## Run ESLint on project JavaScript modules and tests
 	@npx eslint viz_sizing.js reading_mode.js tag_filter.js framework_configs.js framework_processor.js tests/unit
+
+lint-css: ## Run Stylelint on project CSS files
+	@npx stylelint styles.css
 
 lint-app-js: ## Run ESLint on the extracted application script
 	@npx eslint app.js
@@ -194,7 +197,7 @@ else
 #   make tldr V=-vv        stderr + filtered failures to terminal
 #   make tldr V=-vvv       stderr + full stdout to terminal
 
-.PHONY: help chat test test-unit test-e2e screenshots lint lint-js lint-inline-js via_index install_bob update_bob pull_bob clean_bob diff_bob preview venv
+.PHONY: help chat test test-unit test-e2e screenshots lint lint-js lint-css lint-inline-js via_index install_bob update_bob pull_bob clean_bob diff_bob preview venv
 
 install_bob: ## Copy agents into a project and set up skill links (usage: make install_bob TARGET=/path/to/project)
 	@$(MAKE) MKF_ACTIVE=1 install_bob TARGET="$(TARGET)"
@@ -265,6 +268,9 @@ lint: ## Run project lint checks
 	@./agents/tools/mkf.py $(V) $@
 
 lint-js: ## Run ESLint on project JavaScript modules and tests
+	@./agents/tools/mkf.py $(V) $@
+
+lint-css: ## Run Stylelint on project CSS files
 	@./agents/tools/mkf.py $(V) $@
 
 lint-app-js: ## Run ESLint on the extracted application script
