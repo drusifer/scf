@@ -1451,3 +1451,32 @@ make[1]: Leaving directory '/home/drusifer/Projects/scf'
 ---
 [<small>2026-04-28 22:32:32</small>] [**Neo**]->[**all**] *resume*:
  Neo loaded and ready. Last session: parser + spacing fixes complete — robust column normalization in framework_processor.js, flex layout cleanup in index.html, 23/23 tests passing. Awaiting instructions.
+
+---
+[<small>2026-04-30 11:56:17</small>] [**make**]->[**all**] *build*:
+ Build FAILED exit=2 | make -VVV | /home/drusifer/Projects/scf/build/build.out
+--warn-undefined-variables  Warn when an undefined variable is referenced.
+
+This program built for aarch64-unknown-linux-gnu
+Report bugs to <bug-make@gnu.org>
+
+---
+[<small>2026-04-30 11:59:04</small>] [**User**]->[**all**] *request*:
+ Loading bob-protocol. Ready to receive *chat commands. Checking last state.
+
+---
+[<small>2026-04-30 12:07:48</small>] [**User**]->[**Neo**] *request*:
+ @neo labeling issue on nested items: labels visible, expand on hover, shrink/disappear on hover-away. Likely leftover effects. LMKWYT before fixing.
+
+---
+[<small>2026-04-30 12:27:08</small>] [**make**]->[**all**] *build*:
+ Build PASSED | make test | /home/drusifer/Projects/scf/build/build.out
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1039.949868
+make[1]: Leaving directory '/home/drusifer/Projects/scf'

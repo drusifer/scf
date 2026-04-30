@@ -26,8 +26,9 @@ venv: ## Create .venv and install dependencies from pyproject.toml
 	@echo "venv ready: .venv/bin/python"
 
 preview: ## Start a local web server to preview the visualization
-	@echo "Starting preview server at http://localhost:8000"
-	@python3 -m http.server 8000
+	@echo "Starting preview server at http://0.0.0.0:8000"
+	@python3 -m http.server 8181 --bind 0.0.0.0
+
 
 tldr: ## Show TL;DR summaries from all project files (quick orientation for agents)
 	@rg --no-heading "TL;DR:" --glob "*.md" -N | sed 's|^\./||' | sort

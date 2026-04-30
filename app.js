@@ -416,7 +416,8 @@ function updateFrameworkBadge() {
 
 function getNodeTooltipPath(d) {
     if (d.depth === 0) return StateManager.processor.config.name;
-    return d.ancestors().reverse().filter(a => a.depth > 0).map(a => a.data.name).join(" › ");
+    const parts = d.ancestors().reverse().filter(a => a.depth > 0).map(a => a.data.name);
+    return parts.map((name, i) => (i === 0 ? name : `${"  ".repeat(i)}› ${name}`)).join("\n");
 }
 
 function positionNodeTooltip(event, el) {
@@ -688,11 +689,11 @@ function updateVisualization() {
                 .style("stroke", "var(--node-stroke-hover)")
                 .style("stroke-width", d.depth === 4 ? "3px" : "2px");
 
+            const currentTargetView = VizUtils.getTargetView(focus);
             label.filter((labelNode) => labelNode === d)
                 .transition().duration(200)
-                .style("display", "inline")
                 .style("fill-opacity", 1)
-                .style("font-size", getLabelSize(d, focus, targetView, true))
+                .style("font-size", getLabelSize(d, focus, currentTargetView, true))
                 .style("font-weight", 700);
 
             showNodeTooltip(event, d);
@@ -706,11 +707,12 @@ function updateVisualization() {
                 .style("stroke", d.children ? "var(--node-stroke)" : "transparent")
                 .style("stroke-width", "0.5px");
 
+            const currentTargetView = VizUtils.getTargetView(focus);
             label.filter((labelNode) => labelNode === d)
                 .transition().duration(200)
-                .style("display", getLabelDisplay(d, focus, targetView))
-                .style("fill-opacity", getLabelOpacity(d, focus, targetView))
-                .style("font-size", getLabelSize(d, focus, targetView))
+                .style("display", getLabelDisplay(d, focus, currentTargetView))
+                .style("fill-opacity", getLabelOpacity(d, focus, currentTargetView))
+                .style("font-size", getLabelSize(d, focus, currentTargetView))
                 .style("font-weight", (currentNode) => {
                     const depthDiff = currentNode.depth - focus.depth;
                     return depthDiff === 0 ? "700" : "400";

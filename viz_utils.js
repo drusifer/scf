@@ -29,9 +29,11 @@ export const VizUtils = {
 
     getLabelOffset: (d, radius, currentFocus) => {
         const depthDiff = d.depth - (currentFocus?.depth || 0);
-        // Only top-anchor the Focus node (Header) to keep center clear for primary children
         if (depthDiff === 0 && d.children && d.children.length > 0) {
             return -radius * 0.9;
+        }
+        if (depthDiff === 1 && d.children && d.children.length > 0) {
+            return -radius * 0.8;
         }
         return 0;
     }
