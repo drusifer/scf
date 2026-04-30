@@ -36,15 +36,41 @@
             <span id="left-toggle-icon">◀</span>
             <span id="tag-filter-badge" class="hidden absolute -top-1 -right-1 badge-ui w-4 h-4"></span>
         </button>
-        <div class="p-6 border-b border-white/10">
+        <div class="panel-title">
             <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
                 SCF Visualizer
             </h1>
-            <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-tighter">Zoomable Relationship Engine</p>
-            <!-- Framework Selector -->
+            <p class="text-[10px] text-gray-500 uppercase tracking-tighter">Zoomable Relationship Engine</p>
             <div id="framework-selector" class="framework-switcher">
                 <button data-fw="scf" class="framework-btn" onclick="switchFramework('scf')">SCF 2026.1</button>
                 <button data-fw="cri" class="framework-btn" onclick="switchFramework('cri')">CRI Profile v2.1</button>
+            </div>
+            <div class="panel-controls">
+                <div class="panel-control-row">
+                    <input type="checkbox" id="toggle-unmapped" checked class="checkbox-ui">
+                    <label for="toggle-unmapped">Show Unmapped</label>
+                </div>
+                <div class="panel-control-row">
+                    <input type="checkbox" id="toggle-perf-mode" class="checkbox-ui" onchange="setPerfMode(this.checked)">
+                    <label for="toggle-perf-mode">Performance Mode</label>
+                </div>
+                <div class="panel-control-row">
+                    <label for="size-by-select">Size By</label>
+                    <select id="size-by-select" onchange="setSizeBy(this.value)">
+                        <option value="weight">Impact</option>
+                        <option value="uniform">Uniform</option>
+                        <option id="size-by-as" value="alignment" class="hidden">Alignment Strength</option>
+                        <option id="size-by-fcs" value="functional" class="hidden">Functional Coverage Strength</option>
+                    </select>
+                </div>
+                <div class="panel-control-row">
+                    <label for="theme-select">Theme</label>
+                    <select id="theme-select" onchange="setTheme(this.value)">
+                        <option value="system">System</option>
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -57,7 +83,7 @@
                     </span>
                 </div>
                 <div id="regime-selector" class="panel-item-content flex-content">
-                    <div id="treeselect-container" class="w-full h-full flex flex-col min-h-0"></div>
+                    <div id="treeselect-container"></div>
                 </div>
             </div>
 
@@ -69,7 +95,7 @@
                     </span>
                 </div>
                 <div id="hierarchy-fields-container" class="panel-item-content flex-content">
-                    <div id="hierarchy-fields-treeselect" class="w-full flex-1 flex flex-col min-h-0"></div>
+                    <div id="hierarchy-fields-treeselect"></div>
                     <div class="mt-2 text-[10px] text-gray-500 italic px-2 leading-tight text-indigo-400/60 shrink-0 pb-2">
                         * Selection order defines hierarchical depth
                     </div>
@@ -104,44 +130,7 @@
         </div>
 
         <!-- Footer Branding -->
-        <div class="px-4 py-3 border-t border-white/5 bg-white/5 dark:bg-black/40 space-y-2">
-            <div class="flex items-center justify-between">
-                <label
-                    class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase cursor-pointer flex items-center gap-2 hover:text-black dark:hover:text-white transition-colors">
-                    <input type="checkbox" id="toggle-unmapped" checked
-                        class="checkbox-ui"
-                        onchange="toggleUnmappedVisibility(this.checked)">
-                    Show unmapped
-                </label>
-            </div>
-
-            <div class="flex items-center justify-between">
-                <label
-                    class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase flex items-center gap-1">
-                    <span>Size By</span>
-                </label>
-                <select id="size-by-select" onchange="setSizeBy(this.value)"
-                    class="bg-white/10 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-inner text-[10px] text-gray-600 dark:text-gray-400 px-1 py-0.5 focus:outline-none focus:border-blue-500 min-w-[100px]">
-                    <option value="weight">Impact</option>
-                    <option value="uniform">Uniform</option>
-                    <option id="size-by-as" value="alignment" class="hidden">Alignment Strength</option>
-                    <option id="size-by-fcs" value="functional" class="hidden">Functional Coverage Strength</option>
-                </select>
-            </div>
-
-            <div class="flex items-center justify-between">
-                <label
-                    class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                    Theme
-                </label>
-                <select id="theme-select" onchange="setTheme(this.value)"
-                    class="bg-white/10 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-inner text-[10px] text-gray-600 dark:text-gray-400 px-1 py-0.5 focus:outline-none focus:border-blue-500 min-w-[100px]">
-                    <option value="system">System</option>
-                    <option value="dark">Dark</option>
-                    <option value="light">Light</option>
-                </select>
-            </div>
-
+        <div class="px-4 py-3 border-t border-white/5 bg-white/5 dark:bg-black/40">
             <footer class="pt-1">
                 <a href="https://github.com/securecontrolsframework/securecontrolsframework" target="_blank">SCF
                     Visualizer</a> © 2026
@@ -229,7 +218,7 @@
                     </span>
                 </div>
                 <div id="hierarchy-navigator-container" class="panel-item-content flex-content">
-                    <div id="hierarchy-navigator-treeselect" class="w-full h-full flex flex-col min-h-0"></div>
+                    <div id="hierarchy-navigator-treeselect"></div>
                 </div>
             </div>
 

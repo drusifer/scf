@@ -36,6 +36,22 @@ export class VizEngine {
             .style("background", "transparent")
             .style("cursor", "pointer");
 
+        const defs = this.svg.append("defs");
+        [
+            { id: "shadow-2",       dy: 6,  blur: 8,  opacity: 0.50 },
+            { id: "shadow-leaf",    dy: 2,  blur: 3,  opacity: 0.50 },
+            { id: "shadow-focused", dy: 4,  blur: 8,  opacity: 0.70 },
+        ].forEach(({ id, dy, blur, opacity }) => {
+            defs.append("filter")
+                .attr("id", id)
+                .attr("x", "-500%").attr("y", "-500%")
+                .attr("width", "1100%").attr("height", "1100%")
+                .append("feDropShadow")
+                .attr("dx", 0).attr("dy", dy)
+                .attr("stdDeviation", blur)
+                .attr("flood-color", `rgba(0,0,0,${opacity})`);
+        });
+
         this.g = this.svg.append("g");
     }
 

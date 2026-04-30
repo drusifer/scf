@@ -50,19 +50,10 @@
 
     /* Blue 600 */
 
-    /* Greyscale for SCF Layers */
-    --scf-depth-1: #94a3b8;
-
-    /* Slate 400 */
-    --scf-depth-2: #cbd5e1;
-
-    /* Slate 300 */
-    --scf-depth-3: #e2e8f0;
-
-    /* Slate 200 */
-    --scf-depth-4: #f1f5f9;
-
-    /* Slate 100 */
+    --scf-depth-1: #64748b;
+    --scf-depth-2: #94a3b8;
+    --scf-depth-3: #cbd5e1;
+    --scf-depth-4: #e2e8f0;
 }
 
 .dark {
@@ -365,12 +356,19 @@ h3 {
 
 .node {
     cursor: pointer;
-    transition: stroke 0.2s, stroke-width 0.2s, fill 0.3s, filter 0.3s;
-    filter: drop-shadow(var(--shadow-1));
+    transition: stroke 0.2s, stroke-width 0.2s, fill 0.3s;
+}
+
+/* High-performance mode: disable filters and transitions on the viz */
+svg.perf-mode .node {
+    filter: none !important;
+    transition: none !important;
+}
+svg.perf-mode {
+    shape-rendering: optimizeSpeed;
 }
 
 .node:hover {
-    filter: drop-shadow(var(--shadow-2));
     stroke: var(--node-stroke-hover) !important;
     stroke-width: 2px !important;
 }
@@ -410,6 +408,66 @@ h3 {
     letter-spacing: -0.01em;
 }
 
+.panel-title {
+    background: var(--card-bg);
+    margin: 4px 8px;
+    border-radius: var(--radius-ui);
+    border: 1px solid var(--border-muted);
+    box-shadow: var(--shadow-1);
+    flex-shrink: 0;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.panel-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+.panel-control-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+}
+
+.panel-control-row label {
+    cursor: pointer;
+}
+
+.panel-control-row:hover {
+    color: var(--text-primary);
+}
+
+.panel-control-row select {
+    background: rgb(255 255 255 / 10%);
+    border: 1px solid rgb(0 0 0 / 10%);
+    border-radius: var(--radius-inner);
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 2px 4px;
+    min-width: 80px;
+    cursor: pointer;
+}
+
+.dark .panel-control-row select {
+    background: rgb(0 0 0 / 20%);
+    border-color: rgb(255 255 255 / 10%);
+}
+
+.panel-control-row select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+}
+
 /* Sidebar Accordion Cards - Refactored as Independent Scrolling Panel Items */
 .panel-container {
     flex: 1;
@@ -438,7 +496,8 @@ h3 {
 }
 
 .panel-item.open {
-    flex: 1 1 auto;
+    flex: 1 1 0;
+    min-height: 160px;
     max-height: 60vh;
 }
 
@@ -472,8 +531,13 @@ h3 {
 }
 
 #treeselect-container, #hierarchy-fields-treeselect, #hierarchy-navigator-treeselect {
-    margin: 0 !important;
-    padding: 0 !important;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
 }
 
 .panel-item.open > .panel-item-content {
@@ -484,6 +548,8 @@ h3 {
     display: flex !important;
     flex-direction: column;
     overflow: hidden;
+    flex: 1;
+    min-height: 0;
 }
 
 /* Detail Panel Styling */
@@ -545,24 +611,30 @@ h3 {
 }
 
 .panel-item-content .treeselect-list {
-    border: none !important;
-    box-shadow: none !important;
-    margin-top: -1px !important; /* Pull up to be flush with input border */
-    background: var(--sidebar-color) !important;
+    max-height: none !important;
+    border: 1px solid var(--border-muted) !important;
+    box-shadow: inset 0 2px 4px rgb(0 0 0 / 5%) !important;
+    margin: 4px !important;
+    border-radius: var(--radius-ui) !important;
+    background: var(--sidebar-darker) !important;
     flex: 1 1 auto;
     overflow-y: auto !important;
 }
 
 /* Tags Design */
 .treeselect-input__tags-element {
-    background: var(--ts-tag-blue) !important;
     color: #fff !important;
-    border-radius: 1px !important;
+    border-radius: 3px !important;
     padding: 2px 8px !important;
     margin: 2px !important;
     font-weight: 600 !important;
-    border: 1px solid var(--accent-blue) !important;
+    border: 1px solid transparent !important;
     height: auto !important;
+}
+
+#treeselect-container .treeselect-input__tags-element {
+    background: var(--ts-tag-blue);
+    border-color: var(--accent-blue);
 }
 
 

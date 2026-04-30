@@ -671,17 +671,15 @@ function updateVisualization() {
         .data(root.descendants().slice(1))
         .join("circle")
         .attr("class", (d) => `node node--${d.depth} ${d.children ? "" : "node--leaf"}`)
+        .attr("filter", nodeFilter)
         .style("fill", (d) => {
-            if (d.depth === 1) return "var(--scf-depth-1)";
-            if (d.depth === 2) return "var(--scf-depth-2)";
-            if (d.depth === 3) return "var(--scf-depth-3)";
-            if (d.depth === 4) return "var(--scf-depth-4)";
-            if (d.depth === 5 || d.depth === 6) return vizEngine.getRegimeColor(d.data.regimeId);
-            return "var(--node-fill-default)";
+            if (d.data.regimeId) return vizEngine.getRegimeColor(d.data.regimeId);
+            return `var(--scf-depth-${Math.min(d.depth, 4)})`;
         })
         .style("fill-opacity", (d) => {
-            if (d.depth === 5) return 0.2; // Manual opacity for regime groups
-            return d.children ? 0.4 : 0.8;
+            if (!d.data.regimeId) return 0.5;
+            if (!d.children) return 0.95;
+            return 0.2;
         })
         .style("stroke", (d) => d.children ? "var(--node-stroke)" : "transparent")
         .style("stroke-width", 0.5)
@@ -822,23 +820,22 @@ function updateNodeStyles(focusNode) {
         if (isFocused) {
             element.style("fill", "var(--node-focus-fill)")
                 .style("stroke", "var(--node-focus-stroke)")
-                .style("stroke-width", "2.5px");
+                .style("stroke-width", "2.5px")
+                .attr("filter", "url(#shadow-focused)");
         } else {
             element.style("fill", (currentNode) => {
-                if (currentNode.depth === 1) return "var(--scf-depth-1)";
-                if (currentNode.depth === 2) return "var(--scf-depth-2)";
-                if (currentNode.depth === 3) return "var(--scf-depth-3)";
-                if (currentNode.depth === 4) return "var(--scf-depth-4)";
-                if (currentNode.depth === 5 || currentNode.depth === 6) return vizEngine.getRegimeColor(currentNode.data.regimeId);
-                return "var(--node-fill-default)";
+                if (currentNode.data.regimeId) return vizEngine.getRegimeColor(currentNode.data.regimeId);
+                return `var(--scf-depth-${Math.min(currentNode.depth, 4)})`;
             })
                 .style("stroke", (currentNode) => currentNode.children ? "var(--node-stroke)" : "transparent")
-                .style("stroke-width", "0.5px");
+                .style("stroke-width", "0.5px")
+                .attr("filter", nodeFilter);
         }
 
         element.style("fill-opacity", (currentNode) => {
-            if (currentNode.depth === 5) return 0.2;
-            return currentNode.children ? 0.4 : 0.8;
+            if (!currentNode.data.regimeId) return 0.5;
+            if (!currentNode.children) return 0.95;
+            return 0.2;
         });
     });
 }
@@ -1073,6 +1070,27 @@ function applyURLFocus() {
     }
 }
 
+function nodeFilter(d) {
+    if (!d.children || d.data.regimeId) return "url(#shadow-leaf)";
+    return "url(#shadow-2)";
+}
+
+function colorizeRegimeTags() {
+    const nameToId = {};
+    StateManager.scfData.regimeList.forEach((r, idx) => {
+        if (r) nameToId[r.name] = idx;
+    });
+    document.querySelectorAll('#treeselect-container .treeselect-input__tags-element').forEach(tag => {
+        const name = tag.title || tag.querySelector('.treeselect-input__tags-name')?.textContent?.trim();
+        const id = nameToId[name];
+        if (id !== undefined) {
+            const color = vizEngine.getRegimeColor(id);
+            tag.style.background = color;
+            tag.style.borderColor = color;
+        }
+    });
+}
+
 function initTreeselect() {
     let options;
     if (StateManager.processor.config.schema.controls.mapping_tag_suffix) {
@@ -1123,8 +1141,11 @@ function initTreeselect() {
             initMappingQualityFilter();
             updateLegend();
             updateURL();
+            requestAnimationFrame(colorizeRegimeTags);
         }
     );
+
+    requestAnimationFrame(colorizeRegimeTags);
 
     if (window._initialRegimeValue) {
         const selectedIds = window._initialRegimeValue.reduce((accumulator, currentValue) => {
@@ -1476,6 +1497,14 @@ function updateBreadcrumbs(d) {
 }
 
 // --- Theme Management ---
+window.setPerfMode = (enabled) => {
+    const svg = document.querySelector("#viz-container svg");
+    if (svg) svg.classList.toggle("perf-mode", enabled);
+    localStorage.setItem("scf_perf_mode", enabled ? "1" : "0");
+    const cb = document.getElementById("toggle-perf-mode");
+    if (cb) cb.checked = enabled;
+};
+
 window.setTheme = (theme) => {
     localStorage.setItem("scf_theme", theme);
 
@@ -1501,6 +1530,10 @@ window.toggleUnmappedVisibility = toggleUnmappedVisibility;
 
 const storedTheme = localStorage.getItem("scf_theme") || "system";
 window.setTheme(storedTheme);
+
+if (localStorage.getItem("scf_perf_mode") === "1") window.setPerfMode(true);
+
+document.getElementById("toggle-unmapped")?.addEventListener("change", (e) => toggleUnmappedVisibility(e.target.checked));
 
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
     if (localStorage.getItem("scf_theme") === "system") {
