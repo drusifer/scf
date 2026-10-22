@@ -533,8 +533,8 @@ svg.perf-mode {
 #treeselect-container, #hierarchy-fields-treeselect, #hierarchy-navigator-treeselect {
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
+    display: inline !important;
+    flex-direction: column !important;
     flex: 1;
     min-height: 0;
     width: 100%;

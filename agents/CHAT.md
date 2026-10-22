@@ -1469,14 +1469,7 @@ Report bugs to <bug-make@gnu.org>
  @neo labeling issue on nested items: labels visible, expand on hover, shrink/disappear on hover-away. Likely leftover effects. LMKWYT before fixing.
 
 ---
-[<small>2026-04-30 12:27:08</small>] [**make**]->[**all**] *build*:
- Build PASSED | make test | /home/drusifer/Projects/scf/build/build.out
-ℹ tests 23
-ℹ suites 0
-ℹ pass 23
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 1039.949868
+[<small>2026-10-21 21:27:17</small>] [**make**]->[**all**] *build*:
+ Build PASSED | make deploy-forgejo | /home/drusifer/Projects/scf/build/build.out
+Published http://forge.pi-patch.lan/api/packages/pi-patch/generic/scf-site/7221385-dirty/scf-site.tar.gz
 make[1]: Leaving directory '/home/drusifer/Projects/scf'
