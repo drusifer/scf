@@ -185,6 +185,19 @@ diff_bob: ## Compare bob-protocol personas, skills, tools, and templates with a 
 	@echo ""
 	@echo "Done."
 
+
+# ── Publish to the pi-patch Forgejo registry (forge.pi-patch.lan) ──────────────
+# Credentials: make -C $(PI_PATCH)/cluster forgejo-token
+PI_PATCH        ?= $(HOME)/Projects/pi-patch
+FORGEJO_PUBLISH := $(PI_PATCH)/cluster/scripts/forgejo-publish.sh
+FORGEJO_VERSION ?= $(shell git describe --tags --always --dirty)
+
+.PHONY: deploy-forgejo
+deploy-forgejo:  ## Package the static site and publish it to pi-patch Forgejo
+	@mkdir -p build
+	tar -czf build/scf-site.tar.gz index.html styles.css *.js data/*.csv
+	$(FORGEJO_PUBLISH) file build/scf-site.tar.gz scf-site $(FORGEJO_VERSION)
+
 else
 
 # ── Interception layer ───────────────────────────────────────────────────────
@@ -281,6 +294,9 @@ lint-inline-js: ## Run ESLint on the extracted application script
 	@./agents/tools/mkf.py $(V) lint-app-js
 
 via_index: ## Build the via index required by the via MCP server
+	@./agents/tools/mkf.py $(V) $@
+
+deploy-forgejo: ## Package the static site and publish it to pi-patch Forgejo
 	@./agents/tools/mkf.py $(V) $@
 
 # Interception logic: 
